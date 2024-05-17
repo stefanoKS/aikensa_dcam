@@ -91,7 +91,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="cameraFrame">
+    <widget class="QLabel" name="mergeFrame">
      <property name="geometry">
       <rect>
        <x>11</x>
@@ -1230,6 +1230,63 @@ background-color: rgb(211, 215, 207);</string>
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QLabel" name="clip2Frame3">
+    <property name="geometry">
+     <rect>
+      <x>940</x>
+      <y>590</y>
+      <width>111</width>
+      <height>128</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(46, 52, 54);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="clip2Frame">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>590</y>
+      <width>111</width>
+      <height>128</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(46, 52, 54);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="clip1Frame">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>590</y>
+      <width>111</width>
+      <height>128</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(46, 52, 54);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
    <zorder>frame</zorder>
@@ -1275,6 +1332,9 @@ background-color: rgb(211, 215, 207);</string>
    <zorder>P6color_2</zorder>
    <zorder>P6label_3</zorder>
    <zorder>P6color_3</zorder>
+   <zorder>clip2Frame3</zorder>
+   <zorder>clip2Frame</zorder>
+   <zorder>clip1Frame</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -1,5 +1,0 @@
-PyQt5
-psutil
-pygame
-opencv-python-headless
-ultralytics
