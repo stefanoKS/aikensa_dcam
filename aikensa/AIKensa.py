@@ -195,6 +195,9 @@ class AIKensa(QMainWindow):
         slider_contrast.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'contrast', x/100))
         slider_brightness.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'brightness', x/100))
 
+        # Widget 3 and 4
+
+        button_HDRes = self.connect_button_font_color_change(3, "button_HDResQT", "HDRes")
 
 
         # _____________________________________________________________________________________________________
@@ -218,6 +221,35 @@ class AIKensa(QMainWindow):
 
         self.setCentralWidget(self.stackedWidget)
         self.showFullScreen()
+
+    def connect_button_font_color_change(self, widget_index, qtbutton, cam_param):
+        widget = self.stackedWidget.widget(widget_index)
+        button = widget.findChild(QPushButton, qtbutton)
+
+        if button:
+            button.setStyleSheet("color: black")
+
+            # Method to toggle font color and cam_param value
+            def toggle_font_color_and_param():
+                current_value = getattr(self.cam_thread.cam_config, cam_param, False)
+                new_value = not current_value
+                setattr(self.cam_thread.cam_config, cam_param, new_value)
+                self._set_cam_params(self.cam_thread, cam_param, new_value)
+
+                # Update button font color
+                new_color = "red" if new_value else "black"
+                button.setStyleSheet(f"color: {new_color}")
+
+                # Print statements for debugging
+                print(f"Button pressed. {cam_param} changed to {new_value}. Font color changed to {new_color}.")
+
+            # Connect the button's pressed signal to the toggle method
+            button.pressed.connect(toggle_font_color_and_param)
+            print(f"Button '{qtbutton}' connected to toggle method.")
+        else:
+            print(f"Button '{qtbutton}' not found.")
+
+
 
 
     def connect_line_edit_text_changed(self, widget_index, line_edit_name, cam_param):

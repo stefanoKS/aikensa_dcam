@@ -48,6 +48,8 @@ class CameraConfig:
     brightness: int = 0
     savecannyparams: bool = False
 
+    HDRes: bool = False
+
 class CameraThread(QThread):
 
     camFrame1 = pyqtSignal(QImage)
@@ -75,6 +77,9 @@ class CameraThread(QThread):
             4: "5755A492"
         }
 
+        self.previous_HDRes = self.cam_config.HDRes
+        self.scale_factor = 4.0
+
 
     def run(self):
 
@@ -101,18 +106,27 @@ class CameraThread(QThread):
                 homography_param = yaml.load(file, Loader=yaml.FullLoader)
                 H = np.array(homography_param)
 
-        print (cameraMatrix1)
-        print (distortionCoeff1)
-        print (cameraMatrix2)
-        print (distortionCoeff2)
-        print (H)
+        # print (cameraMatrix1)
+        # print (distortionCoeff1)
+        # print (cameraMatrix2)
+        # print (distortionCoeff2)
+        # print (f"initial H : {H}")
+
+        H = self.adjust_transform_matrix(H, self.scale_factor)
+        cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, self.scale_factor)
+        cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
+        
+
 
         while self.running is True:
             current_time = time.time()
 
+            print(f"HDRES is set to: {self.cam_config.HDRes}")
+
             try:
                 ret1, frame1 = cap_cam1.read()
                 ret2, frame2 = cap_cam2.read()
+                
 
             except cv2.error as e:
                 print("An error occurred while reading frames from the cameras:", str(e))
@@ -127,7 +141,7 @@ class CameraThread(QThread):
                 else:
                     frame1 = cv2.rotate(frame1, cv2.ROTATE_180)
                     frame2 = cv2.rotate(frame2, cv2.ROTATE_180)
-                
+                    
                     if os.path.exists("./aikensa/cameracalibration/cam1calibration_param.yaml"):
                         with open("./aikensa/cameracalibration/cam1calibration_param.yaml") as file:
                             cam1calibration_param = yaml.load(file, Loader=yaml.FullLoader)
@@ -275,13 +289,15 @@ class CameraThread(QThread):
                     croppedFrame2 = self.frameCrop(combinedImage_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
                     
                     #Pushing the frame to QTSignal
-                    self.mergeFrame.emit(self.convertQImage(combinedImage))
-        
+                    emitTime_combined = time.perf_counter() - emitTime_combined
+
                     self.kata1Frame.emit(self.convertQImage(croppedFrame1))
+
                     self.kata2Frame.emit(self.convertQImage(croppedFrame2))
 
                     self.camFrame1.emit(self.convertQImage(frame1))
                     self.camFrame2.emit(self.convertQImage(frame2))
+                
 
             if self.cam_config.widget == 3:
 
@@ -289,21 +305,50 @@ class CameraThread(QThread):
                     frame1 = np.zeros((2048, 3072, 3), dtype=np.uint8)
                 if frame2 is None:
                     frame2 = np.zeros((2048, 3072, 3), dtype=np.uint8) 
+
+                if self.cam_config.HDRes != self.previous_HDRes:
+                    if not self.cam_config.HDRes:
+                        cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, self.scale_factor)
+                        cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
+                        H = self.adjust_transform_matrix(H, self.scale_factor)
+                    else:
+                        cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, 1/self.scale_factor)
+                        cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, 1/self.scale_factor)
+                        H = self.adjust_transform_matrix(H, 1 / self.scale_factor)
+
+                    self.previous_HDRes = self.cam_config.HDRes  # Update the previous resolution setting
+
+                if self.cam_config.HDRes == False:
+                    frame1 = self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor))
+                    frame2 = self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor))
+
                 
-                #process frame1
                 frame1 = self.undistortFrame(frame1, cameraMatrix1, distortionCoeff1)
-                #process frame2
                 frame2 = self.undistortFrame(frame2, cameraMatrix1, distortionCoeff1)
                 #merge frame1 and frame2
+                # print(f"Edited H : {H}")
                 combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, H)
 
+                emitTime_combined = time.perf_counter()
                 self.mergeFrame.emit(self.convertQImage(combinedImage))
-    
-                self.kata1Frame.emit(self.convertQImage(croppedFrame1))
-                self.kata2Frame.emit(self.convertQImage(croppedFrame2))
+                emitTime_combined = time.perf_counter() - emitTime_combined
+                # print(f"Time to emit combined frame: {emitTime_combined}")
 
+                emitTime_kata1 = time.perf_counter()
+                self.kata1Frame.emit(self.convertQImage(croppedFrame1))
+                emitTime_kata1 = time.perf_counter() - emitTime_kata1
+                # print(f"Time to emit kata1 frame: {emitTime_kata1}")
+
+                emitTime_kata2 = time.perf_counter()
+                self.kata2Frame.emit(self.convertQImage(croppedFrame2))
+                emitTime_kata2 = time.perf_counter() - emitTime_kata2
+                # print(f"Time to emit kata2 frame: {emitTime_kata2}")
+
+                emitTime_cam1 = time.perf_counter()
                 self.camFrame1.emit(self.convertQImage(frame1))
                 self.camFrame2.emit(self.convertQImage(frame2))
+                emitTime_cam1 = time.perf_counter() - emitTime_cam1
+                # print(f"Time to emit cam1 frame: {emitTime_cam1}")
 
 
         cap_cam1.release()
@@ -312,14 +357,24 @@ class CameraThread(QThread):
         print("Camera 2 released.")
         # Tis.Stop_pipeline()
 
-    def cap_frames(self, camIndex, outputQueue):
-        cap = initialize_camera(camIndex)
-        while self.running:
-            ret, frame = cap.read()
-            if ret:
-                outputQueue.put(frame)
-        cap.release()
+    def adjust_camera_matrix(self, camera_matrix, scale_factor):
+        camera_matrix[0][0] /= scale_factor
+        camera_matrix[1][1] /= scale_factor
+        camera_matrix[0][2] /= scale_factor
+        camera_matrix[1][2] /= scale_factor
+        return camera_matrix
 
+    def adjust_transform_matrix(self, matrix, scale_factor):
+        # matrix[0, 0] /= scale_factor  # Adjust sx
+        # matrix[1, 1] /= scale_factor  # Adjust sy
+
+        # matrix[0, 1] /= scale_factor  # Adjust shear in x
+        # matrix[1, 0] /= scale_factor  # Adjust shear in y
+
+        matrix[0, 2] /= scale_factor  # Adjust tx
+        matrix[1, 2] /= scale_factor  # Adjust ty
+
+        return matrix
 
     def undistortFrame(self, frame,cameraMatrix, distortionCoeff):
         frame = cv2.rotate(frame, cv2.ROTATE_180)
@@ -328,11 +383,35 @@ class CameraThread(QThread):
 
     def combineFrames(self, frame1, frame2, H):
         combinedFrame = warpTwoImages(frame2, frame1, H)
-        combinedFrame, _ = planarize(combinedFrame)
+
+        croppedFrame1 = None
+        croppedFrame2 = None
+
+        # cv2.imwrite("frame1.jpg", frame1)
+        # cv2.imwrite("frame2.jpg", frame2)
+        # cv2.imwrite("combinedImage.jpg", combinedFrame)
+
+        combinedFrame, _ = planarize(combinedFrame, self.scale_factor if not self.cam_config.HDRes else 1.0)
+
         combinedFrame_raw = combinedFrame.copy()
-        combinedFrame = self.resizeImage(combinedFrame, 1521, 363)
-        croppedFrame1 = self.frameCrop(combinedFrame_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
-        croppedFrame2 = self.frameCrop(combinedFrame_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
+        combinedFrame = self.resizeImage(combinedFrame, 1791, 428)
+       
+        
+        if self.cam_config.HDRes == False:
+            croppedFrame1 = self.frameCrop(combinedFrame_raw, x=int(450/self.scale_factor), y=int(260/self.scale_factor), w=int(320/self.scale_factor), h=int(160/self.scale_factor), wout = int(320/self.scale_factor), hout = int(160/self.scale_factor))
+            croppedFrame1 = self.resizeImage(croppedFrame1, 320, 160)
+            croppedFrame2 = self.frameCrop(combinedFrame_raw, x=int(3800/self.scale_factor), y=int(260/self.scale_factor), w=int(320/self.scale_factor), h=int(160/self.scale_factor), wout = int(320/self.scale_factor), hout = int(160/self.scale_factor))
+            croppedFrame2 = self.resizeImage(croppedFrame2, 320, 160)
+        if self.cam_config.HDRes == True:
+            croppedFrame1 = self.frameCrop(combinedFrame_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
+            croppedFrame2 = self.frameCrop(combinedFrame_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
+
+        if croppedFrame1 is None:
+            croppedFrame1 = np.zeros((160, 320, 3), dtype=np.uint8)
+        if croppedFrame2 is None:
+            croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
+
+        # cv2.imwrite("combinedImage_raw.jpg", combinedFrame_raw)
         return combinedFrame_raw, combinedFrame, croppedFrame1, croppedFrame2
 
     def stop(self):
