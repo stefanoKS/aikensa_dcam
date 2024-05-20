@@ -135,6 +135,11 @@ class AIKensa(QMainWindow):
         captureButton1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam1", True))
         captureButton2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam2", True))
 
+        self.connect_camparam_button(1, "takeImageClip1", "captureClip1", True)
+        self.connect_camparam_button(1, "takeImageClip2", "captureClip2", True)
+        self.connect_camparam_button(1, "takeImageClip3", "captureClip3", True)
+        
+
         cam1CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam1")
         cam1CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix1", True))
 
@@ -241,11 +246,11 @@ class AIKensa(QMainWindow):
                 button.setStyleSheet(f"color: {new_color}")
 
                 # Print statements for debugging
-                print(f"Button pressed. {cam_param} changed to {new_value}. Font color changed to {new_color}.")
+                # print(f"Button pressed. {cam_param} changed to {new_value}. Font color changed to {new_color}.")
 
             # Connect the button's pressed signal to the toggle method
             button.pressed.connect(toggle_font_color_and_param)
-            print(f"Button '{qtbutton}' connected to toggle method.")
+            # print(f"Button '{qtbutton}' connected to toggle method.")
         else:
             print(f"Button '{qtbutton}' not found.")
 
@@ -264,6 +269,8 @@ class AIKensa(QMainWindow):
         button = widget.findChild(QPushButton, button_name)
         if button:
             button.pressed.connect(lambda: self._set_cam_params(self.cam_thread, cam_param, value))
+            #print if button is pressed
+            print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}'")
 
 
     def simulateButtonKensaClicks(self):
@@ -382,21 +389,21 @@ class AIKensa(QMainWindow):
         # label.setPixmap(QPixmap.fromImage(image))   
 
     def _setFrameClip1(self, image):
-        for i in [3]: #modify this later
+        for i in [1, 3]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip1Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameClip2(self, image):
-        for i in [3]: #modify this later
+        for i in [1, 3]: #modify this later
             widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "clip1Frame") 
+            label = widget.findChild(QLabel, "clip2Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameClip3(self, image):
-        for i in [3]: #modify this later
+        for i in [1, 3]: #modify this later
             widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "clip1Frame") 
+            label = widget.findChild(QLabel, "clip3Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     # def _close_app(self):

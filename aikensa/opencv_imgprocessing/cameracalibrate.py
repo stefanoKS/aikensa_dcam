@@ -126,11 +126,11 @@ def calculateHomography(img1, img2):
             corners2 = np.array(corners2).reshape(-1, 2)
 
             # Calculate the homography matrix
-            M, mask = cv2.findHomography(corners1, corners2, cv2.RANSAC, 5.0)
+            M, mask = cv2.findHomography(corners2, corners1, cv2.RANSAC, 5.0)
             print(M)
         
 
-        results = warpTwoImages(img2, img1, M)
+        results = warpTwoImages(img1, img2, M)
 
         return results, M
 
@@ -149,7 +149,7 @@ def warpTwoImages(img1, img2, H):
     Ht = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
     # print(xmin, ymin, xmax, ymax)
 
-    result = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
-    result[t[1]:h1+t[1],t[0]:w1+t[0]] = img1
+    result = cv2.warpPerspective(img1, Ht.dot(H), (xmax-xmin, ymax-ymin))
+    result[t[1]:h1+t[1],t[0]:w1+t[0]] = img2
 
     return result

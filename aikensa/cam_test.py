@@ -9,8 +9,6 @@ import csv
 import threading
 from multiprocessing import Process, Queue
 
-import skimage
-
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QImage, QPixmap
 
@@ -36,9 +34,9 @@ class CameraTest:
 
     def start(self):
         
-        cap_cam1 = initialize_camera(1)
+        cap_cam1 = initialize_camera(0)
         print(f"Initiliazing Camera 1.... Located on {cap_cam1}")
-        cap_cam2 = initialize_camera(4)
+        cap_cam2 = initialize_camera(2)
         print(f"Initiliazing Camera 2.... Located on {cap_cam2}")
 
         cameraMatrix1 = None
@@ -128,12 +126,6 @@ class CameraTest:
         cap_cam2.release()
         print("Camera 2 released.")
         
-        end_time = time.time()
-        duration = end_time - start_time
-        fps = frame_count / duration
-
-        print(f"Processed {frame_count} frames in {duration:.2f} seconds. Average FPS: {fps:.2f}")
-
 
     def cap_frames(self, camIndex, outputQueue):
         cap = initialize_camera(camIndex)

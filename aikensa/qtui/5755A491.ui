@@ -1104,12 +1104,12 @@ background-color: rgb(211, 215, 207);</string>
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="clip2Frame3">
+   <widget class="QLabel" name="clip3Frame">
     <property name="geometry">
      <rect>
-      <x>940</x>
+      <x>960</x>
       <y>590</y>
-      <width>111</width>
+      <width>128</width>
       <height>128</height>
      </rect>
     </property>
@@ -1128,7 +1128,7 @@ background-color: rgb(211, 215, 207);</string>
      <rect>
       <x>820</x>
       <y>590</y>
-      <width>111</width>
+      <width>128</width>
       <height>128</height>
      </rect>
     </property>
@@ -1145,9 +1145,9 @@ background-color: rgb(211, 215, 207);</string>
    <widget class="QLabel" name="clip1Frame">
     <property name="geometry">
      <rect>
-      <x>700</x>
+      <x>680</x>
       <y>590</y>
-      <width>111</width>
+      <width>128</width>
       <height>128</height>
      </rect>
     </property>
@@ -1234,7 +1234,7 @@ background-color: rgb(211, 215, 207);</string>
    <zorder>P6color_2</zorder>
    <zorder>P6label_3</zorder>
    <zorder>P6color_3</zorder>
-   <zorder>clip2Frame3</zorder>
+   <zorder>clip3Frame</zorder>
    <zorder>clip2Frame</zorder>
    <zorder>clip1Frame</zorder>
    <zorder>button_HDResQT</zorder>

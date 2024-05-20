@@ -27,6 +27,9 @@ class CameraConfig:
     calculateCamMatrix2: bool = False
     captureCam1: bool = False
     captureCam2: bool = False
+    captureClip1: bool = False
+    captureClip2: bool = False
+    captureClip3: bool = False
     delCamMatrix1: bool = False
     delCamMatrix2: bool = False
     checkUndistort1: bool = False
@@ -78,7 +81,7 @@ class CameraThread(QThread):
         }
 
         self.previous_HDRes = self.cam_config.HDRes
-        self.scale_factor = 4.0
+        self.scale_factor = 5.0
 
 
     def run(self):
@@ -121,7 +124,7 @@ class CameraThread(QThread):
         while self.running is True:
             current_time = time.time()
 
-            print(f"HDRES is set to: {self.cam_config.HDRes}")
+            
 
             try:
                 ret1, frame1 = cap_cam1.read()
@@ -267,44 +270,82 @@ class CameraThread(QThread):
                             yaml.dump(_.tolist(), file)
                         self.cam_config.savePlanarize = False
 
+                    if self.cam_config.delPlanarize == True:
+                        if os.path.exists("./aikensa/param/warptransform.yaml"):
+                            os.remove("./aikensa/param/warptransform.yaml")
+                        self.cam_config.delPlanarize = False
+
                     if self.cam_config.saveImage == True:
                         os.makedirs("./aikensa/capturedimages", exist_ok=True)
                         #conver the image to RGB
 
                         combinedImage_dump = cv2.cvtColor(combinedImage, cv2.COLOR_BGR2RGB)
-                        cv2.imwrite(f"./aikensa/capturedimages/capturedimage_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", combinedImage_dump)
+                        cv2.imwrite(f"./aikensa/capturedimages/combinedImage/capturedimage_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", combinedImage_dump)
 
                         croppedFrame1_dump = cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB)
-                        cv2.imwrite(f"./aikensa/capturedimages/croppedFrame1_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", croppedFrame1_dump)
+                        cv2.imwrite(f"./aikensa/capturedimages/croppedFrame1/croppedFrame1_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", croppedFrame1_dump)
 
                         croppedFrame2_dump = cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB)
-                        cv2.imwrite(f"./aikensa/capturedimages/croppedFrame2_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", croppedFrame2_dump)
+                        cv2.imwrite(f"./aikensa/capturedimages/croppedFrame2/croppedFrame2_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", croppedFrame2_dump)
                         print("Images saved.")
                         self.cam_config.saveImage = False
 
+
+                    clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=1425, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame1, x=2230, y=0, w=600, h=600, wout = 128, hout = 128)
+                    if self.cam_config.captureClip1:
+                        clipFrame1_dump = cv2.cvtColor(clipFrame1, cv2.COLOR_BGR2RGB)
+                        os.makedirs("./aikensa/capturedimages/clip1", exist_ok=True)
+                        cv2.imwrite(f"./aikensa/capturedimages/clip1/clip1_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", clipFrame1_dump)
+                        self.cam_config.captureClip1 = False
+                        print("Clip 1 captured.")
+                    if self.cam_config.captureClip2:
+                        clipFrame2_dump = cv2.cvtColor(clipFrame2, cv2.COLOR_BGR2RGB)
+                        os.makedirs("./aikensa/capturedimages/clip2", exist_ok=True)
+                        cv2.imwrite(f"./aikensa/capturedimages/clip2/clip2_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", clipFrame2_dump)
+                        self.cam_config.captureClip2 = False
+                        print("Clip 2 captured.")
+                    if self.cam_config.captureClip3:
+                        clipFrame3_dump = cv2.cvtColor(clipFrame3, cv2.COLOR_BGR2RGB)
+                        os.makedirs("./aikensa/capturedimages/clip3", exist_ok=True)
+                        cv2.imwrite(f"./aikensa/capturedimages/clip3/clip3_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", clipFrame3_dump)
+                        print("Clip 3 captured.")
+                        self.cam_config.captureClip3 = False
+
                     combinedImage_raw = combinedImage.copy()
                     combinedImage = self.resizeImage(combinedImage, 1521, 363)
-
+                    
                     croppedFrame1 = self.frameCrop(combinedImage_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
                     croppedFrame2 = self.frameCrop(combinedImage_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
                     
-                    #Pushing the frame to QTSignal
-                    emitTime_combined = time.perf_counter() - emitTime_combined
 
                     self.kata1Frame.emit(self.convertQImage(croppedFrame1))
-
                     self.kata2Frame.emit(self.convertQImage(croppedFrame2))
 
-                    self.camFrame1.emit(self.convertQImage(frame1))
-                    self.camFrame2.emit(self.convertQImage(frame2))
-                
+                    frame1_downres = self.resizeImage(frame1)
+                    frame2_downres = self.resizeImage(frame2)
+
+                    self.camFrame1.emit(self.convertQImage(frame1_downres))
+                    self.camFrame2.emit(self.convertQImage(frame2_downres))
+
+                    self.mergeFrame.emit(self.convertQImage(combinedImage))
+
+                    self.clip1Frame.emit(self.convertQImage(clipFrame1))
+                    self.clip2Frame.emit(self.convertQImage(clipFrame2))
+                    self.clip3Frame.emit(self.convertQImage(clipFrame3))
 
             if self.cam_config.widget == 3:
+                # print(f"HDRES is set to: {self.cam_config.HDRes}")
 
                 if frame1 is None:
                     frame1 = np.zeros((2048, 3072, 3), dtype=np.uint8)
                 if frame2 is None:
                     frame2 = np.zeros((2048, 3072, 3), dtype=np.uint8) 
+
+                if ret1 and ret2:
+                    frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2RGB)
+                    frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
 
                 if self.cam_config.HDRes != self.previous_HDRes:
                     if not self.cam_config.HDRes:
@@ -327,28 +368,31 @@ class CameraThread(QThread):
                 frame2 = self.undistortFrame(frame2, cameraMatrix1, distortionCoeff1)
                 #merge frame1 and frame2
                 # print(f"Edited H : {H}")
+
                 combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, H)
+                if self.cam_config.HDRes == False:
+                    clipFrame1 = self.frameCrop(frame1, x=int(590/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(600/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=int(1425/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(600/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame1, x=int(2230/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(600/self.scale_factor), wout = 128, hout = 128)
 
-                emitTime_combined = time.perf_counter()
+                if self.cam_config.HDRes == True:
+                    clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=1425, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame1, x=2230, y=0, w=600, h=600, wout = 128, hout = 128)
+
                 self.mergeFrame.emit(self.convertQImage(combinedImage))
-                emitTime_combined = time.perf_counter() - emitTime_combined
-                # print(f"Time to emit combined frame: {emitTime_combined}")
 
-                emitTime_kata1 = time.perf_counter()
                 self.kata1Frame.emit(self.convertQImage(croppedFrame1))
-                emitTime_kata1 = time.perf_counter() - emitTime_kata1
-                # print(f"Time to emit kata1 frame: {emitTime_kata1}")
 
-                emitTime_kata2 = time.perf_counter()
                 self.kata2Frame.emit(self.convertQImage(croppedFrame2))
-                emitTime_kata2 = time.perf_counter() - emitTime_kata2
-                # print(f"Time to emit kata2 frame: {emitTime_kata2}")
 
-                emitTime_cam1 = time.perf_counter()
                 self.camFrame1.emit(self.convertQImage(frame1))
                 self.camFrame2.emit(self.convertQImage(frame2))
-                emitTime_cam1 = time.perf_counter() - emitTime_cam1
-                # print(f"Time to emit cam1 frame: {emitTime_cam1}")
+                # cv2.imwrite("frame1ref.jpg", frame1)
+
+                self.clip1Frame.emit(self.convertQImage(clipFrame1))
+                self.clip2Frame.emit(self.convertQImage(clipFrame2))
+                self.clip3Frame.emit(self.convertQImage(clipFrame3))
 
 
         cap_cam1.release()
@@ -373,6 +417,7 @@ class CameraThread(QThread):
 
         matrix[0, 2] /= scale_factor  # Adjust tx
         matrix[1, 2] /= scale_factor  # Adjust ty
+        # matrix[2, 2] /= scale_factor
 
         return matrix
 
@@ -398,10 +443,8 @@ class CameraThread(QThread):
        
         
         if self.cam_config.HDRes == False:
-            croppedFrame1 = self.frameCrop(combinedFrame_raw, x=int(450/self.scale_factor), y=int(260/self.scale_factor), w=int(320/self.scale_factor), h=int(160/self.scale_factor), wout = int(320/self.scale_factor), hout = int(160/self.scale_factor))
-            croppedFrame1 = self.resizeImage(croppedFrame1, 320, 160)
-            croppedFrame2 = self.frameCrop(combinedFrame_raw, x=int(3800/self.scale_factor), y=int(260/self.scale_factor), w=int(320/self.scale_factor), h=int(160/self.scale_factor), wout = int(320/self.scale_factor), hout = int(160/self.scale_factor))
-            croppedFrame2 = self.resizeImage(croppedFrame2, 320, 160)
+            croppedFrame1 = self.frameCrop(combinedFrame_raw, x=int(450/self.scale_factor), y=int(260/self.scale_factor), w=int(320/self.scale_factor), h=int(160/self.scale_factor), wout = int(320), hout = int(160))
+            croppedFrame2 = self.frameCrop(combinedFrame_raw, x=int(3800/self.scale_factor), y=int(260/self.scale_factor), w=int(320/self.scale_factor), h=int(160/self.scale_factor), wout = int(320), hout = int(160))
         if self.cam_config.HDRes == True:
             croppedFrame1 = self.frameCrop(combinedFrame_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
             croppedFrame2 = self.frameCrop(combinedFrame_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
@@ -427,7 +470,7 @@ class CameraThread(QThread):
 
     def resizeImage(self, image, width=384, height=256):
         # Resize image using cv2.resize
-        resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+        resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
         return resized_image
     
     def stop(self):
@@ -443,7 +486,7 @@ class CameraThread(QThread):
 
     def downSampling(self, image, width=384, height=256):
         # Resize image using cv2.resize
-        resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+        resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
         # Convert resized cv2 image to QImage
         h, w, ch = resized_image.shape
         bytesPerLine = ch * w
@@ -452,6 +495,8 @@ class CameraThread(QThread):
 
     def frameCrop(self,img=None, x=0, y=0, w=640, h=480, wout=640, hout=480):
         #crop and resize image to wout and hout
+        if img is None:
+            img = np.zeros((480, 640, 3), dtype=np.uint8)
         img = img[y:y+h, x:x+w]
-        img = cv2.resize(img, (wout, hout), interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, (wout, hout), interpolation=cv2.INTER_LINEAR)
         return img
