@@ -871,7 +871,7 @@ background-color: rgb(238, 238, 236);</string>
    <widget class="QPushButton" name="counterReset">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>360</x>
       <y>830</y>
       <width>121</width>
       <height>91</height>
@@ -1193,6 +1193,150 @@ background-color: rgb(211, 215, 207);</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QLabel" name="timeLabel">
+    <property name="geometry">
+     <rect>
+      <x>1060</x>
+      <y>20</y>
+      <width>271</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>20</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>Time</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="kensareset">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>830</y>
+      <width>121</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>10</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+      <stylestrategy>PreferAntialias</stylestrategy>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(245, 121, 0);</string>
+    </property>
+    <property name="text">
+     <string>検査リセット
+Kensa Reset</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="furyou_plus">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>880</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>+</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="kansei_minus">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>830</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="furyou_minus">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>880</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="kansei_plus">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>830</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>+</string>
+    </property>
+   </widget>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
    <zorder>frame</zorder>
@@ -1238,6 +1382,12 @@ background-color: rgb(211, 215, 207);</string>
    <zorder>clip2Frame</zorder>
    <zorder>clip3Frame</zorder>
    <zorder>button_HDResQT</zorder>
+   <zorder>timeLabel</zorder>
+   <zorder>kensareset</zorder>
+   <zorder>furyou_plus</zorder>
+   <zorder>kansei_minus</zorder>
+   <zorder>furyou_minus</zorder>
+   <zorder>kansei_plus</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

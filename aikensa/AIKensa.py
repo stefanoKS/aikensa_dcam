@@ -16,6 +16,7 @@ from aikensa.opencv_imgprocessing.cameracalibrate import detectCharucoBoard, cal
 from aikensa.cam_thread import CameraThread, CameraConfig
 
 from aikensa.sio_thread import ServerMonitorThread
+from aikensa.time_thread import TimeMonitorThread
 
 
 # List of UI files to be loaded
@@ -44,6 +45,14 @@ class AIKensa(QMainWindow):
         self.server_monitor_thread.server_status_signal.connect(self.handle_server_status)
         self.server_monitor_thread.input_states_signal.connect(self.handle_input_states)
         self.server_monitor_thread.start()
+
+        self.timeMonitorThread = TimeMonitorThread(check_interval=1)
+        self.timeMonitorThread.time_signal.connect(self.timeUpdate)
+        self.timeMonitorThread.start()
+
+    def timeUpdate(self, time):
+        for label in self.timeLabel:
+            label.setText(time)
 
     def handle_server_status(self, is_up):
         status_text = "ON" if is_up else "OFF"
@@ -87,6 +96,12 @@ class AIKensa(QMainWindow):
         self.cam_thread.clip2Frame.connect(self._setFrameClip2)
         self.cam_thread.clip3Frame.connect(self._setFrameClip3)
 
+        self.cam_thread.handFrame1.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip1Check"))
+        self.cam_thread.handFrame2.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip2Check"))
+        self.cam_thread.handFrame3.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip3Check"))
+
+        self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
+
         # self.cam_thread.cowl_pitch_updated.connect(self._set_button_color)
         # self.cam_thread.cowl_numofPart_updated.connect(self._set_numlabel_text)
         
@@ -107,6 +122,7 @@ class AIKensa(QMainWindow):
         button_P5755A492 = main_widget.findChild(QPushButton, "P5755A492button")
 
         self.siostatus = main_widget.findChild(QLabel, "status_sio")
+        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 3, 4]]
 
         if button_calib:
             button_calib.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -203,7 +219,16 @@ class AIKensa(QMainWindow):
         # Widget 3 and 4
 
         button_HDRes = self.connect_button_font_color_change(3, "button_HDResQT", "HDRes")
+        
+        kensaButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
+        kensaButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
+        kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
+        kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
+
+        workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
+        workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
+        workorder3 = self.stackedWidget.widget(3).findChild(QLineEdit, "order3")
 
         # _____________________________________________________________________________________________________
        # Find and connect quit buttons and main menu buttons in all widgets
@@ -233,29 +258,34 @@ class AIKensa(QMainWindow):
 
         if button:
             button.setStyleSheet("color: black")
-
-            # Method to toggle font color and cam_param value
             def toggle_font_color_and_param():
                 current_value = getattr(self.cam_thread.cam_config, cam_param, False)
                 new_value = not current_value
                 setattr(self.cam_thread.cam_config, cam_param, new_value)
                 self._set_cam_params(self.cam_thread, cam_param, new_value)
-
-                # Update button font color
                 new_color = "red" if new_value else "black"
                 button.setStyleSheet(f"color: {new_color}")
-
-                # Print statements for debugging
-                # print(f"Button pressed. {cam_param} changed to {new_value}. Font color changed to {new_color}.")
-
-            # Connect the button's pressed signal to the toggle method
             button.pressed.connect(toggle_font_color_and_param)
-            # print(f"Button '{qtbutton}' connected to toggle method.")
         else:
             print(f"Button '{qtbutton}' not found.")
 
+    def connect_button_label_color_change(self, widget_index, qtbutton, cam_param):
+        widget = self.stackedWidget.widget(widget_index)
+        button = widget.findChild(QPushButton, qtbutton)
 
+        if button:
+            button.setStyleSheet("color: red")
+            def toggle_font_color_and_param():
+                current_value = getattr(self.cam_thread.cam_config, cam_param, False)
+                new_value = not current_value
+                setattr(self.cam_thread.cam_config, cam_param, new_value)
+                self._set_cam_params(self.cam_thread, cam_param, new_value)
+                new_color = "green" if new_value else "red"
+                button.setStyleSheet(f"color: {new_color}")
 
+            button.pressed.connect(toggle_font_color_and_param)
+        else:
+            print(f"Button '{qtbutton}' not found.")
 
     def connect_line_edit_text_changed(self, widget_index, line_edit_name, cam_param):
         widget = self.stackedWidget.widget(widget_index)
@@ -263,24 +293,20 @@ class AIKensa(QMainWindow):
         if line_edit:
             line_edit.textChanged.connect(lambda text: self._set_cam_params(self.cam_thread, cam_param, text))
 
-
     def connect_camparam_button(self, widget_index, button_name, cam_param, value):
         widget = self.stackedWidget.widget(widget_index)
         button = widget.findChild(QPushButton, button_name)
         if button:
             button.pressed.connect(lambda: self._set_cam_params(self.cam_thread, cam_param, value))
-            #print if button is pressed
             print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}'")
 
-
     def simulateButtonKensaClicks(self):
-        # Simulate clicking multiple buttons
         self.button_kensa5.click()
         self.button_kensa6.click()
         self.button_kensa7.click()
 
     def _on_widget_changed(self, idx: int):
-        if idx == 5 or idx == 6 or idx == 7:
+        if idx == 3 or idx == 4:
             #Change widget value to equal to index of stacked widget first
             self._set_cam_params(self.cam_thread, 'widget', idx)
             self.cam_thread.initialize_model()
@@ -321,16 +347,22 @@ class AIKensa(QMainWindow):
         color = "green" if new_value else "red"
         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
-    # def _cowltop_update_label(self, param, pitchvalue, labels):
-    #     pitch = getattr(self.cam_thread.cam_config, pitchvalue)
-    #     self._set_cam_params(self.cam_thread, param, True)
+    # def _set_labelFrame1(self, widget, paramValue):
     #     colorOK = "green"
     #     colorNG = "red"
-    #     # if the pitchvalue[i] is 1, then labels[i] is green, else red
-    #     for i in range(len(pitch)):
-    #         color = colorOK if pitch[i] else colorNG
-    #         labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+    #     label_names = ["clip1Check"]  # Assuming this is a list of label names
+    #     labels = [widget.findChild(QLabel, name) for name in label_names]
+    #     for label in labels:
+    #         color = colorNG if paramValue else colorOK
+    #         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
+    def _set_labelFrame(self, widget, paramValue, label_names):
+        colorOK = "blue"
+        colorNG = "black"
+        label = widget.findChild(QLabel, label_names) 
+        color = colorNG if paramValue else colorOK
+        label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+        
     def _set_button_color(self, pitch_data):
         colorOK = "green"
         colorNG = "red"
@@ -406,9 +438,17 @@ class AIKensa(QMainWindow):
             label = widget.findChild(QLabel, "clip3Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
-    # def _close_app(self):
-    #     self.cam_thread.stop()
-    #     self.close()
+    def _set_workorder_color_ctrplr(self, workOrder): #For rr side, consists of 6 pitches and Lsun (total Length)
+        colorOK = "green"
+        colorNG = "red"
+        label_names = ["order1", "order2", "order3"]
+        
+        labels = [self.stackedWidget.widget(3).findChild( QLabel, name) for name in label_names]
+        
+        for i, pitch_value in enumerate(workOrder):
+            color = colorOK if pitch_value else colorNG
+            labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+
 
     def _set_cam_params(self, thread, key, value):
         setattr(thread.cam_config, key, value)

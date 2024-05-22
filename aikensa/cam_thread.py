@@ -5,8 +5,9 @@ import numpy as np
 import yaml
 import time
 import csv
-import threading
-from multiprocessing import Process, Queue
+
+from sahi import AutoDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction, predict
 
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QImage, QPixmap
@@ -18,6 +19,10 @@ from aikensa.opencv_imgprocessing.arucoplanarize import planarize
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
+from aikensa.parts_config.sound import play_do_sound, play_re_sound, play_mi_sound, play_fa_sound, play_sol_sound, play_la_sound, play_si_sound, play_alarm_sound
+
+from ultralytics import YOLO
+from aikensa.parts_config.ctrplr_8283XW0W0P import partcheck as ctrplrCheck
 
 @dataclass
 class CameraConfig:
@@ -52,6 +57,14 @@ class CameraConfig:
     savecannyparams: bool = False
 
     HDRes: bool = False
+    triggerKensa: bool = False
+    kensaReset: bool = False
+
+    ctrplrpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
+    ctrplrWorkOrder : List[int] = field(default_factory=lambda: [0, 0, 0])
+
+
+
 
 class CameraThread(QThread):
 
@@ -63,6 +76,13 @@ class CameraThread(QThread):
     clip1Frame = pyqtSignal(QImage)
     clip2Frame = pyqtSignal(QImage)
     clip3Frame = pyqtSignal(QImage)
+
+    handFrame1 = pyqtSignal(int)
+    handFrame2 = pyqtSignal(int)
+    handFrame3 = pyqtSignal(int)
+
+    ctrplrworkorderSignal = pyqtSignal(list)
+    
 
     def __init__(self, cam_config: CameraConfig = None):
         super(CameraThread, self).__init__()
@@ -83,6 +103,38 @@ class CameraThread(QThread):
         self.previous_HDRes = self.cam_config.HDRes
         self.scale_factor = 5.0
 
+        self.handClassificationModel = None
+
+        self.clipHandWaitTime = 2.5
+        self.inspection_delay = 5.0
+
+        self.handinFrame1 = False
+        self.handinFrame2 = False
+        self.handinFrame3 = False
+
+        self.result_handframe1 = None
+        self.result_handframe2 = None
+        self.result_handframe3 = None
+
+        self.result_clip = None
+
+        self.handinFrame1Timer = None
+        self.handinFrame2Timer = None
+        self.handinFrame3Timer = None
+        self.oneLoop = False
+
+        self.cameraMatrix1 = None
+        self.distortionCoeff1 = None
+        self.cameraMatrix2 = None
+        self.distortionCoeff2 = None
+        self.H = None
+
+        self.clip_detection = None
+
+        self.kensa_cycle = False
+        self.kensa_order = []
+
+        self.musicPlay = False
 
     def run(self):
 
@@ -115,22 +167,19 @@ class CameraThread(QThread):
         # print (distortionCoeff2)
         # print (f"initial H : {H}")
 
-        H = self.adjust_transform_matrix(H, self.scale_factor)
-        cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, self.scale_factor)
-        cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
-        
-
+        self.cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, self.scale_factor)
+        self.cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
+        self.distortionCoeff1 = distortionCoeff1
+        self.distortionCoeff2 = distortionCoeff2
+        self.H = self.adjust_transform_matrix(H, self.scale_factor)
 
         while self.running is True:
             current_time = time.time()
-
-            
 
             try:
                 ret1, frame1 = cap_cam1.read()
                 ret2, frame2 = cap_cam2.read()
                 
-
             except cv2.error as e:
                 print("An error occurred while reading frames from the cameras:", str(e))
 
@@ -251,21 +300,15 @@ class CameraThread(QThread):
                         with open("./aikensa/cameracalibration/homography_param.yaml") as file:
                             homography_param = yaml.load(file, Loader=yaml.FullLoader)
                             H = np.array(homography_param)
-
                             combinedImage = warpTwoImages(frame2, frame1, H)
-                            # cv2.imwrite("combinedImage.jpg", combinedImage)
-                            # combinedImage_raw = combinedImage.copy()
-                            # combinedImage = self.resizeImage(combinedImage, 1521, 521)
 
                     else :
                         combinedImage = np.zeros((363, 1521, 3), dtype=np.uint8)
 
-                    #check ./aikensa/param/warptransform.yaml, if exists use that value
                     combinedImage, _ = planarize(combinedImage)
 
                     if self.cam_config.savePlanarize == True:
                         os.makedirs("./aikensa/param", exist_ok=True)
-                        #Save planarize transform to warptransform.yaml (from the arucoplanarize.py)
                         with open('./aikensa/param/warptransform.yaml', 'w') as file:
                             yaml.dump(_.tolist(), file)
                         self.cam_config.savePlanarize = False
@@ -277,7 +320,9 @@ class CameraThread(QThread):
 
                     if self.cam_config.saveImage == True:
                         os.makedirs("./aikensa/capturedimages", exist_ok=True)
-                        #conver the image to RGB
+                        os.makedirs("./aikensa/capturedimages/combinedImage", exist_ok=True)
+                        os.makedirs("./aikensa/capturedimages/croppedFrame1", exist_ok=True)
+                        os.makedirs("./aikensa/capturedimages/croppedFrame2", exist_ok=True)
 
                         combinedImage_dump = cv2.cvtColor(combinedImage, cv2.COLOR_BGR2RGB)
                         cv2.imwrite(f"./aikensa/capturedimages/combinedImage/capturedimage_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg", combinedImage_dump)
@@ -292,8 +337,9 @@ class CameraThread(QThread):
 
 
                     clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
-                    clipFrame2 = self.frameCrop(frame1, x=1425, y=0, w=600, h=600, wout = 128, hout = 128)
-                    clipFrame3 = self.frameCrop(frame1, x=2230, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=1900, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=600, y=0, w=600, h=600, wout = 128, hout = 128)
+
                     if self.cam_config.captureClip1:
                         clipFrame1_dump = cv2.cvtColor(clipFrame1, cv2.COLOR_BGR2RGB)
                         os.makedirs("./aikensa/capturedimages/clip1", exist_ok=True)
@@ -335,8 +381,8 @@ class CameraThread(QThread):
                     self.clip2Frame.emit(self.convertQImage(clipFrame2))
                     self.clip3Frame.emit(self.convertQImage(clipFrame3))
 
+
             if self.cam_config.widget == 3:
-                # print(f"HDRES is set to: {self.cam_config.HDRes}")
 
                 if frame1 is None:
                     frame1 = np.zeros((2048, 3072, 3), dtype=np.uint8)
@@ -349,57 +395,184 @@ class CameraThread(QThread):
 
                 if self.cam_config.HDRes != self.previous_HDRes:
                     if not self.cam_config.HDRes:
-                        cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, self.scale_factor)
-                        cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
-                        H = self.adjust_transform_matrix(H, self.scale_factor)
+                        self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, self.scale_factor)
+                        self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, self.scale_factor)
+                        self.H = self.adjust_transform_matrix(self.H, self.scale_factor)
                     else:
-                        cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, 1/self.scale_factor)
-                        cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, 1/self.scale_factor)
-                        H = self.adjust_transform_matrix(H, 1 / self.scale_factor)
+                        self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, 1/self.scale_factor)
+                        self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, 1/self.scale_factor)
+                        self.H = self.adjust_transform_matrix(self.H, 1 / self.scale_factor)
 
-                    self.previous_HDRes = self.cam_config.HDRes  # Update the previous resolution setting
+                    self.previous_HDRes = self.cam_config.HDRes  
+
 
                 if self.cam_config.HDRes == False:
                     frame1 = self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor))
                     frame2 = self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor))
 
                 
-                frame1 = self.undistortFrame(frame1, cameraMatrix1, distortionCoeff1)
-                frame2 = self.undistortFrame(frame2, cameraMatrix1, distortionCoeff1)
-                #merge frame1 and frame2
-                # print(f"Edited H : {H}")
+                frame1 = self.undistortFrame(frame1, self.cameraMatrix1, self.distortionCoeff1)
+                frame2 = self.undistortFrame(frame2, self.cameraMatrix1, self.distortionCoeff1)
 
-                combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, H)
+                combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, self.H)
+
+                cv2.imwrite("frame1.jpg", frame1)
+                cv2.imwrite("frame2.jpg", frame2)
+                
                 if self.cam_config.HDRes == False:
-                    clipFrame1 = self.frameCrop(frame1, x=int(590/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(600/self.scale_factor), wout = 128, hout = 128)
-                    clipFrame2 = self.frameCrop(frame1, x=int(1425/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(600/self.scale_factor), wout = 128, hout = 128)
-                    clipFrame3 = self.frameCrop(frame1, x=int(2230/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(600/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame1 = self.frameCrop(frame1, x=int(696/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=int(2020/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=int(807/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
 
                 if self.cam_config.HDRes == True:
-                    clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
-                    clipFrame2 = self.frameCrop(frame1, x=1425, y=0, w=600, h=600, wout = 128, hout = 128)
-                    clipFrame3 = self.frameCrop(frame1, x=2230, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame1 = self.frameCrop(frame1, x=696, y=0, w=600, h=500, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=2020, y=0, w=600, h=500, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=807, y=0, w=600, h=500, wout = 128, hout = 128)
+                    
+
+                if self.handClassificationModel is not None and self.cam_config.HDRes == False:
+                    frame1_handClassify = self.handClassificationModel(cv2.cvtColor(clipFrame1, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                    frame2_handClassify = self.handClassificationModel(cv2.cvtColor(clipFrame2, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                    frame3_handClassify = self.handClassificationModel(cv2.cvtColor(clipFrame3, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                    
+                    self.result_handframe1 = list(frame1_handClassify)[0].probs.data.argmax().item()
+                    self.result_handframe2 = list(frame2_handClassify)[0].probs.data.argmax().item()
+                    self.result_handframe3 = list(frame3_handClassify)[0].probs.data.argmax().item()
+                
+                if self.musicPlay == True:
+                    if self.result_handframe1 == 0:
+                        self.handinFrame1 = True
+                        if self.handinFrame1Timer is None:
+                            self.handinFrame1Timer = time.time()
+                            play_do_sound()
+                    elif self.handinFrame1 and time.time() - self.handinFrame1Timer > self.clipHandWaitTime:
+                        self.handinFrame1 = False
+                        self.handinFrame1Timer = None
+
+                    if self.result_handframe2 == 0:
+                        self.handinFrame2 = True
+                        if self.handinFrame2Timer is None:
+                            self.handinFrame2Timer = time.time()
+                            play_re_sound()
+                    elif self.handinFrame2 and time.time() - self.handinFrame2Timer > self.clipHandWaitTime:
+                        self.handinFrame2 = False
+                        self.handinFrame2Timer = None
+
+                    if self.result_handframe3 == 0:
+                        self.handinFrame3 = True
+                        if self.handinFrame3Timer is None:
+                            self.handinFrame3Timer = time.time()
+                            play_mi_sound()
+                    elif self.handinFrame3 and time.time() - self.handinFrame3Timer > self.clipHandWaitTime:
+                        self.handinFrame3 = False
+                        self.handinFrame3Timer = None
+
+                if self.musicPlay == False:
+                    if self.result_handframe1 == 0:
+                        self.handinFrame1 = True
+                        if self.handinFrame1Timer is None:
+                            self.handinFrame1Timer = time.time()
+                            
+                            if self.kensa_cycle and self.kensa_order == ["a"]:
+                                self.kensa_order.append("a")
+                                self.cam_config.ctrplrWorkOrder = [1, 1, 0]
+                                play_re_sound()
+
+                            
+                            if self.kensa_cycle == False:
+                                self.kensa_cycle = True
+                                self.kensa_order.append("a")
+                                self.cam_config.ctrplrWorkOrder = [1, 0, 0]
+                                play_do_sound()
+
+                    if self.handinFrame1 and time.time() - self.handinFrame1Timer > self.clipHandWaitTime:
+                        self.handinFrame1 = False
+                        self.handinFrame1Timer = None
+
+                    if self.result_handframe2 == 0:
+                        self.handinFrame2 = True
+                        if self.handinFrame2Timer is None:
+                            self.handinFrame2Timer = time.time()
+
+                            if self.kensa_cycle and self.kensa_order == ["a", "a"]:
+                                self.kensa_order.append("b")
+                                self.cam_config.ctrplrWorkOrder = [1, 1, 1]
+                                play_mi_sound()
+                            
+                    elif self.handinFrame2 and time.time() - self.handinFrame2Timer > self.clipHandWaitTime:
+                        self.handinFrame2 = False
+                        self.handinFrame2Timer = None
+
+                if self.cam_config.kensaReset == True:
+                    self.kensa_order = []
+                    self.kensa_cycle = False
+                    self.cam_config.ctrplrWorkOrder = [0, 0, 0]
+                    self.cam_config.kensaReset = False
+            
+                if self.cam_config.triggerKensa == True or self.oneLoop == True:
+                    print (self.cam_config.ctrplrWorkOrder)
+
+                    if self.cam_config.ctrplrWorkOrder != [1, 1, 1]:
+                        play_alarm_sound()
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        continue
+
+                    if self.cam_config.ctrplrWorkOrder == [1, 1, 1]:
+                        self.cam_config.HDRes = True
+
+                        if self.oneLoop == True:
+                            # cv2.imwrite("combinedbeforeImage.jpg", combinedFrame_raw)
+                            self.clip_detection = get_sliced_prediction(combinedFrame_raw, self.ctrplr_clipDetectionModel, slice_height=512, slice_width=512, overlap_height_ratio=0.2, overlap_width_ratio=0.2)
+                            self.hanire_detections = None
+                            # print("Clip Detection: ", self.clip_detection.object_prediction_list)
+                            # cv2.imwrite("combinedImage.jpg", combinedFrame_raw)
+                            imgResult, pitch_results, detected_pitch, delta_pitch, hanire = ctrplrCheck(combinedFrame_raw, self.clip_detection.object_prediction_list, self.hanire_detections, partid="LH")
+                            _imgResult = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                            cv2.imwrite("imgResult.jpg", _imgResult)
+                            combinedImage = self.resizeImage(imgResult, 1791, 428)
+                            print("Inference done.")
+                            self.mergeFrame.emit(self.convertQImage(combinedImage))
+                            self.kata1Frame.emit(self.convertQImage(croppedFrame1))
+                            self.kata2Frame.emit(self.convertQImage(croppedFrame2))
+                            self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
+                            #sleep for self.inspection_delay
+                            self.clip_detection = None
+                            self.oneLoop = False
+                            self.cam_config.HDRes = False
+                            self.cam_config.ctrplrWorkOrder = [0, 0, 0]
+                            self.kensa_order = [] #reinitialize the kensa order
+                            self.kensa_cycle = False #reinitialize the kensa cycle
+                            time.sleep(self.inspection_delay)
+                            continue
+
+                        self.oneLoop = True
+                        self.cam_config.triggerKensa = False
 
                 self.mergeFrame.emit(self.convertQImage(combinedImage))
-
                 self.kata1Frame.emit(self.convertQImage(croppedFrame1))
-
                 self.kata2Frame.emit(self.convertQImage(croppedFrame2))
-
-                self.camFrame1.emit(self.convertQImage(frame1))
-                self.camFrame2.emit(self.convertQImage(frame2))
-                # cv2.imwrite("frame1ref.jpg", frame1)
 
                 self.clip1Frame.emit(self.convertQImage(clipFrame1))
                 self.clip2Frame.emit(self.convertQImage(clipFrame2))
-                self.clip3Frame.emit(self.convertQImage(clipFrame3))
+                # self.clip3Frame.emit(self.convertQImage(clipFrame3)) #only 2 clips for this part
+
+                self.handFrame1.emit(not self.handinFrame1)
+                self.handFrame2.emit(not self.handinFrame2)
+                # self.handFrame3.emit(not self.handinFrame3) #only 2 clips for this part
+                
+                self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
+
 
 
         cap_cam1.release()
         print("Camera 1 released.")
         cap_cam2.release()
         print("Camera 2 released.")
-        # Tis.Stop_pipeline()
+
+    # def partCheck(self, frame1, frame2, ret1, ret2, widget):
+
+
 
     def adjust_camera_matrix(self, camera_matrix, scale_factor):
         camera_matrix[0][0] /= scale_factor
@@ -438,6 +611,8 @@ class CameraThread(QThread):
 
         combinedFrame, _ = planarize(combinedFrame, self.scale_factor if not self.cam_config.HDRes else 1.0)
 
+        # cv2.imwrite("combinedImage.jpg", combinedFrame)
+
         combinedFrame_raw = combinedFrame.copy()
         combinedFrame = self.resizeImage(combinedFrame, 1791, 428)
        
@@ -475,7 +650,7 @@ class CameraThread(QThread):
     
     def stop(self):
         self.running = False
-        print(self.running)
+        print(f"Running is set to {self.running}")
   
     def convertQImage(self, image):
         # Convert resized cv2 image to QImage
@@ -493,10 +668,34 @@ class CameraThread(QThread):
         processed_image = QImage(resized_image.data, w, h, bytesPerLine, QImage.Format_RGB888)
         return processed_image
 
-    def frameCrop(self,img=None, x=0, y=0, w=640, h=480, wout=640, hout=480):
+    def frameCrop(self,img, x=0, y=0, w=640, h=480, wout=640, hout=480):
         #crop and resize image to wout and hout
         if img is None:
             img = np.zeros((480, 640, 3), dtype=np.uint8)
         img = img[y:y+h, x:x+w]
-        img = cv2.resize(img, (wout, hout), interpolation=cv2.INTER_LINEAR)
+        try:
+            img = cv2.resize(img, (wout, hout), interpolation=cv2.INTER_LINEAR)
+        except cv2.error as e:
+            print("An error occurred while cropping the image:", str(e))
         return img
+    
+
+    def initialize_model(self):
+        #Change based on the widget
+        handClassificationModel = None
+        ctrplr_clipDetectionModel = None
+        ctrplr_hanireDetectionModel = None
+
+        if self.cam_config.widget == 3:
+            handClassificationModel = YOLO("./aikensa/custom_weights/handClassify.pt")
+            ctrplr_clipDetectionModel = AutoDetectionModel.from_pretrained(model_type="yolov8",
+                                                                           model_path="./aikensa/custom_weights/weights_5755A49X.pt",
+                                                                           confidence_threshold=0.6,
+                                                                           device="cuda:0",
+            )
+            
+
+        self.handClassificationModel = handClassificationModel
+        self.ctrplr_clipDetectionModel = ctrplr_clipDetectionModel
+
+        print("HandClassificationModel initialized.")
