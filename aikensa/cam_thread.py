@@ -161,17 +161,17 @@ class CameraThread(QThread):
                 homography_param = yaml.load(file, Loader=yaml.FullLoader)
                 H = np.array(homography_param)
 
-        # print (cameraMatrix1)
-        # print (distortionCoeff1)
-        # print (cameraMatrix2)
-        # print (distortionCoeff2)
-        # print (f"initial H : {H}")
+        if os.path.exists("./aikensa/cameracalibration/homography_param_lowres.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_lowres.yaml") as file:
+                homography_param_lowres = yaml.load(file, Loader=yaml.FullLoader)
+                H_lowres = np.array(homography_param_lowres)
 
         self.cameraMatrix1 = self.adjust_camera_matrix(cameraMatrix1, self.scale_factor)
         self.cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
         self.distortionCoeff1 = distortionCoeff1
         self.distortionCoeff2 = distortionCoeff2
         self.H = self.adjust_transform_matrix(H, self.scale_factor)
+        self.H_lowres = H_lowres
 
         while self.running is True:
             current_time = time.time()
@@ -285,15 +285,21 @@ class CameraThread(QThread):
 
                     if self.cam_config.calculateHomo == True:
                         combineImage, homographyMatrix = calculateHomography(frame1, frame2)
-                        if not os.path.exists("./aikensa/cameracalibration"):
-                            os.makedirs("./aikensa/cameracalibration")
+                        combineImage_lowres, homographyMatrix_lowres = calculateHomography(self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor)),self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor)))
+
+                        os.makedirs("./aikensa/cameracalibration", exist_ok=True)
                         with open("./aikensa/cameracalibration/homography_param.yaml", "w") as file:
                             yaml.dump(homographyMatrix.tolist(), file)
+                        with open("./aikensa/cameracalibration/homography_param_lowres.yaml", "w") as file:
+                            yaml.dump(homographyMatrix_lowres.tolist(), file)
+                        
                         self.cam_config.calculateHomo = False
 
                     if self.cam_config.deleteHomo == True:
                         if os.path.exists("./aikensa/cameracalibration/homography_param.yaml"):
                             os.remove("./aikensa/cameracalibration/homography_param.yaml")
+                        if os.path.exists("./aikensa/cameracalibration/homography_param_lowres.yaml"):
+                            os.remove("./aikensa/cameracalibration/homography_param_lowres.yaml")
                         self.cam_config.deleteHomo = False
 
                     if os.path.exists("./aikensa/cameracalibration/homography_param.yaml"):
@@ -301,21 +307,35 @@ class CameraThread(QThread):
                             homography_param = yaml.load(file, Loader=yaml.FullLoader)
                             H = np.array(homography_param)
                             combinedImage = warpTwoImages(frame2, frame1, H)
+                    
+                    if os.path.exists("./aikensa/cameracalibration/homography_param_lowres.yaml"):
+                        with open("./aikensa/cameracalibration/homography_param_lowres.yaml") as file:
+                            homography_param_lowres = yaml.load(file, Loader=yaml.FullLoader)
+                            H_lowres = np.array(homography_param_lowres)
+                            combinedImage_lowres = warpTwoImages(self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor)), self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor)), H_lowres)
 
                     else :
                         combinedImage = np.zeros((363, 1521, 3), dtype=np.uint8)
 
-                    combinedImage, _ = planarize(combinedImage)
+                    combinedImage, _ = planarize(combinedImage, scale_factor=1.0)
+                    combinedImage_lowres, _t = planarize(combinedImage_lowres, scale_factor = self.scale_factor)
+
+                    cv2.imwrite("combinedImage.jpg", combinedImage)
+                    cv2.imwrite("combinedImage_lowres.jpg", combinedImage_lowres)
 
                     if self.cam_config.savePlanarize == True:
                         os.makedirs("./aikensa/param", exist_ok=True)
                         with open('./aikensa/param/warptransform.yaml', 'w') as file:
                             yaml.dump(_.tolist(), file)
+                        with open('./aikensa/param/warptransform_lowres.yaml', 'w') as file:
+                            yaml.dump(_t.tolist(), file)
                         self.cam_config.savePlanarize = False
 
                     if self.cam_config.delPlanarize == True:
                         if os.path.exists("./aikensa/param/warptransform.yaml"):
                             os.remove("./aikensa/param/warptransform.yaml")
+                        if os.path.exists("./aikensa/param/warptransform_lowres.yaml"):
+                            os.remove("./aikensa/param/warptransform_lowres.yaml")
                         self.cam_config.delPlanarize = False
 
                     if self.cam_config.saveImage == True:
@@ -397,7 +417,7 @@ class CameraThread(QThread):
                     if not self.cam_config.HDRes:
                         self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, self.scale_factor)
                         self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, self.scale_factor)
-                        self.H = self.adjust_transform_matrix(self.H, self.scale_factor)
+                        self.H = self.H_lowres
                     else:
                         self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, 1/self.scale_factor)
                         self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, 1/self.scale_factor)
@@ -416,18 +436,18 @@ class CameraThread(QThread):
 
                 combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, self.H)
 
-                cv2.imwrite("frame1.jpg", frame1)
-                cv2.imwrite("frame2.jpg", frame2)
+                # cv2.imwrite("frame1.jpg", frame1)
+                # cv2.imwrite("frame2.jpg", frame2)
                 
                 if self.cam_config.HDRes == False:
-                    clipFrame1 = self.frameCrop(frame1, x=int(696/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
-                    clipFrame2 = self.frameCrop(frame1, x=int(2020/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
-                    clipFrame3 = self.frameCrop(frame2, x=int(807/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame1 = self.frameCrop(frame1, x=int(590/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=int(1900/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=int(600/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
 
                 if self.cam_config.HDRes == True:
-                    clipFrame1 = self.frameCrop(frame1, x=696, y=0, w=600, h=500, wout = 128, hout = 128)
-                    clipFrame2 = self.frameCrop(frame1, x=2020, y=0, w=600, h=500, wout = 128, hout = 128)
-                    clipFrame3 = self.frameCrop(frame2, x=807, y=0, w=600, h=500, wout = 128, hout = 128)
+                    clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=1900, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=600, y=0, w=600, h=600, wout = 128, hout = 128)
                     
 
                 if self.handClassificationModel is not None and self.cam_config.HDRes == False:

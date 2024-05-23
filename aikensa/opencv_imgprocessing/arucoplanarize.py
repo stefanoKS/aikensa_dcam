@@ -29,14 +29,24 @@ def planarize(image, scale_factor=1.0):
     IMAGE_HEIGHT = int(ORIGINAL_IMAGE_HEIGHT / scale_factor)
     IMAGE_WIDTH = int(ORIGINAL_IMAGE_WIDTH / scale_factor)
 
-    if os.path.exists("./aikensa/param/warptransform.yaml"):
-        with open('./aikensa/param/warptransform.yaml', 'r') as file:
-            transform_list = yaml.load(file, Loader=yaml.FullLoader)
-            transform = np.array(transform_list)
-            if scale_factor != 1.0:
-                transform = adjust_warp_transform(transform, scale_factor)
-        image = cv2.warpPerspective(image, transform, (IMAGE_WIDTH, IMAGE_HEIGHT))
-        return image, None
+    if os.path.exists("./aikensa/param/warptransform.yaml") and os.path.exists("./aikensa/param/warptransform_lowres.yaml"):
+        if scale_factor == 1.0:
+            with open('./aikensa/param/warptransform.yaml', 'r') as file:
+                transform_list = yaml.load(file, Loader=yaml.FullLoader)
+                transform = np.array(transform_list)
+                if scale_factor != 1.0:
+                    transform = adjust_warp_transform(transform, scale_factor)
+            image = cv2.warpPerspective(image, transform, (IMAGE_WIDTH, IMAGE_HEIGHT))
+            return image, None
+        if scale_factor != 1.0:
+            with open('./aikensa/param/warptransform_lowres.yaml', 'r') as file:
+                transform_list = yaml.load(file, Loader=yaml.FullLoader)
+                transform = np.array(transform_list)
+                if scale_factor != 1.0:
+                    transform = transform#modify logic to adjust scale factor -> lowres being "fooled" to have scale of 1.0
+            image = cv2.warpPerspective(image, transform, (IMAGE_WIDTH, IMAGE_HEIGHT))
+            return image, None
+
 
     else:
         corners, ids, rejected = detector.detectMarkers(gray)
@@ -79,3 +89,4 @@ def planarize(image, scale_factor=1.0):
             return image, transform
         else:
             return image, None
+

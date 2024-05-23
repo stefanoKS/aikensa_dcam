@@ -18,7 +18,7 @@ pitchSpecRH = [103, 113, 78, 98, 98, 87, 85]
 pitchToleranceLH = [2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
 pitchToleranceRH = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
 
-pixelMultiplier = 0.2000 #basically multiplier from 1/arucoplanarize param -> will create a constant for this later
+pixelMultiplier = 0.20005 #basically multiplier from 1/arucoplanarize param -> will create a constant for this later
 
 text_offset = 50
 
@@ -344,7 +344,7 @@ def calclength(p1, p2):
     length = math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
     return length
 
-def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=3):
+def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=1):
     x = int(x)
     y = int(y)
     w = int(w)
