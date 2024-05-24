@@ -56,6 +56,12 @@ class CameraConfig:
     brightness: int = 0
     savecannyparams: bool = False
 
+    #General Functions
+    furyou_plus: bool = False
+    furyou_minus: bool = False
+    kansei_plus: bool = False
+    kansei_minus: bool = False
+
     HDRes: bool = False
     triggerKensa: bool = False
     kensaReset: bool = False
@@ -63,6 +69,14 @@ class CameraConfig:
     ctrplrpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
     ctrplrWorkOrder : List[int] = field(default_factory=lambda: [0, 0, 0])
 
+    ctrplrLHpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
+    ctrplrLHnumofPart: Tuple[int, int] = (0, 0)
+    resetCounter: bool = False
+
+    ctrplrRHpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
+    ctrplrRHnumofPart: Tuple[int, int] = (0, 0)
+    ctrplrRH_resetCounter: bool = False
+    
 
 
 
@@ -82,6 +96,12 @@ class CameraThread(QThread):
     handFrame3 = pyqtSignal(int)
 
     ctrplrworkorderSignal = pyqtSignal(list)
+
+    ctrplrLH_pitch_updated = pyqtSignal(list)
+    ctrplrRH_pitch_updated = pyqtSignal(list)
+
+    ctrplrLH_numofPart_updated = pyqtSignal(tuple)
+    ctrplrRH_numofPart_updated = pyqtSignal(tuple)
     
 
     def __init__(self, cam_config: CameraConfig = None):
@@ -105,7 +125,7 @@ class CameraThread(QThread):
 
         self.handClassificationModel = None
 
-        self.clipHandWaitTime = 2.5
+        self.clipHandWaitTime = 1.5
         self.inspection_delay = 5.0
 
         self.handinFrame1 = False
@@ -170,7 +190,9 @@ class CameraThread(QThread):
         self.cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
         self.distortionCoeff1 = distortionCoeff1
         self.distortionCoeff2 = distortionCoeff2
-        self.H = self.adjust_transform_matrix(H, self.scale_factor)
+        # self.H = self.adjust_transform_matrix(H, self.scale_factor)
+        self.flexibleH = H_lowres
+        self.H = H
         self.H_lowres = H_lowres
 
         while self.running is True:
@@ -312,16 +334,15 @@ class CameraThread(QThread):
                         with open("./aikensa/cameracalibration/homography_param_lowres.yaml") as file:
                             homography_param_lowres = yaml.load(file, Loader=yaml.FullLoader)
                             H_lowres = np.array(homography_param_lowres)
-                            combinedImage_lowres = warpTwoImages(self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor)), self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor)), H_lowres)
-
+                            combinedImage_lowres = warpTwoImages(self.resizeImage(frame2, 
+                                                                                  int(3072//self.scale_factor), int(2048//self.scale_factor)), 
+                                                                                  self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor)), 
+                                                                                  H_lowres)
                     else :
                         combinedImage = np.zeros((363, 1521, 3), dtype=np.uint8)
 
                     combinedImage, _ = planarize(combinedImage, scale_factor=1.0)
-                    combinedImage_lowres, _t = planarize(combinedImage_lowres, scale_factor = self.scale_factor)
-
-                    cv2.imwrite("combinedImage.jpg", combinedImage)
-                    cv2.imwrite("combinedImage_lowres.jpg", combinedImage_lowres)
+                    combinedImage_lowres, _t = planarize(combinedImage_lowres, self.scale_factor)
 
                     if self.cam_config.savePlanarize == True:
                         os.makedirs("./aikensa/param", exist_ok=True)
@@ -385,7 +406,7 @@ class CameraThread(QThread):
                     croppedFrame1 = self.frameCrop(combinedImage_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
                     croppedFrame2 = self.frameCrop(combinedImage_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
                     
-
+                    
                     self.kata1Frame.emit(self.convertQImage(croppedFrame1))
                     self.kata2Frame.emit(self.convertQImage(croppedFrame2))
 
@@ -417,11 +438,11 @@ class CameraThread(QThread):
                     if not self.cam_config.HDRes:
                         self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, self.scale_factor)
                         self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, self.scale_factor)
-                        self.H = self.H_lowres
+                        self.flexibleH = self.H_lowres
                     else:
                         self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, 1/self.scale_factor)
                         self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, 1/self.scale_factor)
-                        self.H = self.adjust_transform_matrix(self.H, 1 / self.scale_factor)
+                        self.flexibleH = self.H
 
                     self.previous_HDRes = self.cam_config.HDRes  
 
@@ -434,11 +455,8 @@ class CameraThread(QThread):
                 frame1 = self.undistortFrame(frame1, self.cameraMatrix1, self.distortionCoeff1)
                 frame2 = self.undistortFrame(frame2, self.cameraMatrix1, self.distortionCoeff1)
 
-                combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, self.H)
+                combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, self.flexibleH)
 
-                # cv2.imwrite("frame1.jpg", frame1)
-                # cv2.imwrite("frame2.jpg", frame2)
-                
                 if self.cam_config.HDRes == False:
                     clipFrame1 = self.frameCrop(frame1, x=int(590/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
                     clipFrame2 = self.frameCrop(frame1, x=int(1900/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
@@ -492,18 +510,24 @@ class CameraThread(QThread):
                         self.handinFrame1 = True
                         if self.handinFrame1Timer is None:
                             self.handinFrame1Timer = time.time()
+                            #reverse order logic here
+                            if self.kensa_cycle and self.kensa_order == ["a", "a"]:
+                                print("true")
+                                play_alarm_sound()
                             
                             if self.kensa_cycle and self.kensa_order == ["a"]:
                                 self.kensa_order.append("a")
                                 self.cam_config.ctrplrWorkOrder = [1, 1, 0]
                                 play_re_sound()
-
                             
                             if self.kensa_cycle == False:
                                 self.kensa_cycle = True
                                 self.kensa_order.append("a")
                                 self.cam_config.ctrplrWorkOrder = [1, 0, 0]
                                 play_do_sound()
+
+                            # else:
+                            #     play_alarm_sound()
 
                     if self.handinFrame1 and time.time() - self.handinFrame1Timer > self.clipHandWaitTime:
                         self.handinFrame1 = False
@@ -518,6 +542,10 @@ class CameraThread(QThread):
                                 self.kensa_order.append("b")
                                 self.cam_config.ctrplrWorkOrder = [1, 1, 1]
                                 play_mi_sound()
+
+                            else:
+                                play_alarm_sound()
+                                
                             
                     elif self.handinFrame2 and time.time() - self.handinFrame2Timer > self.clipHandWaitTime:
                         self.handinFrame2 = False
@@ -528,6 +556,21 @@ class CameraThread(QThread):
                     self.kensa_cycle = False
                     self.cam_config.ctrplrWorkOrder = [0, 0, 0]
                     self.cam_config.kensaReset = False
+
+                ok_count, ng_count = self.cam_config.ctrplrLHnumofPart
+                self.cam_config.ctrplrLHnumofPart = self.manual_adjustment(ok_count, 
+                                                                           ng_count, 
+                                                                           self.cam_config.furyou_plus, 
+                                                                           self.cam_config.furyou_minus, 
+                                                                           self.cam_config.kansei_plus, 
+                                                                           self.cam_config.kansei_minus)
+                
+
+                if self.cam_config.resetCounter == True:
+                    ok_count = 0
+                    ng_count = 0
+                    self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
+                    self.cam_config.resetCounter = False
             
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     print (self.cam_config.ctrplrWorkOrder)
@@ -542,11 +585,8 @@ class CameraThread(QThread):
                         self.cam_config.HDRes = True
 
                         if self.oneLoop == True:
-                            # cv2.imwrite("combinedbeforeImage.jpg", combinedFrame_raw)
                             self.clip_detection = get_sliced_prediction(combinedFrame_raw, self.ctrplr_clipDetectionModel, slice_height=512, slice_width=512, overlap_height_ratio=0.2, overlap_width_ratio=0.2)
                             self.hanire_detections = None
-                            # print("Clip Detection: ", self.clip_detection.object_prediction_list)
-                            # cv2.imwrite("combinedImage.jpg", combinedFrame_raw)
                             imgResult, pitch_results, detected_pitch, delta_pitch, hanire = ctrplrCheck(combinedFrame_raw, self.clip_detection.object_prediction_list, self.hanire_detections, partid="LH")
                             _imgResult = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
                             cv2.imwrite("imgResult.jpg", _imgResult)
@@ -570,7 +610,7 @@ class CameraThread(QThread):
                         self.cam_config.triggerKensa = False
 
                 self.mergeFrame.emit(self.convertQImage(combinedImage))
-                self.kata1Frame.emit(self.convertQImage(croppedFrame1))
+                # self.kata1Frame.emit(self.convertQImage(croppedFrame1))
                 self.kata2Frame.emit(self.convertQImage(croppedFrame2))
 
                 self.clip1Frame.emit(self.convertQImage(clipFrame1))
@@ -582,6 +622,8 @@ class CameraThread(QThread):
                 # self.handFrame3.emit(not self.handinFrame3) #only 2 clips for this part
                 
                 self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
+
+                self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
 
 
 
@@ -625,13 +667,7 @@ class CameraThread(QThread):
         croppedFrame1 = None
         croppedFrame2 = None
 
-        # cv2.imwrite("frame1.jpg", frame1)
-        # cv2.imwrite("frame2.jpg", frame2)
-        # cv2.imwrite("combinedImage.jpg", combinedFrame)
-
         combinedFrame, _ = planarize(combinedFrame, self.scale_factor if not self.cam_config.HDRes else 1.0)
-
-        # cv2.imwrite("combinedImage.jpg", combinedFrame)
 
         combinedFrame_raw = combinedFrame.copy()
         combinedFrame = self.resizeImage(combinedFrame, 1791, 428)
@@ -644,12 +680,12 @@ class CameraThread(QThread):
             croppedFrame1 = self.frameCrop(combinedFrame_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
             croppedFrame2 = self.frameCrop(combinedFrame_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
 
+
         if croppedFrame1 is None:
             croppedFrame1 = np.zeros((160, 320, 3), dtype=np.uint8)
         if croppedFrame2 is None:
             croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
 
-        # cv2.imwrite("combinedImage_raw.jpg", combinedFrame_raw)
         return combinedFrame_raw, combinedFrame, croppedFrame1, croppedFrame2
 
     def stop(self):
@@ -699,6 +735,24 @@ class CameraThread(QThread):
             print("An error occurred while cropping the image:", str(e))
         return img
     
+    def manual_adjustment(self, ok_count, ng_count, furyou_plus, furyou_minus, kansei_plus, kansei_minus):
+        if furyou_plus:
+            ng_count += 1
+            self.cam_config.furyou_plus = False
+
+        if furyou_minus and ng_count > 0:
+            ng_count -= 1
+            self.cam_config.furyou_minus = False
+
+        if kansei_plus:
+            ok_count += 1
+            self.cam_config.kansei_plus = False
+
+        if kansei_minus and ok_count > 0:
+            ok_count -= 1
+            self.cam_config.kansei_minus = False
+
+        return ok_count, ng_count
 
     def initialize_model(self):
         #Change based on the widget
@@ -719,3 +773,4 @@ class CameraThread(QThread):
         self.ctrplr_clipDetectionModel = ctrplr_clipDetectionModel
 
         print("HandClassificationModel initialized.")
+        

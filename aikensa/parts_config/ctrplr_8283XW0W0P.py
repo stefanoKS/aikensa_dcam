@@ -17,12 +17,14 @@ pitchSpecLH = [85, 87, 98, 98, 78, 113, 103]
 pitchSpecRH = [103, 113, 78, 98, 98, 87, 85]
 pitchToleranceLH = [2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
 pitchToleranceRH = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
+clipSpecLH = [2, 1, 0, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
 
 pixelMultiplier = 0.20005 #basically multiplier from 1/arucoplanarize param -> will create a constant for this later
 
 text_offset = 50
 
 endoffset_y = 0
+bbox_offset = 15
 
 
 
@@ -51,7 +53,7 @@ def partcheck(img, detections, hanire_detection, partid=None):
     flag_clip_furyou = 0
     flag_clip_hanire = 0
 
-    for detection in sorted_detections:
+    for i, detection in enumerate(sorted_detections):
         
         bbox = detection.bbox
         x, y = get_center(bbox)
@@ -79,13 +81,13 @@ def partcheck(img, detections, hanire_detection, partid=None):
         if class_id == 3: #Clip is orange
             center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 165, 0))
 
-            
         if prev_center is not None:
             length = calclength(prev_center, center)*pixelMultiplier
             middle_lengths.append(length)
             line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
-            img = drawbox(img, line_center, length)
-            img = drawtext(img, line_center, length)
+            if i != 0 and i != len(sorted_detections) - 1:
+                img = drawbox(img, line_center, length)
+                img = drawtext(img, line_center, length)
         prev_center = center
 
     #not used temporarily
@@ -119,10 +121,14 @@ def partcheck(img, detections, hanire_detection, partid=None):
             flag_pitchfuryou = 1
         if any(id != 0 for id in customid):
             flag_clip_hanire = 1
-        if any(result != 1 for result in pitchresult) or any(id != 0 for id in detectedid) or any(id != 0 for id in customid):
+        #check whether the detectedid matches with the clipSpecLH
+        if detectedid == clipSpecLH:
+            flag_clip_furyou = 1
+        if flag_clip_furyou or flag_clip_hanire or flag_pitchfuryou:
             status = "NG"
         else:
             status = "OK"
+
 
     # elif partid == "RH":
     #     pitchresult = check_tolerance(pitchSpecRH, totalLengthSpec, pitchTolerance, totalLengthTolerance, detectedPitch, total_length)
@@ -246,7 +252,7 @@ def check_tolerance(checkedPitchResult, pitchSpec, pitchTolerance):
     for i, (spec, detected) in enumerate(zip(pitchSpec, checkedPitchResult)):
         if abs(spec - detected) <= pitchTolerance[i]:
             result[i] = 1
-    print(checkedPitchResult, result)
+    # print(checkedPitchResult, result)
     return result
 
 def yolo_to_pixel(yolo_coords, img_shape):
@@ -344,14 +350,14 @@ def calclength(p1, p2):
     length = math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
     return length
 
-def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=1):
+def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=3):
     x = int(x)
     y = int(y)
     w = int(w)
     h = int(h)
 
-    x1, y1 = int(x - w // 2), int(y - h // 2)
-    x2, y2 = int(x + w // 2), int(y + h // 2)
+    x1, y1 = int(x - w // 2) - bbox_offset, int(y - h // 2) - bbox_offset
+    x2, y2 = int(x + w // 2) + bbox_offset, int(y + h // 2) + bbox_offset
     cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     center_x, center_y = x, y
     return (center_x, center_y)

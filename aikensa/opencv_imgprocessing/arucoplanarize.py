@@ -44,7 +44,9 @@ def planarize(image, scale_factor=1.0):
                 transform = np.array(transform_list)
                 if scale_factor != 1.0:
                     transform = transform#modify logic to adjust scale factor -> lowres being "fooled" to have scale of 1.0
-            image = cv2.warpPerspective(image, transform, (IMAGE_WIDTH, IMAGE_HEIGHT))
+            image = cv2.warpPerspective(image, transform, (int(IMAGE_WIDTH*scale_factor), int(IMAGE_HEIGHT*scale_factor)))
+            #resize image to original size
+            image = cv2.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
             return image, None
 
 

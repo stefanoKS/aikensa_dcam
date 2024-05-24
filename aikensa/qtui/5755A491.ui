@@ -1371,9 +1371,9 @@ Kensa Reset</string>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>605</y>
-      <width>241</width>
+      <x>370</x>
+      <y>600</y>
+      <width>271</width>
       <height>21</height>
      </rect>
     </property>
@@ -1390,7 +1390,7 @@ Kensa Reset</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>茶色クリップ Kẹp màu nâu</string>
+     <string>① 茶色クリップ Kẹp màu nâu</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1399,9 +1399,9 @@ Kensa Reset</string>
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>645</y>
-      <width>241</width>
+      <x>370</x>
+      <y>640</y>
+      <width>271</width>
       <height>21</height>
      </rect>
     </property>
@@ -1418,7 +1418,7 @@ Kensa Reset</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>茶色クリップ Kẹp màu nâu</string>
+     <string>② 茶色クリップ Kẹp màu nâu</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1427,9 +1427,9 @@ Kensa Reset</string>
    <widget class="QLabel" name="label_11">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>685</y>
-      <width>241</width>
+      <x>370</x>
+      <y>680</y>
+      <width>281</width>
       <height>21</height>
      </rect>
     </property>
@@ -1446,7 +1446,7 @@ Kensa Reset</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>黄色クリップ Kẹp màu vàng</string>
+     <string>③ 黄色クリップ Kẹp màu vàng</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1455,8 +1455,8 @@ Kensa Reset</string>
    <widget class="QLabel" name="order1">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>600</y>
+      <x>330</x>
+      <y>595</y>
       <width>31</width>
       <height>31</height>
      </rect>
@@ -1486,8 +1486,8 @@ Kensa Reset</string>
    <widget class="QLabel" name="order2">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>640</y>
+      <x>330</x>
+      <y>635</y>
       <width>31</width>
       <height>31</height>
      </rect>
@@ -1517,8 +1517,8 @@ Kensa Reset</string>
    <widget class="QLabel" name="order3">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>680</y>
+      <x>330</x>
+      <y>675</y>
       <width>31</width>
       <height>31</height>
      </rect>

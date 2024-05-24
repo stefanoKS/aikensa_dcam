@@ -102,6 +102,9 @@ class AIKensa(QMainWindow):
 
         self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
 
+        self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH)
+        self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH)
+
         # self.cam_thread.cowl_pitch_updated.connect(self._set_button_color)
         # self.cam_thread.cowl_numofPart_updated.connect(self._set_numlabel_text)
         
@@ -223,12 +226,27 @@ class AIKensa(QMainWindow):
         kensaButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
         kensaButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
+        self.connect_camparam_button(3, "counterReset", "resetCounter", True)
+        self.connect_camparam_button(4, "counterReset", "resetCounter", True)
+
         kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
         kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
 
         workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
         workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
         workorder3 = self.stackedWidget.widget(3).findChild(QLineEdit, "order3")
+
+        self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
+        self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
+
+        self.kanseihin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_kansei")
+        self.furyouhin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_furyou")
+
+        for i in range(3, 4):
+            self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
+            self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
+            self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
+            self.connect_camparam_button(i, "furyou_minus", "furyou_minus", True)
 
         # _____________________________________________________________________________________________________
        # Find and connect quit buttons and main menu buttons in all widgets
@@ -251,6 +269,8 @@ class AIKensa(QMainWindow):
 
         self.setCentralWidget(self.stackedWidget)
         self.showFullScreen()
+
+
 
     def connect_button_font_color_change(self, widget_index, qtbutton, cam_param):
         widget = self.stackedWidget.widget(widget_index)
@@ -374,17 +394,13 @@ class AIKensa(QMainWindow):
             color = colorOK if pitch_value else colorNG
             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
-    def _set_numlabel_text(self, numofPart):
-        self.kanseihin_number_cowltop.setText(str(numofPart[0]))
-        self.furyouhin_number_cowltop.setText(str(numofPart[1]))
+    def _set_numlabel_text_ctrplr_LH(self, numofPart):
+        self.kanseihin_number_ctrplr_lh.setText(str(numofPart[0]))
+        self.furyouhin_number_ctrplr_lh.setText(str(numofPart[1]))
 
-    def _set_numlabel_text_rrside_LH(self, numofPart):
-        self.kanseihin_number_rrside_lh.setText(str(numofPart[0]))
-        self.furyouhin_number_rrside_lh.setText(str(numofPart[1]))
-
-    def _set_numlabel_text_rrside_RH(self, numofPart):
-        self.kanseihin_number_rrside_rh.setText(str(numofPart[0]))
-        self.furyouhin_number_rrside_rh.setText(str(numofPart[1]))
+    def _set_numlabel_text_ctrplr_RH(self, numofPart):
+        self.kanseihin_number_ctrplr_rh.setText(str(numofPart[0]))
+        self.furyouhin_number_ctrplr_rh.setText(str(numofPart[1]))
 
     def _setFrameCam1(self, image):
         widget = self.stackedWidget.widget(1)
@@ -447,8 +463,13 @@ class AIKensa(QMainWindow):
         
         for i, pitch_value in enumerate(workOrder):
             color = colorOK if pitch_value else colorNG
-            labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+            labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
+            # labels[i].setStyleSheet(f"QLabel {{ border-radius: 13; }}")
+            # labels[i].setStyleSheet(f"QLabel {{ min-height: 10; }}")
+            # labels[i].setStyleSheet(f"QLabel {{ min-width: 10; }}")
 
+            
+            
 
     def _set_cam_params(self, thread, key, value):
         setattr(thread.cam_config, key, value)
