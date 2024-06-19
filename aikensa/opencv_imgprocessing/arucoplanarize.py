@@ -14,7 +14,7 @@ dict_type = cv2.aruco.DICT_5X5_250
 aruco_dict = cv2.aruco.getPredefinedDictionary(dict_type)
 parameters = cv2.aruco.DetectorParameters()
 detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
-desired_plane = np.array([[0, 0], [ORIGINAL_IMAGE_WIDTH, 0], [0, ORIGINAL_IMAGE_HEIGHT], [ORIGINAL_IMAGE_WIDTH, ORIGINAL_IMAGE_HEIGHT]], dtype='float32')
+
 
 def adjust_warp_transform(warp_transform, scale_factor):
     warp_transform[0, 2] /= scale_factor  # Adjust tx
@@ -28,6 +28,8 @@ def planarize(image, scale_factor=1.0):
 
     IMAGE_HEIGHT = int(ORIGINAL_IMAGE_HEIGHT / scale_factor)
     IMAGE_WIDTH = int(ORIGINAL_IMAGE_WIDTH / scale_factor)
+
+    desired_plane = np.array([[0, 0], [ORIGINAL_IMAGE_WIDTH, 0], [0, ORIGINAL_IMAGE_HEIGHT], [ORIGINAL_IMAGE_WIDTH, ORIGINAL_IMAGE_HEIGHT]], dtype='float32')
 
     if os.path.exists("./aikensa/param/warptransform.yaml") and os.path.exists("./aikensa/param/warptransform_lowres.yaml"):
         if scale_factor == 1.0:
@@ -44,7 +46,7 @@ def planarize(image, scale_factor=1.0):
                 transform = np.array(transform_list)
                 if scale_factor != 1.0:
                     transform = transform#modify logic to adjust scale factor -> lowres being "fooled" to have scale of 1.0
-            image = cv2.warpPerspective(image, transform, (int(IMAGE_WIDTH*scale_factor), int(IMAGE_HEIGHT*scale_factor)))
+            image = cv2.warpPerspective(image, transform, (int(IMAGE_WIDTH), int(IMAGE_HEIGHT)))
             #resize image to original size
             image = cv2.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
             return image, None
@@ -52,9 +54,9 @@ def planarize(image, scale_factor=1.0):
 
     else:
         corners, ids, rejected = detector.detectMarkers(gray)
-        print (corners)
-        print (ids)
-        print (rejected)
+        # print (corners)
+        # print (ids)
+        # print (rejected)
         if corners and ids is not None:
 
             top_left_corner = None
@@ -85,6 +87,9 @@ def planarize(image, scale_factor=1.0):
                     bottom_left_corner, bottom_right_corner
                 ], dtype='float32')
 
+                if scale_factor != 1.0:
+                    desired_plane = np.array([[0, 0], [ORIGINAL_IMAGE_WIDTH//scale_factor, 0], [0, ORIGINAL_IMAGE_HEIGHT//scale_factor], [ORIGINAL_IMAGE_WIDTH//scale_factor, ORIGINAL_IMAGE_HEIGHT//scale_factor]], dtype='float32')
+                
                 transform = cv2.getPerspectiveTransform(ordered_corners, desired_plane)
                 image = cv2.warpPerspective(image, transform, (IMAGE_WIDTH, IMAGE_HEIGHT))
 

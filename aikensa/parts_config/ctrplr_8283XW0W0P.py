@@ -17,41 +17,110 @@ pitchSpecLH = [85, 87, 98, 98, 78, 113, 103]
 pitchSpecRH = [103, 113, 78, 98, 98, 87, 85]
 pitchToleranceLH = [2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
 pitchToleranceRH = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
-clipSpecLH = [2, 1, 0, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
+clipSpecLH = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
 
-pixelMultiplier = 0.20005 #basically multiplier from 1/arucoplanarize param -> will create a constant for this later
+pitchSpecKatabu = [14]
+pitchToleranceKatabu = [1.5]
 
-text_offset = 50
+pixelMultiplier = 0.19968499 #basically multiplier from 1/arucoplanarize param -> will create a constant for this later
+pixelMultiplier_katabumarking = 0.2
+
+text_offset = 40
 
 endoffset_y = 0
-bbox_offset = 15
+bbox_offset = 10
 
 
 
-def partcheck(img, detections, hanire_detection, partid=None):
+def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanire_detection, partid=None):
 
     sorted_detections = sorted(detections, key=lambda d: d.bbox.minx)
 
 
     middle_lengths = []
+    katabumarking_lengths = []
 
     detectedid = []
     customid = []
 
     detectedPitch = []
     deltaPitch = []
+    deltaPitchKatabu = []
 
     detectedposX = []
     detectedposY = []
 
+
+    detectedposX_katabumarking = []
+    detectedposY_katabumarking = []
+
     pitchresult = []
     checkedPitchResult = []
 
+    katabupitchresult = []
+
+    allpitchresult = []
+
     prev_center = None
+    prev_center_katabumarking = None
 
     flag_pitchfuryou = 0
     flag_clip_furyou = 0
     flag_clip_hanire = 0
+
+    #KATABU MARKING DETECTION
+    #class 0 is for clip, class 1 is for katabu marking
+    for r in katabumarking_detection:
+        for box in r.boxes:
+            x_marking, y_marking = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
+            w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
+            class_id_marking = int(box.cls.cpu())
+
+            print(class_id_marking)
+
+            if class_id_marking == 0:
+                color = (0, 255, 0)
+            elif class_id_marking == 1:
+                color = (100, 100, 200)
+
+            center_katabummarking = draw_bounding_box(img_katabumarking, 
+                                       x_marking, y_marking, 
+                                       w_marking, h_marking, 
+                                       [img_katabumarking.shape[1], img_katabumarking.shape[0]], color=color,
+                                       bbox_offset=3, thickness=2)
+            
+            if class_id_marking == 1:
+                center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
+            
+            if prev_center_katabumarking is not None:
+                length = calclength(prev_center_katabumarking, center_katabummarking)*pixelMultiplier_katabumarking
+                katabumarking_lengths.append(length)
+                line_center = ((prev_center_katabumarking[0] + center_katabummarking[0]) // 2, (prev_center_katabumarking[1] + center_katabummarking[1]) // 2)
+                img_katabumarking = drawbox(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
+                img_katabumarking = drawtext(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
+
+            prev_center_katabumarking = center_katabummarking
+
+            detectedposX_katabumarking.append(center_katabummarking[0])
+            detectedposY_katabumarking.append(center_katabummarking[1])
+        
+        katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpecKatabu, pitchToleranceKatabu)
+
+
+        xy_pairs_katabumarking = list(zip(detectedposX_katabumarking, detectedposY_katabumarking))
+        draw_pitch_line(img_katabumarking, xy_pairs_katabumarking, katabupitchresult, endoffset_y, thickness=2)
+
+        #pick only the first element if array consists of more than 1 element
+        if len(katabumarking_lengths) > 1:
+            katabumarking_lengths = katabumarking_lengths[:1]
+        if len(katabupitchresult) > 1:
+            katabupitchresult = katabupitchresult[:1]
+        #since there is only one katabu marking, we can just use the first element
+        if katabumarking_lengths:
+            deltaPitchKatabu = [katabumarking_lengths[0] - pitchSpecKatabu[0]]
+        else:
+            deltaPitchKatabu = [0]
+
 
     for i, detection in enumerate(sorted_detections):
         
@@ -72,20 +141,28 @@ def partcheck(img, detections, hanire_detection, partid=None):
         #id 2 object is yellow clip
         #id 3 object is orange clip
 
-        if class_id == 0: #Clip is white
-            center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 255, 255))
-        if class_id == 1: #Clip is brown
-            center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(139, 69, 19))
-        if class_id == 2: #Clip is yellow
-            center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 255, 0))
-        if class_id == 3: #Clip is orange
-            center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 165, 0))
+        if class_id == clipSpecLH[i]:
+            color = (0, 255, 0)
+        else:
+            color = (255, 0, 0)
+
+        center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=color)
+
+        ## Made this for viz only
+        # if class_id == 0: #Clip is white
+        #     center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 255, 255))
+        # if class_id == 1: #Clip is brown
+        #     center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(139, 69, 19))
+        # if class_id == 2: #Clip is yellow
+        #     center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 255, 0))
+        # if class_id == 3: #Clip is orange
+        #     center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=(255, 165, 0))
 
         if prev_center is not None:
             length = calclength(prev_center, center)*pixelMultiplier
             middle_lengths.append(length)
             line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
-            if i != 0 and i != len(sorted_detections) - 1:
+            if i != 1 and i != len(sorted_detections) - 1:
                 img = drawbox(img, line_center, length)
                 img = drawtext(img, line_center, length)
         prev_center = center
@@ -104,6 +181,7 @@ def partcheck(img, detections, hanire_detection, partid=None):
         
 
     detectedPitch = middle_lengths
+
     #pop first and last element of the list
     checkedPitchResult = detectedPitch[1:-1]
     detectedposX = detectedposX[1:-1]
@@ -112,23 +190,27 @@ def partcheck(img, detections, hanire_detection, partid=None):
     if partid == "LH":
         pitchresult = check_tolerance(checkedPitchResult, pitchSpecLH, pitchToleranceLH)
 
-        if len(detectedPitch) == 6:
+        if len(detectedPitch) == 7:
             deltaPitch = [detectedPitch[i] - pitchSpecLH[i] for i in range(len(pitchSpecLH))]
         else:
-            deltaPitch = [0, 0, 0, 0, 0, 0]
+            deltaPitch = [0, 0, 0, 0, 0, 0, 0]
+
+        allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
+        pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
+        deltaPitch = deltaPitch + deltaPitchKatabu #this is the delta (difference) between the nominal pitch and the detected pitch
 
         if any(result != 1 for result in pitchresult):
             flag_pitchfuryou = 1
-        if any(id != 0 for id in customid):
-            flag_clip_hanire = 1
         #check whether the detectedid matches with the clipSpecLH
-        if detectedid == clipSpecLH:
+        if detectedid != clipSpecLH:
             flag_clip_furyou = 1
+
         if flag_clip_furyou or flag_clip_hanire or flag_pitchfuryou:
             status = "NG"
         else:
             status = "OK"
 
+        print(pitchresult)
 
     # elif partid == "RH":
     #     pitchresult = check_tolerance(pitchSpecRH, totalLengthSpec, pitchTolerance, totalLengthTolerance, detectedPitch, total_length)
@@ -150,14 +232,13 @@ def partcheck(img, detections, hanire_detection, partid=None):
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(img, xy_pairs, pitchresult, endoffset_y)
 
-
-    # play_sound(status)
+    play_sound(status)
     img = draw_status_text(img, status)
 
     img = draw_flag_status(img, flag_pitchfuryou, flag_clip_furyou, flag_clip_hanire)
 
 
-    return img, pitchresult, detectedPitch, deltaPitch, flag_clip_hanire
+    return img, img_katabumarking, allpitchresult, pitchresult, deltaPitch, flag_clip_hanire, status
 
 def play_sound(status):
     if status == "OK":
@@ -193,7 +274,7 @@ def draw_flag_status(image, flag_pitchfuryou, flag_clip_furyou, flag_clip_hanire
     return image
 
 
-def draw_pitch_line(image, xy_pairs, pitchresult, endoffset_y=0):
+def draw_pitch_line(image, xy_pairs, pitchresult, endoffset_y=0, thickness=4):
     xy_pairs = [(int(x), int(y)) for x, y in xy_pairs]
 
     if len(xy_pairs) != 0:
@@ -213,7 +294,7 @@ def draw_pitch_line(image, xy_pairs, pitchresult, endoffset_y=0):
             #     cv2.line(image, offsetpos_, xy_pairs[i+1], lineColor, 5)
             #     cv2.circle(image, xy_pairs[i+1], 4, (255, 0, 0), -1)
             # else:
-                cv2.line(image, xy_pairs[i], xy_pairs[i+1], lineColor, 4)
+                cv2.line(image, xy_pairs[i], xy_pairs[i+1], lineColor, thickness)
 
     return None
 
@@ -315,17 +396,16 @@ def drawcircle(image, pos, class_id): #for ire and hanire
 
     return image
 
-def drawbox(image, pos, length):
+def drawbox(image, pos, length, offset = text_offset, font_scale=1.7, font_thickness=4):
     pos = (pos[0], pos[1])
     rectangle_bgr = (255, 255, 255)
-    font_scale = 1.7
-    font_thickness = 4
     (text_width, text_height), _ = cv2.getTextSize(f"{length:.2f}", cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
+    print
     
     top_left_x = pos[0] - text_width // 2 - 8
-    top_left_y = pos[1] - text_height // 2 - 8 - text_offset
+    top_left_y = pos[1] - text_height // 2 - 8 - offset
     bottom_right_x = pos[0] + text_width // 2 + 8
-    bottom_right_y = pos[1] + text_height // 2 + 8 - text_offset
+    bottom_right_y = pos[1] + text_height // 2 + 8 - offset
     
     cv2.rectangle(image, (top_left_x, top_left_y),
                   (bottom_right_x, bottom_right_y),
@@ -333,15 +413,14 @@ def drawbox(image, pos, length):
     
     return image
 
-def drawtext(image, pos, length):
+def drawtext(image, pos, length, font_scale=1.7, offset = text_offset, font_thickness=6):
     pos = (pos[0], pos[1])
-    font_scale = 1.7
-    font_thickness = 6
+    font_scale = font_scale
     text = f"{length:.1f}"
     (text_width, text_height), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
     
     text_x = pos[0] - text_width // 2
-    text_y = pos[1] + text_height // 2 - text_offset
+    text_y = pos[1] + text_height // 2 - offset
     
     cv2.putText(image, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (20, 125, 20), font_thickness)
     return image
@@ -350,7 +429,7 @@ def calclength(p1, p2):
     length = math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
     return length
 
-def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=3):
+def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=3, bbox_offset=bbox_offset):
     x = int(x)
     y = int(y)
     w = int(w)

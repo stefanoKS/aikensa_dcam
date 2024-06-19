@@ -102,6 +102,9 @@ class AIKensa(QMainWindow):
 
         self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
 
+        self.cam_thread.ctrplrLH_pitch_updated.connect(self._set_button_color_ctrplrLH)
+        # self.cam_thread.ctrplrRH_pitch_updated.connect(self._set_button_color_ctrplrRH)
+
         self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH)
         self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH)
 
@@ -178,8 +181,15 @@ class AIKensa(QMainWindow):
         calculateHomo = self.stackedWidget.widget(1).findChild(QPushButton, "calcH")
         calculateHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo", True))
 
+        calculateHomo_cam1 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam1")
+        calculateHomo_cam1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam1", True))
+
+        calculateHomo_cam2 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam2")
+        calculateHomo_cam2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam2", True))
+
+
         deleteHomo = self.stackedWidget.widget(1).findChild(QPushButton, "delH")
-        deleteHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "deleteHomo", False))
+        deleteHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "deleteHomo", True))
 
         combineCam = self.stackedWidget.widget(1).findChild(QPushButton, "mergeCam")
         combineCam.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "mergeCam", True))
@@ -457,7 +467,7 @@ class AIKensa(QMainWindow):
     def _set_workorder_color_ctrplr(self, workOrder): #For rr side, consists of 6 pitches and Lsun (total Length)
         colorOK = "green"
         colorNG = "red"
-        label_names = ["order1", "order2", "order3"]
+        label_names = ["order1", "order2", "order3", "order4", "order5"]
         
         labels = [self.stackedWidget.widget(3).findChild( QLabel, name) for name in label_names]
         
@@ -467,6 +477,20 @@ class AIKensa(QMainWindow):
             # labels[i].setStyleSheet(f"QLabel {{ border-radius: 13; }}")
             # labels[i].setStyleSheet(f"QLabel {{ min-height: 10; }}")
             # labels[i].setStyleSheet(f"QLabel {{ min-width: 10; }}")
+
+    def _set_button_color_ctrplrLH(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
+        colorOK = "green"
+        colorNG = "red"
+        # print (pitch_data)
+        label_names = ["P1color", "P2color", "P3color",
+                       "P4color", "P5color", "P6color",
+                       "P7color", "P8color"]
+        
+        labels = [self.stackedWidget.widget(3).findChild( QLabel, name) for name in label_names]
+        
+        for i, pitch_value in enumerate(pitch_data):
+            color = colorOK if pitch_value else colorNG
+            labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
             
             
