@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1920</width>
-    <height>1079</height>
+    <height>825</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -79,8 +79,8 @@ Camera Calib.</string>
 background-color: rgb(114, 159, 207);</string>
     </property>
     <property name="text">
-     <string>5755A491P 
-CTR PLR OPNG LH</string>
+     <string>82833W050P
+W/STRIP-RR DOOR LH</string>
     </property>
    </widget>
    <widget class="Line" name="line_2">
@@ -378,8 +378,8 @@ Edge Params</string>
      <string notr="true">background-color: rgb(173, 127, 168);</string>
     </property>
     <property name="text">
-     <string>5755A492
- CTR PLR OPNG RH</string>
+     <string>82833W040P
+ W/STRIP-RR DOOR RH</string>
     </property>
    </widget>
    <widget class="QLabel" name="timeLabel">

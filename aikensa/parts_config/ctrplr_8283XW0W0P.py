@@ -18,6 +18,7 @@ pitchSpecRH = [103, 113, 78, 98, 98, 87, 85]
 pitchToleranceLH = [2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
 pitchToleranceRH = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
 clipSpecLH = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
+clipSpecRH = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2] #white is 0, brown is 1, yellow is 2, orange is 3
 
 pitchSpecKatabu = [14]
 pitchToleranceKatabu = [1.5]
@@ -90,7 +91,10 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
                                        bbox_offset=3, thickness=2)
             
             if class_id_marking == 1:
-                center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
+                if partid == "LH":
+                    center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
+                elif partid == "RH":
+                    center_katabummarking = (int(x_marking + w_marking/2), int(y_marking))
             
             if prev_center_katabumarking is not None:
                 length = calclength(prev_center_katabumarking, center_katabummarking)*pixelMultiplier_katabumarking
@@ -141,11 +145,17 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
         #id 2 object is yellow clip
         #id 3 object is orange clip
 
-        if class_id == clipSpecLH[i]:
-            color = (0, 255, 0)
-        else:
-            color = (255, 0, 0)
-
+        if partid == "LH":
+            if i < len(clipSpecLH) and class_id == clipSpecLH[i]:
+                color = (0, 255, 0)
+            else:
+                color = (255, 0, 0)
+        if partid == "RH":
+            if i < len(clipSpecRH) and class_id == clipSpecRH[i]:
+                color = (0, 255, 0)
+            else:
+                color = (255, 0, 0)
+                
         center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=color)
 
         ## Made this for viz only
@@ -212,22 +222,34 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
 
         print(pitchresult)
 
-    # elif partid == "RH":
-    #     pitchresult = check_tolerance(pitchSpecRH, totalLengthSpec, pitchTolerance, totalLengthTolerance, detectedPitch, total_length)
-        
-    #     if len(detectedPitch) == 6:
-    #         deltaPitch = [detectedPitch[i] - pitchSpecRH[i] for i in range(len(pitchSpecRH))]
-    #     else:
-    #         deltaPitch = [0, 0, 0, 0, 0, 0]
+    if partid == "RH":
+        pitchresult = check_tolerance(checkedPitchResult, pitchSpecRH, pitchToleranceRH)
 
-    #     if any(result != 1 for result in pitchresult):
-    #         flag_pitchfuryou = 1
-    #     if any(id != 0 for id in customid):
-    #         flag_clip_hanire = 1
-    #     if any(result != 1 for result in pitchresult) or any(id != 1 for id in detectedid) or any(id != 0 for id in customid):
-    #         status = "NG"
-    #     else:
-    #         status = "OK"
+        if len(detectedPitch) == 7:
+            deltaPitch = [detectedPitch[i] - pitchSpecRH[i] for i in range(len(pitchSpecRH))]
+        else:
+            deltaPitch = [0, 0, 0, 0, 0, 0, 0]
+
+        allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
+        pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
+        deltaPitch = deltaPitch + deltaPitchKatabu #this is the delta (difference) between the nominal pitch and the detected pitch
+
+        if any(result != 1 for result in pitchresult):
+            flag_pitchfuryou = 1
+        #check whether the detectedid matches with the clipSpecLH
+        print (f"spec {clipSpecRH} detected {detectedid}")
+        if detectedid != clipSpecRH:
+            flag_clip_furyou = 1
+
+        if flag_clip_furyou or flag_clip_hanire or flag_pitchfuryou:
+            status = "NG"
+        else:
+            status = "OK"
+
+        print(pitchresult)
+
+
+
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(img, xy_pairs, pitchresult, endoffset_y)

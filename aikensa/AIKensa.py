@@ -98,10 +98,13 @@ class AIKensa(QMainWindow):
         self.cam_thread.handFrame1.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip1Check"))
         self.cam_thread.handFrame2.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip2Check"))
         self.cam_thread.handFrame3.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip3Check"))
+        self.cam_thread.handFrame1.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip1Check"))
+        self.cam_thread.handFrame2.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip2Check"))
+        self.cam_thread.handFrame3.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip3Check"))
 
         self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
 
-        self.cam_thread.ctrplrLH_pitch_updated.connect(self._set_button_color_ctrplrLH)
+        self.cam_thread.ctrplrLH_pitch_updated.connect(self._set_button_color_ctrplr)
         # self.cam_thread.ctrplrRH_pitch_updated.connect(self._set_button_color_ctrplrRH)
 
         self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH)
@@ -237,11 +240,19 @@ class AIKensa(QMainWindow):
         kensaButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
         kensaButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
+        button_HDRes4 = self.connect_button_font_color_change(4, "button_HDResQT", "HDRes")
+        
+        kensaButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
+        kensaButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+
         self.connect_camparam_button(3, "counterReset", "resetCounter", True)
         self.connect_camparam_button(4, "counterReset", "resetCounter", True)
 
         kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
         kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
+        
+        kensaresetButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensareset")
+        kensaresetButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
 
         workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
         workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
@@ -428,7 +439,7 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameMerge(self, image):
-        for i in [1, 3]:
+        for i in [1, 3, 4]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "mergeFrame")
             label.setPixmap(QPixmap.fromImage(image))
@@ -452,19 +463,19 @@ class AIKensa(QMainWindow):
         # label.setPixmap(QPixmap.fromImage(image))   
 
     def _setFrameClip1(self, image):
-        for i in [1, 3]: #modify this later
+        for i in [1, 3, 4]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip1Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameClip2(self, image):
-        for i in [1, 3]: #modify this later
+        for i in [1, 3, 4]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip2Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameClip3(self, image):
-        for i in [1, 3]: #modify this later
+        for i in [1, 3, 4]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip3Frame") 
             label.setPixmap(QPixmap.fromImage(image))
@@ -474,16 +485,15 @@ class AIKensa(QMainWindow):
         colorNG = "red"
         label_names = ["order1", "order2", "order3", "order4", "order5"]
         
-        labels = [self.stackedWidget.widget(3).findChild( QLabel, name) for name in label_names]
+        for widget_index in [3, 4]:
+            labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+            
+            for i, pitch_value in enumerate(workOrder):
+                color = colorOK if pitch_value else colorNG
+                labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
         
-        for i, pitch_value in enumerate(workOrder):
-            color = colorOK if pitch_value else colorNG
-            labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
-            # labels[i].setStyleSheet(f"QLabel {{ border-radius: 13; }}")
-            # labels[i].setStyleSheet(f"QLabel {{ min-height: 10; }}")
-            # labels[i].setStyleSheet(f"QLabel {{ min-width: 10; }}")
 
-    def _set_button_color_ctrplrLH(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
+    def _set_button_color_ctrplr(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
         colorOK = "green"
         colorNG = "red"
         # print (pitch_data)
@@ -491,11 +501,12 @@ class AIKensa(QMainWindow):
                        "P4color", "P5color", "P6color",
                        "P7color", "P8color"]
         
-        labels = [self.stackedWidget.widget(3).findChild( QLabel, name) for name in label_names]
-        
-        for i, pitch_value in enumerate(pitch_data):
-            color = colorOK if pitch_value else colorNG
-            labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+        for widget_index in [3, 4]:
+            labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+            
+            for i, pitch_value in enumerate(pitch_data):
+                color = colorOK if pitch_value else colorNG
+                labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
             
             

@@ -129,7 +129,7 @@ class CameraThread(QThread):
         self.handClassificationModel = None
 
         self.clipHandWaitTime = 1.5
-        self.inspection_delay = 5.0
+        self.inspection_delay = 2.0
 
         self.handinFrame1 = False
         self.handinFrame2 = False
@@ -533,7 +533,7 @@ class CameraThread(QThread):
                     self.clip3Frame.emit(self.convertQImage(clipFrame3))
 
 
-            if self.cam_config.widget == 3:
+            if self.cam_config.widget == 3 or self.cam_config.widget == 4:
 
                 if frame1 is None:
                     frame1 = np.zeros((2048, 3072, 3), dtype=np.uint8)
@@ -594,6 +594,7 @@ class CameraThread(QThread):
                     self.result_handframe2 = list(frame2_handClassify)[0].probs.data.argmax().item()
                     self.result_handframe3 = list(frame3_handClassify)[0].probs.data.argmax().item()
                     # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
+                    # print(f"HandFrame1,2,and 3: {self.result_handframe1}, {self.result_handframe2}, {self.result_handframe3}")
                 
                 if self.musicPlay == True:
 
@@ -696,6 +697,8 @@ class CameraThread(QThread):
                     self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
                     self.cam_config.resetCounter = False
             
+                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
 
                     if self.cam_config.ctrplrWorkOrder != [1, 1, 1, 1, 1]:
@@ -715,16 +718,32 @@ class CameraThread(QThread):
                                                                         slice_height=968, slice_width=968, 
                                                                         overlap_height_ratio=0.2, overlap_width_ratio=0.2)
                             #Detect Katabu Marking
-                            self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
-                                                                                        stream=True, 
-                                                                                        verbose=False,
-                                                                                        conf=0.1, iou=0.5)
-                            self.hanire_detections = None
-                            imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheck(combinedFrame_raw, croppedFrame2,
-                                                                                                        self.clip_detection.object_prediction_list, 
-                                                                                                        self.marking_detection, 
-                                                                                                        self.hanire_detections, 
-                                                                                                        partid="LH")
+                            if self.cam_config.widget == 3:
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheck(combinedFrame_raw, croppedFrame2,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="LH")
+                                
+                            if self.cam_config.widget == 4:
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheck(combinedFrame_raw, croppedFrame1,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="RH")
+                                
+
+
                             if status == "OK":
                                 ok_count += 1
                             elif status == "NG":
@@ -737,10 +756,18 @@ class CameraThread(QThread):
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
 
                             self.mergeFrame.emit(self.convertQImage(combinedImage))
-                            self.kata2Frame.emit(self.convertQImage(katabumarkingResult))
+                            if self.cam_config.widget == 3:
+                                self.kata2Frame.emit(self.convertQImage(katabumarkingResult))
+                                self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
+                                self.ctrplrLH_pitch_updated.emit(pitch_results)
+
+                            if self.cam_config.widget == 4:
+                                self.kata1Frame.emit(self.convertQImage(katabumarkingResult))
+                                self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
+                                self.ctrplrRH_pitch_updated.emit(pitch_results)
+
                             self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
-                            self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
-                            self.ctrplrLH_pitch_updated.emit(pitch_results)
+
 
                             #sleep for self.inspection_delay
                             time.sleep(self.inspection_delay)
@@ -751,14 +778,27 @@ class CameraThread(QThread):
                             self.cam_config.ctrplrWorkOrder = [0, 0, 0, 0, 0]
                             self.kensa_order = [] #reinitialize the kensa order
                             self.kensa_cycle = False #reinitialize the kensa cycle
+                            self.clip1Frame.emit(self.convertQImage(clipFrame1))
+                            self.clip2Frame.emit(self.convertQImage(clipFrame2))
+                            self.clip3Frame.emit(self.convertQImage(clipFrame3))
                             continue
 
                         self.oneLoop = True
                         self.cam_config.triggerKensa = False
 
                 self.mergeFrame.emit(self.convertQImage(combinedImage))
-                # self.kata1Frame.emit(self.convertQImage(croppedFrame1))
-                self.kata2Frame.emit(self.convertQImage(croppedFrame2))
+
+                if self.cam_config.widget == 3:
+                    self.kata2Frame.emit(self.convertQImage(croppedFrame2))
+                    #emit blank image for kata1Frame
+                    blankFrame = np.zeros((160, 320, 3), dtype=np.uint8)
+                    self.kata1Frame.emit(self.convertQImage(blankFrame))
+                if self.cam_config.widget == 4:
+                    self.kata1Frame.emit(self.convertQImage(croppedFrame1))
+                    #emit blank image for kata2Frame
+                    blankFrame = np.zeros((160, 320, 3), dtype=np.uint8)
+                    self.kata2Frame.emit(self.convertQImage(blankFrame))
+
 
                 self.clip1Frame.emit(self.convertQImage(clipFrame1))
                 self.clip2Frame.emit(self.convertQImage(clipFrame2))
@@ -770,9 +810,12 @@ class CameraThread(QThread):
                 
                 self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
 
-                self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
-                self.ctrplrLH_pitch_updated.emit(self.cam_config.ctrplrLHpitch)
-
+                if self.cam_config.widget == 3:
+                    self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
+                    self.ctrplrLH_pitch_updated.emit(self.cam_config.ctrplrLHpitch)
+                if self.cam_config.widget == 4:
+                    self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
+                    self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
 
 
         cap_cam1.release()
@@ -939,7 +982,7 @@ class CameraThread(QThread):
         ctrplr_hanireDetectionModel = None
         ctrplr_markingDetectionModel = None
 
-        if self.cam_config.widget == 3:
+        if self.cam_config.widget == 3 or self.cam_config.widget == 4:
             handClassificationModel = YOLO("./aikensa/custom_weights/handClassify.pt")
             ctrplr_clipDetectionModel = AutoDetectionModel.from_pretrained(model_type="yolov8",
                                                                            model_path="./aikensa/custom_weights/weights_5755A49X.pt",
