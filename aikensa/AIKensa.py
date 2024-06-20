@@ -38,7 +38,7 @@ class AIKensa(QMainWindow):
 
         # Thread for SiO
         HOST = '192.168.0.100'  # Use the IP address from SiO settings
-        PORT = 30001  # Use the port number from SiO settings
+        PORT = 40001  # Use the port number from SiO settings
 
         self.server_monitor_thread = ServerMonitorThread(
             HOST, PORT, check_interval=0.1)
@@ -60,10 +60,10 @@ class AIKensa(QMainWindow):
 
         #to show the label later. Implement later
 
-        # for label in self.siostatus_cowltop:
-        #     if label:  # Check if the label was found correctly
-        #         label.setText(status_text)
-        #         label.setStyleSheet(f"color: {status_color};")
+        for label in self.siostatus_server:
+            if label:  # Check if the label was found correctly
+                label.setText(status_text)
+                label.setStyleSheet(f"color: {status_color};")
 
 
     def handle_input_states(self, input_states):
@@ -77,9 +77,8 @@ class AIKensa(QMainWindow):
                 pass
 
     def trigger_kensa(self):
-        self.button_kensa5.click()
-        self.button_kensa6.click()
-        self.button_kensa7.click()
+        self.button_kensa3.click()
+        self.button_kensa4.click()
 
     def trigger_rekensa(self):
         self.button_rekensa.click()
@@ -214,6 +213,8 @@ class AIKensa(QMainWindow):
         label_readwarp = self.stackedWidget.widget(2).findChild(QLabel, "label_readwarpcolor")
         button_readwarp.pressed.connect(lambda: self._toggle_param_and_update_label("cannyreadwarp", label_readwarp))
 
+        
+
         # frame = process_for_edge_detection(frame, self.slider_value)
         slider_opacity = self.stackedWidget.widget(2).findChild(QSlider, "slider_opacity")
         slider_blur = self.stackedWidget.widget(2).findChild(QSlider, "slider_blur")
@@ -245,6 +246,11 @@ class AIKensa(QMainWindow):
         workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
         workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
         workorder3 = self.stackedWidget.widget(3).findChild(QLineEdit, "order3")
+
+        self.button_kensa3 = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
+        self.button_kensa4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
+
+        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 3, 4]]
 
         self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
         self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
@@ -331,9 +337,8 @@ class AIKensa(QMainWindow):
             print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}'")
 
     def simulateButtonKensaClicks(self):
-        self.button_kensa5.click()
-        self.button_kensa6.click()
-        self.button_kensa7.click()
+        self.button_kensa3.click()
+        self.button_kensa4.click()
 
     def _on_widget_changed(self, idx: int):
         if idx == 3 or idx == 4:

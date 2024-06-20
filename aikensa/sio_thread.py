@@ -61,8 +61,8 @@ class ServerMonitorThread(QThread):
         input_states = [int(bit) for bit in input_states]
         output_states = [int(bit) for bit in output_states]
 
-        print("Input states:", input_states)
-        print("Output states:", output_states)
+        # print("Input states:", input_states)
+        # print("Output states:", output_states)
         
         return input_states, output_states
         
