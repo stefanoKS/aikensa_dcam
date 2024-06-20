@@ -9,6 +9,7 @@ so_sound = pygame.mixer.Sound("aikensa/sound/sol.wav")
 la_sound = pygame.mixer.Sound("aikensa/sound/la.wav")
 si_sound = pygame.mixer.Sound("aikensa/sound/si.wav")
 alarm_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav")
+picking_sound = pygame.mixer.Sound("aikensa/sound/mixkit-kids-cartoon-close-bells-2256.wav")
 
 
 def play_do_sound():
@@ -34,3 +35,6 @@ def play_si_sound():
 
 def play_alarm_sound():
     alarm_sound.play() 
+
+def play_picking_sound():
+    picking_sound.play()

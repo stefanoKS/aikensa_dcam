@@ -155,7 +155,7 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
                 color = (0, 255, 0)
             else:
                 color = (255, 0, 0)
-                
+
         center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=color)
 
         ## Made this for viz only
@@ -220,7 +220,7 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
         else:
             status = "OK"
 
-        print(pitchresult)
+        # print(pitchresult)
 
     if partid == "RH":
         pitchresult = check_tolerance(checkedPitchResult, pitchSpecRH, pitchToleranceRH)
@@ -237,7 +237,7 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
         if any(result != 1 for result in pitchresult):
             flag_pitchfuryou = 1
         #check whether the detectedid matches with the clipSpecLH
-        print (f"spec {clipSpecRH} detected {detectedid}")
+        # print (f"spec {clipSpecRH} detected {detectedid}")
         if detectedid != clipSpecRH:
             flag_clip_furyou = 1
 

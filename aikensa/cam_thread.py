@@ -19,7 +19,7 @@ from aikensa.opencv_imgprocessing.arucoplanarize import planarize
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-from aikensa.parts_config.sound import play_do_sound, play_re_sound, play_mi_sound, play_fa_sound, play_sol_sound, play_la_sound, play_si_sound, play_alarm_sound
+from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_re_sound, play_mi_sound, play_fa_sound, play_sol_sound, play_la_sound, play_si_sound, play_alarm_sound
 
 from ultralytics import YOLO
 from aikensa.parts_config.ctrplr_8283XW0W0P import partcheck as ctrplrCheck
@@ -632,28 +632,28 @@ class CameraThread(QThread):
 
                         if self.kensa_cycle is False and self.result_handframe1 == 0:
                             self.handinFrameTimer = time.time()
-                            play_do_sound()
+                            play_picking_sound()
                             self.kensa_cycle = True
                             self.cam_config.ctrplrWorkOrder = [1, 0, 0, 0, 0]
 
                         elif self.kensa_cycle is True and self.result_handframe1 == 0 and self.cam_config.ctrplrWorkOrder == [1, 0, 0, 0, 0]:
                             self.handinFrameTimer = time.time()
-                            play_do_sound()
+                            play_picking_sound()
                             self.cam_config.ctrplrWorkOrder = [1, 1, 0, 0, 0]
 
                         elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrder == [1, 1, 0, 0, 0]:
                             self.handinFrameTimer = time.time()
-                            play_do_sound()
+                            play_picking_sound()
                             self.cam_config.ctrplrWorkOrder = [1, 1, 1, 0, 0]
 
                         elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrder == [1, 1, 1, 0, 0]:
                             self.handinFrameTimer = time.time()
-                            play_do_sound()
+                            play_picking_sound()
                             self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 0]                    
 
                         elif self.kensa_cycle is True and self.result_handframe3 == 0 and self.cam_config.ctrplrWorkOrder == [1, 1, 1, 1, 0]:
                             self.handinFrameTimer = time.time()
-                            play_do_sound()
+                            play_picking_sound()
                             self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1] 
 
                         elif self.result_handframe1 == 1 and self.result_handframe2 == 1 and self.result_handframe3 == 1:
@@ -697,7 +697,7 @@ class CameraThread(QThread):
                     self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
                     self.cam_config.resetCounter = False
             
-                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
 
