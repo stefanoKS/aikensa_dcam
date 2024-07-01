@@ -753,7 +753,7 @@ class CameraThread(QThread):
                                                                         self.ctrplr_clipDetectionModel, 
                                                                         slice_height=968, slice_width=968, 
                                                                         overlap_height_ratio=0.2, overlap_width_ratio=0.2)
-                            #Detect Katabu Marking
+                            #Detect Katabu Marking 
                             if self.cam_config.widget == 3:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
                                                                                             stream=True, 
@@ -773,6 +773,11 @@ class CameraThread(QThread):
                                                     pitch_results, delta_pitch, 
                                                     total_length=0)
                                 
+                                #dump imgResult to .aikensa/inspection_results/{dir_part}/{timestamp_date}/{timestamp}}.png"
+                                imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                os.makedirs(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                                cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
+                                
                             if self.cam_config.widget == 4:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
                                                                                             stream=True, 
@@ -784,12 +789,21 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="RH")
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
                                 self.save_result_csv("82833W040P", dir_part, 
                                                     self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrRHnumofPart, 
                                                     timestamp, deltaTime, 
                                                     self.cam_config.kensainName, 
                                                     pitch_results, delta_pitch, 
                                                     total_length=0)
+                                
+                                                            
+                                #dump imgResult to .aikensa/inspection_results/{dir_part}/{timestamp_date}/{timestamp}}.png"
+                                imgResult = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                os.makedirs(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                                cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult)
+
+
                                 
                             if status == "OK":
                                 ok_count += 1
@@ -801,6 +815,7 @@ class CameraThread(QThread):
                             cv2.imwrite("imgResult.jpg", _imgResult)
 
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
+
 
                             self.mergeFrame.emit(self.convertQImage(combinedImage))
                             if self.cam_config.widget == 3:
