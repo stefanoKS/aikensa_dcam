@@ -707,7 +707,7 @@ class CameraThread(QThread):
                     self.cam_config.resetCounter = False
             
                     ##To manually set the work order
-                # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -784,6 +784,7 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="RH")
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
                                 self.save_result_csv("82833W040P", dir_part, 
                                                     self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrRHnumofPart, 
                                                     timestamp, deltaTime, 

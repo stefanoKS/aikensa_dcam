@@ -7,6 +7,7 @@ import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
 
+
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
 ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav")  
