@@ -41,7 +41,7 @@ class AIKensa(QMainWindow):
         PORT = 40001  # Use the port number from SiO settings
 
         self.server_monitor_thread = ServerMonitorThread(
-            HOST, PORT, check_interval=0.1)
+            HOST, PORT, check_interval=0.13)
         self.server_monitor_thread.server_status_signal.connect(self.handle_server_status)
         self.server_monitor_thread.input_states_signal.connect(self.handle_input_states)
         self.server_monitor_thread.start()
@@ -49,6 +49,8 @@ class AIKensa(QMainWindow):
         self.timeMonitorThread = TimeMonitorThread(check_interval=1)
         self.timeMonitorThread.time_signal.connect(self.timeUpdate)
         self.timeMonitorThread.start()
+
+        self.initial_colors = {}#store initial colors of the labels
 
     def timeUpdate(self, time):
         for label in self.timeLabel:
@@ -247,6 +249,9 @@ class AIKensa(QMainWindow):
 
         self.connect_camparam_button(3, "counterReset", "resetCounter", True)
         self.connect_camparam_button(4, "counterReset", "resetCounter", True)
+
+        self.connect_line_edit_text_changed(widget_index=3, line_edit_name="kensain_name", cam_param="kensainName")
+        self.connect_line_edit_text_changed(widget_index=4, line_edit_name="kensain_name", cam_param="kensainName")
 
         kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
         kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
@@ -480,31 +485,56 @@ class AIKensa(QMainWindow):
             label = widget.findChild(QLabel, "clip3Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
-    def _set_workorder_color_ctrplr(self, workOrder): #For rr side, consists of 6 pitches and Lsun (total Length)
+    def _extract_color(self, stylesheet):
+        # Extracts the color value from the stylesheet string
+        start = stylesheet.find("background-color: ") + len("background-color: ")
+        end = stylesheet.find(";", start)
+        return stylesheet[start:end].strip()
+
+    def _store_initial_colors(self, widget_index, label_names):
+        if widget_index not in self.initial_colors:
+            self.initial_colors[widget_index] = {}
+        labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+        for label in labels:
+            color = self._extract_color(label.styleSheet())
+            self.initial_colors[widget_index][label.objectName()] = color
+            # print(f"Stored initial color for {label.objectName()} in widget {widget_index}: {color}")
+
+    def _set_workorder_color_ctrplr(self, workOrder): # For rr side, consists of 6 pitches and Lsun (total Length)
         colorOK = "green"
         colorNG = "red"
         label_names = ["order1", "order2", "order3", "order4", "order5"]
-        
+
+        if not self.initial_colors:
+            for widget_index in [3, 4]:
+                self._store_initial_colors(widget_index, label_names)
+
         for widget_index in [3, 4]:
             labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
             
             for i, pitch_value in enumerate(workOrder):
-                color = colorOK if pitch_value else colorNG
+                if pitch_value:
+                    color = colorOK
+                else:
+                    color = self.initial_colors[widget_index][labels[i].objectName()] # Use the initial color from the specific widget
                 labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
-        
+                # print(f"Setting color for {labels[i].objectName()} in widget {widget_index} to {color}")
+
 
     def _set_button_color_ctrplr(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
         colorOK = "green"
         colorNG = "red"
         # print (pitch_data)
         label_names = ["P1color", "P2color", "P3color",
-                       "P4color", "P5color", "P6color",
-                       "P7color", "P8color"]
+                        "P4color", "P5color", "P6color",
+                        "P7color", "P8color"]
         
         for widget_index in [3, 4]:
             labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
             
             for i, pitch_value in enumerate(pitch_data):
+                if i >= len(labels):
+                    break #in case the number of pitches is more than the number of labels
                 color = colorOK if pitch_value else colorNG
                 labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 

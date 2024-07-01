@@ -24,6 +24,8 @@ from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_r
 from ultralytics import YOLO
 from aikensa.parts_config.ctrplr_8283XW0W0P import partcheck as ctrplrCheck
 
+from PIL import ImageFont, ImageDraw, Image
+
 @dataclass
 class CameraConfig:
     widget: int = 0
@@ -65,6 +67,8 @@ class CameraConfig:
     furyou_minus: bool = False
     kansei_plus: bool = False
     kansei_minus: bool = False
+
+    kensainName: str = None
 
     HDRes: bool = False
     triggerKensa: bool = False
@@ -119,8 +123,8 @@ class CameraThread(QThread):
             self.cam_config = cam_config
 
         self.widget_dir_map={
-            3: "5755A491",
-            4: "5755A492"
+            3: "82833W050P",
+            4: "82833W040P"
         }
 
         self.previous_HDRes = self.cam_config.HDRes
@@ -128,8 +132,8 @@ class CameraThread(QThread):
 
         self.handClassificationModel = None
 
-        self.clipHandWaitTime = 1.5
-        self.inspection_delay = 2.0
+        self.clipHandWaitTime = 2.5
+        self.inspection_delay = 3.0
 
         self.handinFrame1 = False
         self.handinFrame2 = False
@@ -160,6 +164,11 @@ class CameraThread(QThread):
 
         self.musicPlay = False
         self.handinFrameTimer = None
+
+        self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
+
+        self.last_inspection_time = 0
+        self.prev_timestamp = None
 
     def run(self):
 
@@ -697,9 +706,25 @@ class CameraThread(QThread):
                     self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
                     self.cam_config.resetCounter = False
             
+                    ##To manually set the work order
                 # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
+                    current_time = time.time()
+
+                    if current_time - self.last_inspection_time < self.inspection_delay: #extra 3 sec after inspection to prevent multiple inspection
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        continue
+
+                    if self.prev_timestamp == None:
+                        self.prev_timestamp = datetime.now()
+
+                    timestamp = datetime.now() #datetime.now().strftime('%Y%m%d_%H%M%S')
+
+                    deltaTime = timestamp - self.prev_timestamp
+                    self.prev_timestamp = timestamp
+                    print (f"previout time stamp, current time stamp, delta time stamp:")
 
                     if self.cam_config.ctrplrWorkOrder != [1, 1, 1, 1, 1]:
                         play_alarm_sound()
@@ -710,6 +735,17 @@ class CameraThread(QThread):
                     # if self.cam_config.ctrplrWorkOrder == [0,0,0,0,0]:
                     if self.cam_config.ctrplrWorkOrder == [1, 1, 1, 1, 1]:
                         self.cam_config.HDRes = True
+
+                        #Append a word "kensaChuu" to the combined image and emit it
+                        combinedImage_wait = combinedImage.copy()
+                        text = '検査実施中'
+                        font_path = self.kanjiFontPath
+                        font_size = 80
+
+                        combinedImage_wait = self.add_text_to_image(combinedImage_wait, text, font_path, font_size)
+                        self.mergeFrame.emit(self.convertQImage(combinedImage_wait))
+
+
 
                         if self.oneLoop == True:
                             #Detect Clip
@@ -729,6 +765,13 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="LH")
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
+                                self.save_result_csv("82833W050P", dir_part, 
+                                                    self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrLHnumofPart, 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
                                 
                             if self.cam_config.widget == 4:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
@@ -741,9 +784,13 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="RH")
+                                self.save_result_csv("82833W040P", dir_part, 
+                                                    self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrRHnumofPart, 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
                                 
-
-
                             if status == "OK":
                                 ok_count += 1
                             elif status == "NG":
@@ -771,6 +818,8 @@ class CameraThread(QThread):
 
                             #sleep for self.inspection_delay
                             time.sleep(self.inspection_delay)
+
+                            self.last_inspection_time = time.time()
 
                             self.clip_detection = None
                             self.oneLoop = False
@@ -823,9 +872,58 @@ class CameraThread(QThread):
         cap_cam2.release()
         print("Camera 2 released.")
 
-    # def partCheck(self, frame1, frame2, ret1, ret2, widget):
+    def save_result_csv(self, part_name, dir_part, 
+                        numofPart, current_numofPart, 
+                        timestamp, deltaTime, kensainName, 
+                        detected_pitch, delta_pitch, 
+                        total_length):
+        
+        
+        detected_pitch_str = str(detected_pitch).replace('[', '').replace(']', '')
+        delta_pitch_str = str(delta_pitch).replace('[', '').replace(']', '')
+
+        timestamp_date = timestamp.strftime("%Y%m%d")
+        timestamp_hour = timestamp.strftime("%H:%M:%S")
+        deltaTime = deltaTime.total_seconds()
+
+        base_dir = f"./aikensa/inspection_results/{dir_part}/{timestamp_date}/results"
+        os.makedirs(base_dir, exist_ok=True)
 
 
+        if not os.path.exists(f"{base_dir}/inspection_results.csv"):
+            with open(f"{base_dir}/inspection_results.csv", mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["PartName", 'KensaResult(OK,/NG)', 
+                                 "CurrentKensaResult(OK/NG)", 'KensaTime', 
+                                 "KensaDate",  "KensaTimeLength", 
+                                 'KensaSagyoushaName',
+                                'DetectedPitch', "DeltaPitch", 
+                                'TotalLength'])
+
+                writer.writerow([part_name, numofPart, 
+                                 current_numofPart, timestamp_hour, 
+                                 timestamp_date, deltaTime, 
+                                 kensainName, detected_pitch_str, 
+                                 delta_pitch_str, total_length
+                                 ])
+                
+        else:
+            with open(f"{base_dir}/inspection_results.csv", mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([part_name, numofPart, 
+                                 current_numofPart, timestamp_hour, 
+                                 timestamp_date, deltaTime, 
+                                 kensainName, detected_pitch_str, 
+                                 delta_pitch_str, total_length
+                                 ])
+                
+            # Call the method to save data to the database
+        # self.save_result_database(part_name, numofPart, 
+        #                           current_numofPart, timestamp_hour, 
+        #                           timestamp_date, deltaTime, 
+        #                           kensainName, detected_pitch_str, 
+        #                           delta_pitch_str, total_length
+        #                           )
 
     def adjust_camera_matrix(self, camera_matrix, scale_factor):
         camera_matrix[0][0] /= scale_factor
@@ -878,6 +976,25 @@ class CameraThread(QThread):
             croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
 
         return combinedFrame_raw, combinedFrame, croppedFrame1, croppedFrame2
+    
+    def add_text_to_image(self, combinedImage, text, font_path, font_size):
+        pil_image = Image.fromarray(cv2.cvtColor(combinedImage, cv2.COLOR_BGR2RGB))
+        draw = ImageDraw.Draw(pil_image)
+        font = ImageFont.truetype(font_path, font_size)
+        
+        text_bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        
+        x = (pil_image.width - text_width) // 2
+        y = (pil_image.height + text_height) // 2
+        
+        draw.text((x, y), text, font=font, fill=(255, 50, 100))
+        
+        open_cv_image = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+        
+        return open_cv_image
+
     
     def combineFrames_template(self, frame1, frame2, template, H1, H2):
         combinedFrame = warpTwoImages_template(template, frame1, H1)

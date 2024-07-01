@@ -77,7 +77,7 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
             w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
             class_id_marking = int(box.cls.cpu())
 
-            print(class_id_marking)
+            # print(class_id_marking)
 
             if class_id_marking == 0:
                 color = (0, 255, 0)
@@ -200,10 +200,11 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
     if partid == "LH":
         pitchresult = check_tolerance(checkedPitchResult, pitchSpecLH, pitchToleranceLH)
 
-        if len(detectedPitch) == 7:
-            deltaPitch = [detectedPitch[i] - pitchSpecLH[i] for i in range(len(pitchSpecLH))]
+        if len(checkedPitchResult) == 7:
+            deltaPitch = [checkedPitchResult[i] - pitchSpecLH[i] for i in range(len(pitchSpecLH))]
         else:
             deltaPitch = [0, 0, 0, 0, 0, 0, 0]
+            checkedPitchResult = [0, 0, 0, 0, 0, 0, 0]
 
         allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
         pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
@@ -229,6 +230,7 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
             deltaPitch = [detectedPitch[i] - pitchSpecRH[i] for i in range(len(pitchSpecRH))]
         else:
             deltaPitch = [0, 0, 0, 0, 0, 0, 0]
+            pitchresult = [0, 0, 0, 0, 0, 0, 0]
 
         allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
         pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
@@ -422,7 +424,6 @@ def drawbox(image, pos, length, offset = text_offset, font_scale=1.7, font_thick
     pos = (pos[0], pos[1])
     rectangle_bgr = (255, 255, 255)
     (text_width, text_height), _ = cv2.getTextSize(f"{length:.2f}", cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
-    print
     
     top_left_x = pos[0] - text_width // 2 - 8
     top_left_y = pos[1] - text_height // 2 - 8 - offset
