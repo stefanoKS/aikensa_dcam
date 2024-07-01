@@ -867,6 +867,7 @@ class CameraThread(QThread):
                     self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
 
 
+
         cap_cam1.release()
         print("Camera 1 released.")
         cap_cam2.release()

@@ -253,6 +253,7 @@ class AIKensa(QMainWindow):
         self.connect_line_edit_text_changed(widget_index=3, line_edit_name="kensain_name", cam_param="kensainName")
         self.connect_line_edit_text_changed(widget_index=4, line_edit_name="kensain_name", cam_param="kensainName")
 
+
         kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
         kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
         

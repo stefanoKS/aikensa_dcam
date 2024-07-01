@@ -176,6 +176,7 @@ class CameraTest:
         return combinedFrame_raw, combinedFrame, croppedFrame1, croppedFrame2
 
     
+    
     def planarize(self, image):
         transform = None
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

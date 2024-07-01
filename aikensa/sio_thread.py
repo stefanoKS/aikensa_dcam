@@ -14,6 +14,7 @@ class ServerMonitorThread(QThread):
         self.running = True
         self.sock = None
 
+
     def reconnect(self):
         self.sock.close()  # Close the existing socket
         time_to_wait = 1  # Start with a 1-second wait

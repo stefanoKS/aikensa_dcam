@@ -17,5 +17,6 @@ class TimeMonitorThread(QThread):
             self.time_signal.emit(current_time)
             time.sleep(self.check_interval)
 
+
     def stop(self):
         self.running = False
