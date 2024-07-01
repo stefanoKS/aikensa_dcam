@@ -7,7 +7,6 @@ import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
 
-
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
 ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav")  
@@ -405,7 +404,6 @@ def find_edge_point(image, center, direction="None", offsetval = 0):
             return x, y + offsetval
         
         x = x - 1 if direction == "left" else x + 1
-
     return None
 
 def drawcircle(image, pos, class_id): #for ire and hanire
