@@ -790,12 +790,7 @@ class CameraThread(QThread):
                                                     self.cam_config.kensainName, 
                                                     pitch_results, delta_pitch, 
                                                     total_length=0)
-                                
-                                #dump imgResult to .aikensa/inspection_results/{dir_part}/{timestamp_date}/{timestamp}}.png"
-                                imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
-                                os.makedirs(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
-                                cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
-                                
+                       
                                 if status == "OK":
                                     ok_count += 1
                                 elif status == "NG":
@@ -821,23 +816,24 @@ class CameraThread(QThread):
                                                     total_length=0)
                                 
                                                             
-                                #dump imgResult to .aikensa/inspection_results/{dir_part}/{timestamp_date}/{timestamp}}.png"
-                                imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
-                                os.makedirs(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
-                                cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
-
                                 if status == "OK":
                                     ok_count += 1
                                 elif status == "NG":
                                     ng_count += 1
                                 
+        
+                            combinedFrame_raw_copy = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_BGR2RGB)
+                            imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                            
 
+                            os.makedirs(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                            os.makedirs(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                            
+                            cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", combinedFrame_raw_copy)
+                            cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
 
                             self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
                             self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
-
-                            _imgResult = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
-                            cv2.imwrite("imgResult.jpg", _imgResult)
 
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
 
