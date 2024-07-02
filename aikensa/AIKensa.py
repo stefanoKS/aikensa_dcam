@@ -274,13 +274,12 @@ class AIKensa(QMainWindow):
         self.kanseihin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_kansei")
         self.furyouhin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_furyou")
 
-        for i in range(3, 4):
+        for i in [3, 4]:
             self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
             self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
             self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
             self.connect_camparam_button(i, "furyou_minus", "furyou_minus", True)
 
-        # _____________________________________________________________________________________________________
        # Find and connect quit buttons and main menu buttons in all widgets
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
@@ -350,7 +349,7 @@ class AIKensa(QMainWindow):
         button = widget.findChild(QPushButton, button_name)
         if button:
             button.pressed.connect(lambda: self._set_cam_params(self.cam_thread, cam_param, value))
-            print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}'")
+            print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
     def simulateButtonKensaClicks(self):
         self.button_kensa3.click()

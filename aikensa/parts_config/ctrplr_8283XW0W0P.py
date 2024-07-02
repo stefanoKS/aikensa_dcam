@@ -226,11 +226,11 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
     if partid == "RH":
         pitchresult = check_tolerance(checkedPitchResult, pitchSpecRH, pitchToleranceRH)
 
-        if len(detectedPitch) == 7:
-            deltaPitch = [detectedPitch[i] - pitchSpecRH[i] for i in range(len(pitchSpecRH))]
+        if len(checkedPitchResult) == 7:
+            deltaPitch = [checkedPitchResult[i] - pitchSpecRH[i] for i in range(len(pitchSpecRH))]
         else:
             deltaPitch = [0, 0, 0, 0, 0, 0, 0]
-            pitchresult = [0, 0, 0, 0, 0, 0, 0]
+            checkedPitchResult = [0, 0, 0, 0, 0, 0, 0]
 
         allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
         pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled

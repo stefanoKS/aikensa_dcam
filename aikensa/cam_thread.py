@@ -691,20 +691,38 @@ class CameraThread(QThread):
                     self.cam_config.ctrplrWorkOrder = [0, 0, 0, 0, 0]
                     self.cam_config.kensaReset = False
 
-                ok_count, ng_count = self.cam_config.ctrplrLHnumofPart
-                self.cam_config.ctrplrLHnumofPart = self.manual_adjustment(ok_count, 
-                                                                           ng_count, 
-                                                                           self.cam_config.furyou_plus, 
-                                                                           self.cam_config.furyou_minus, 
-                                                                           self.cam_config.kansei_plus, 
-                                                                           self.cam_config.kansei_minus)
+                if self.cam_config.widget == 3:
+                    ok_count, ng_count = self.cam_config.ctrplrLHnumofPart
+                    self.cam_config.ctrplrLHnumofPart = self.manual_adjustment(ok_count, 
+                                                                            ng_count, 
+                                                                            self.cam_config.furyou_plus, 
+                                                                            self.cam_config.furyou_minus, 
+                                                                            self.cam_config.kansei_plus, 
+                                                                            self.cam_config.kansei_minus)
+                    if self.cam_config.resetCounter == True:
+                        ok_count = 0
+                        ng_count = 0
+                        self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
+                        self.cam_config.resetCounter = False
+
+                if self.cam_config.widget == 4:
+                    ok_count, ng_count = self.cam_config.ctrplrRHnumofPart
+                    self.cam_config.ctrplrRHnumofPart = self.manual_adjustment(ok_count, 
+                                                                ng_count, 
+                                                                self.cam_config.furyou_plus, 
+                                                                self.cam_config.furyou_minus, 
+                                                                self.cam_config.kansei_plus, 
+                                                                self.cam_config.kansei_minus)
+
+                    if self.cam_config.resetCounter == True:
+                        ok_count = 0
+                        ng_count = 0
+                        self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
+                        self.cam_config.resetCounter = False
+
                 
 
-                if self.cam_config.resetCounter == True:
-                    ok_count = 0
-                    ng_count = 0
-                    self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
-                    self.cam_config.resetCounter = False
+
             
                     ##To manually set the work order
                 # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
@@ -778,6 +796,11 @@ class CameraThread(QThread):
                                 os.makedirs(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
                                 cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
                                 
+                                if status == "OK":
+                                    ok_count += 1
+                                elif status == "NG":
+                                    ng_count += 1
+
                             if self.cam_config.widget == 4:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
                                                                                             stream=True, 
@@ -791,7 +814,7 @@ class CameraThread(QThread):
                                                                                                                                         partid="RH")
                                 dir_part = self.widget_dir_map.get(self.cam_config.widget)
                                 self.save_result_csv("82833W040P", dir_part, 
-                                                    self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrRHnumofPart, 
+                                                    self.cam_config.ctrplrRHnumofPart, self.cam_config.ctrplrRHnumofPart, 
                                                     timestamp, deltaTime, 
                                                     self.cam_config.kensainName, 
                                                     pitch_results, delta_pitch, 
@@ -799,17 +822,19 @@ class CameraThread(QThread):
                                 
                                                             
                                 #dump imgResult to .aikensa/inspection_results/{dir_part}/{timestamp_date}/{timestamp}}.png"
-                                imgResult = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
                                 os.makedirs(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
-                                cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult)
+                                cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
 
-
+                                if status == "OK":
+                                    ok_count += 1
+                                elif status == "NG":
+                                    ng_count += 1
                                 
-                            if status == "OK":
-                                ok_count += 1
-                            elif status == "NG":
-                                ng_count += 1
+
+
                             self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
+                            self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
 
                             _imgResult = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
                             cv2.imwrite("imgResult.jpg", _imgResult)
