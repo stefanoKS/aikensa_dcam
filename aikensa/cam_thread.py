@@ -132,8 +132,8 @@ class CameraThread(QThread):
 
         self.handClassificationModel = None
 
-        self.clipHandWaitTime = 2.5
-        self.inspection_delay = 3.0
+        self.clipHandWaitTime = 1.5
+        self.inspection_delay = 4.0
 
         self.handinFrame1 = False
         self.handinFrame2 = False
@@ -172,9 +172,9 @@ class CameraThread(QThread):
 
     def run(self):
 
-        cap_cam1 = initialize_camera(0)
+        cap_cam1 = initialize_camera(2)
         print(f"Initiliazing Camera 1.... Located on {cap_cam1}")
-        cap_cam2 = initialize_camera(2)
+        cap_cam2 = initialize_camera(0)
         print(f"Initiliazing Camera 2.... Located on {cap_cam2}")
 
         #Read the yaml param once
@@ -763,6 +763,7 @@ class CameraThread(QThread):
                         combinedImage_wait = self.add_text_to_image(combinedImage_wait, text, font_path, font_size)
                         self.mergeFrame.emit(self.convertQImage(combinedImage_wait))
 
+                        combinedFrame_raw_copy = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_BGR2RGB)
 
 
                         if self.oneLoop == True:
@@ -822,7 +823,6 @@ class CameraThread(QThread):
                                     ng_count += 1
                                 
         
-                            combinedFrame_raw_copy = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_BGR2RGB)
                             imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
                             
 
