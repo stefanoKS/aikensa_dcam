@@ -132,8 +132,8 @@ class CameraThread(QThread):
 
         self.handClassificationModel = None
 
-        self.clipHandWaitTime = 1.5
-        self.inspection_delay = 4.0
+        self.clipHandWaitTime = 0.8 
+        self.inspection_delay = 3.0
 
         self.handinFrame1 = False
         self.handinFrame2 = False
@@ -725,7 +725,7 @@ class CameraThread(QThread):
 
             
                     ##To manually set the work order
-                # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -742,7 +742,6 @@ class CameraThread(QThread):
 
                     deltaTime = timestamp - self.prev_timestamp
                     self.prev_timestamp = timestamp
-                    print (f"previout time stamp, current time stamp, delta time stamp:")
 
                     if self.cam_config.ctrplrWorkOrder != [1, 1, 1, 1, 1]:
                         play_alarm_sound()
@@ -771,7 +770,15 @@ class CameraThread(QThread):
                             self.clip_detection = get_sliced_prediction(combinedFrame_raw, 
                                                                         self.ctrplr_clipDetectionModel, 
                                                                         slice_height=968, slice_width=968, 
-                                                                        overlap_height_ratio=0.2, overlap_width_ratio=0.2)
+                                                                        overlap_height_ratio=0.3, overlap_width_ratio=0.2,
+                                                                        postprocess_match_metric = "IOS",
+                                                                        postprocess_match_threshold = 0.2,
+                                                                        postprocess_class_agnostic = True,
+                                                                        postprocess_type = "GREEDYNMM",
+                                                                        verbose = 0,
+                                                                        perform_standard_pred = False)
+                            
+                            # self.clip_detection.export_visuals(export_dir="./demo_data/")
                             #Detect Katabu Marking 
                             if self.cam_config.widget == 3:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
@@ -1138,7 +1145,7 @@ class CameraThread(QThread):
             handClassificationModel = YOLO("./aikensa/custom_weights/handClassify.pt")
             ctrplr_clipDetectionModel = AutoDetectionModel.from_pretrained(model_type="yolov8",
                                                                            model_path="./aikensa/custom_weights/weights_5755A49X.pt",
-                                                                           confidence_threshold=0.6,
+                                                                           confidence_threshold=0.5,
                                                                            device="cuda:0",
             )
             ctrplr_markingDetectionModel = YOLO("./aikensa/custom_weights/weights_5755A49X_marking.pt")

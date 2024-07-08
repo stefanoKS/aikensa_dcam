@@ -41,7 +41,7 @@ class AIKensa(QMainWindow):
         PORT = 40001  # Use the port number from SiO settings
 
         self.server_monitor_thread = ServerMonitorThread(
-            HOST, PORT, check_interval=0.13)
+            HOST, PORT, check_interval=0.08)
         self.server_monitor_thread.server_status_signal.connect(self.handle_server_status)
         self.server_monitor_thread.input_states_signal.connect(self.handle_input_states)
         self.server_monitor_thread.start()
