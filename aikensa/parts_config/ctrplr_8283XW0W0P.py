@@ -9,7 +9,9 @@ from PIL import ImageFont, ImageDraw, Image
 
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
+ok_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-software-interface-remove-2576.wav")
 ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav")  
+ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
 
@@ -266,9 +268,11 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
 
 def play_sound(status):
     if status == "OK":
-        ok_sound.play()
+        # ok_sound.play()
+        ok_sound_v2.play()
     elif status == "NG":
-        ng_sound.play()
+        # ng_sound.play()
+        ng_sound_v2.play()
 
 def get_center(bbox):
     center_x = bbox.minx + (bbox.maxx - bbox.minx) / 2

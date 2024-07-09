@@ -859,7 +859,7 @@ class CameraThread(QThread):
                                     ng_count += 1
                                     self.inspection_result = False
 
-                            save_image_nama = cv2.cvtColor(combinedFrame_raw_copy, cv2.COLOR_BGR2RGB)
+                            save_image_nama = combinedFrame_raw_copy
                             save_image_kekka = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
 
                             self.save_image(dir_part, save_image_nama, save_image_kekka, timestamp, self.cam_config.kensainName, self.inspection_result, rekensa_id = 0)
@@ -874,27 +874,31 @@ class CameraThread(QThread):
                             self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
                             self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
 
-                            if ok_count % 20 == 0 and ok_count != 0 and all(result == 1 for result in pitch_results):
-                                if ok_count % 100 == 0:
-                                    # imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
-                                    # img_pil = Image.fromarray(imgresults)
-                                    # font = ImageFont.truetype(self.kanjiFontPath, 60)
-                                    # draw = ImageDraw.Draw(img_pil)
-                                    # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                                    # draw.text((centerpos[0]-680, centerpos[1]+180), u"ダンボールに入れてください", 
-                                    #         font=font, fill=(5, 50, 210, 0))
-                                    # imgresults = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                            print(ok_count, ng_count)
+                            print(detected_pitch)
+
+                            if ok_count % 20 == 0 and ok_count != 0 and all(result == 1 for result in detected_pitch):
+                                if ok_count % 200 == 0:
+                                    imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    img_pil = Image.fromarray(imgresults)
+                                    font = ImageFont.truetype(self.kanjiFontPath, 120)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                                    draw.text((centerpos[0]-650, centerpos[1]+150), u"箱に２００になっております\nCó 200 cái trong một hộp.", 
+                                            font=font, fill=(5, 80, 160, 0))
+                                    imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
                                     play_konpou_sound()
                                 else:
-                                    # imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
-                                    # img_pil = Image.fromarray(imgresults)
-                                    # font = ImageFont.truetype(self.kanjiFontPath, 60)
-                                    # draw = ImageDraw.Draw(img_pil)
-                                    # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                                    # draw.text((centerpos[0]-680, centerpos[1]+180), u"束ねてください。", 
-                                    #         font=font, fill=(5, 30, 50, 0))
-                                    # imgresults = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                                    imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    img_pil = Image.fromarray(imgresults)
+                                    font = ImageFont.truetype(self.kanjiFontPath, 120)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                                    draw.text((centerpos[0]-650, centerpos[1]+150), u"束ねてください。\n Hãy buộc nó lại", 
+                                            font=font, fill=(5, 30, 50, 0))
+                                    imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
                                     play_keisoku_sound()
+                                    print ("Keisoku sound played")
 
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
 
