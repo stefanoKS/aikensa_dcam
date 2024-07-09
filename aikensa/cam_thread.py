@@ -5,6 +5,7 @@ import numpy as np
 import yaml
 import time
 import csv
+import sqlite3
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -19,7 +20,7 @@ from aikensa.opencv_imgprocessing.arucoplanarize import planarize
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_re_sound, play_mi_sound, play_fa_sound, play_sol_sound, play_la_sound, play_si_sound, play_alarm_sound
+from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_re_sound, play_mi_sound, play_alarm_sound, play_konpou_sound, play_keisoku_sound
 
 from ultralytics import YOLO
 from aikensa.parts_config.ctrplr_8283XW0W0P import partcheck as ctrplrCheck
@@ -169,8 +170,33 @@ class CameraThread(QThread):
 
         self.last_inspection_time = 0
         self.prev_timestamp = None
+        
+        self.inspection_result = False
 
     def run(self):
+
+        #initialize database
+        self.conn = sqlite3.connect('./aikensa/inspection_results/database_results.db')
+        self.cursor = self.conn.cursor()
+
+        # Create the table if it doesn't exist
+        self.cursor.execute('''
+        CREATE TABLE IF NOT EXISTS inspection_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partName TEXT,
+            numofPart TEXT,
+            currentnumofPart TEXT,
+            timestampHour TEXT,
+            timestampDate TEXT,
+            deltaTime REAL,
+            kensainName TEXT,
+            detected_pitch TEXT,
+            delta_pitch TEXT,
+            total_length REAL
+        )
+        ''')
+
+        self.conn.commit()
 
         cap_cam1 = initialize_camera(2)
         print(f"Initiliazing Camera 1.... Located on {cap_cam1}")
@@ -648,7 +674,7 @@ class CameraThread(QThread):
                         elif self.kensa_cycle is True and self.result_handframe1 == 0 and self.cam_config.ctrplrWorkOrder == [1, 0, 0, 0, 0]:
                             self.handinFrameTimer = time.time()
                             play_picking_sound()
-                            self.cam_config.ctrplrWorkOrder = [1, 1, 0, 0, 0]
+                            self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 0]
 
                         elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrder == [1, 1, 0, 0, 0]:
                             self.handinFrameTimer = time.time()
@@ -725,7 +751,7 @@ class CameraThread(QThread):
 
             
                     ##To manually set the work order
-                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -801,8 +827,10 @@ class CameraThread(QThread):
                        
                                 if status == "OK":
                                     ok_count += 1
+                                    self.inspection_result = True
                                 elif status == "NG":
                                     ng_count += 1
+                                    self.inspection_result = False
 
                             if self.cam_config.widget == 4:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
@@ -826,21 +854,47 @@ class CameraThread(QThread):
                                                             
                                 if status == "OK":
                                     ok_count += 1
+                                    self.inspection_result = True
                                 elif status == "NG":
                                     ng_count += 1
-                                
-        
-                            imgResult_copy = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    self.inspection_result = False
+
+                            save_image_nama = cv2.cvtColor(combinedFrame_raw_copy, cv2.COLOR_BGR2RGB)
+                            save_image_kekka = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+
+                            self.save_image(dir_part, save_image_nama, save_image_kekka, timestamp, self.cam_config.kensainName, self.inspection_result, rekensa_id = 0)
                             
 
-                            os.makedirs(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
-                            os.makedirs(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                            # os.makedirs(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                            # os.makedirs(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
                             
-                            cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", combinedFrame_raw_copy)
-                            cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
+                            # cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", combinedFrame_raw_copy)
+                            # cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
 
                             self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
                             self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
+
+                            if ok_count % 20 == 0 and ok_count != 0 and all(result == 1 for result in pitch_results):
+                                if ok_count % 100 == 0:
+                                    # imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    # img_pil = Image.fromarray(imgresults)
+                                    # font = ImageFont.truetype(self.kanjiFontPath, 60)
+                                    # draw = ImageDraw.Draw(img_pil)
+                                    # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                                    # draw.text((centerpos[0]-680, centerpos[1]+180), u"ダンボールに入れてください", 
+                                    #         font=font, fill=(5, 50, 210, 0))
+                                    # imgresults = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                                    play_konpou_sound()
+                                else:
+                                    # imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    # img_pil = Image.fromarray(imgresults)
+                                    # font = ImageFont.truetype(self.kanjiFontPath, 60)
+                                    # draw = ImageDraw.Draw(img_pil)
+                                    # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                                    # draw.text((centerpos[0]-680, centerpos[1]+180), u"束ねてください。", 
+                                    #         font=font, fill=(5, 30, 50, 0))
+                                    # imgresults = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                                    play_keisoku_sound()
 
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
 
@@ -915,6 +969,30 @@ class CameraThread(QThread):
         cap_cam2.release()
         print("Camera 2 released.")
 
+
+    def save_image(self, dir_part, save_image_nama, save_image_kekka, timestamp, kensainName, inspection_result, rekensa_id):
+        if inspection_result == True:
+            resultid = "OK"
+        else:
+            resultid = "NG"
+
+        timestamp_date = timestamp.strftime("%Y%m%d")
+        timestamp_hour = timestamp.strftime("%H%M%S")
+
+
+        base_dir_nama = f"./aikensa/inspection_results/{dir_part}/{timestamp_date}/{resultid}/nama"
+        base_dir_kekka = f"./aikensa/inspection_results/{dir_part}/{timestamp_date}/{resultid}/kekka"
+
+        img_path_nama = f"{base_dir_nama}/{timestamp_hour}_{kensainName}_start.png"
+        img_path_kekka = f"{base_dir_kekka}/{timestamp_hour}_{kensainName}_finish.png"
+
+        os.makedirs(base_dir_nama, exist_ok=True)
+        os.makedirs(base_dir_kekka, exist_ok=True)
+
+        cv2.imwrite(img_path_nama, save_image_nama)
+        cv2.imwrite(img_path_kekka, save_image_kekka)
+
+
     def save_result_csv(self, part_name, dir_part, 
                         numofPart, current_numofPart, 
                         timestamp, deltaTime, kensainName, 
@@ -961,12 +1039,50 @@ class CameraThread(QThread):
                                  ])
                 
             # Call the method to save data to the database
-        # self.save_result_database(part_name, numofPart, 
-        #                           current_numofPart, timestamp_hour, 
-        #                           timestamp_date, deltaTime, 
-        #                           kensainName, detected_pitch_str, 
-        #                           delta_pitch_str, total_length
-        #                           )
+        self.save_result_database(part_name, numofPart, 
+                                  current_numofPart, timestamp_hour, 
+                                  timestamp_date, deltaTime, 
+                                  kensainName, detected_pitch_str, 
+                                  delta_pitch_str, total_length
+                                  )
+    
+
+    #database save method
+    def save_result_database(self, partname, numofPart, 
+                             currentnumofPart, timestamp_hour, 
+                             timestamp_date, deltaTime, 
+                             kensainName, detected_pitch_str, 
+                             delta_pitch_str, total_length):
+        # Ensure all inputs are strings or compatible types
+        partname = str(partname)
+        numofPart = str(numofPart)
+        currentnumofPart = str(currentnumofPart)
+        timestamp_hour = str(timestamp_hour)
+        timestamp_date = str(timestamp_date)
+        deltaTime = float(deltaTime)  # Ensure this is a float
+        kensainName = str(kensainName)
+        detected_pitch_str = str(detected_pitch_str)
+        delta_pitch_str = str(delta_pitch_str)
+        total_length = float(total_length)  # Ensure this is a float
+
+        self.cursor.execute('''
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        self.conn.commit()
+        # print("Data saved to database")
+
+            # id INTEGER PRIMARY KEY AUTOINCREMENT,
+            # partName TEXT,
+            # numofPart TEXT,
+            # currentnumofPart TEXT,
+            # timestampHour TEXT,
+            # timestampDate TEXT,
+            # deltaTime REAL,
+            # kensainName TEXT,
+            # detected_pitch TEXT,
+            # delta_pitch TEXT,
+            # total_length REAL
 
     def adjust_camera_matrix(self, camera_matrix, scale_factor):
         camera_matrix[0][0] /= scale_factor
@@ -1115,7 +1231,8 @@ class CameraThread(QThread):
         except cv2.error as e:
             print("An error occurred while cropping the image:", str(e))
         return img
-    
+
+            
     def manual_adjustment(self, ok_count, ng_count, furyou_plus, furyou_minus, kansei_plus, kansei_minus):
         if furyou_plus:
             ng_count += 1
