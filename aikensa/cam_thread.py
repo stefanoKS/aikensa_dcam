@@ -926,7 +926,7 @@ class CameraThread(QThread):
 
                                     #reset ok and ng value evert 200 iteration
                                     ok_count_current = 0
-                                    ng_count_current = 0
+                                    # ng_count_current = 0
                                     if self.cam_config.widget == 3:
                                         self.cam_config.ctrplrLHcurrentnumofPart = (ok_count_current, ng_count_current)
                                     if self.cam_config.widget == 4:
