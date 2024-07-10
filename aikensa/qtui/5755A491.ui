@@ -715,7 +715,7 @@ OK Parts:</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="status_kansei">
+   <widget class="QLabel" name="current_kansei">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -773,7 +773,7 @@ NG Parts:</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="status_furyou">
+   <widget class="QLabel" name="current_furyou">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -1269,84 +1269,84 @@ Order Reset</string>
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>830</y>
+      <y>850</y>
       <width>41</width>
-      <height>41</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>20</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(211, 215, 207);</string>
     </property>
     <property name="text">
-     <string>-</string>
+     <string>-1</string>
     </property>
    </widget>
    <widget class="QPushButton" name="kansei_plus">
     <property name="geometry">
      <rect>
       <x>250</x>
-      <y>830</y>
+      <y>850</y>
       <width>41</width>
-      <height>41</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>20</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
      <string notr="true">color: rgb(211, 215, 207);</string>
     </property>
     <property name="text">
-     <string>+</string>
+     <string>+1</string>
     </property>
    </widget>
    <widget class="QPushButton" name="furyou_minus">
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>880</y>
+      <y>900</y>
       <width>41</width>
-      <height>41</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>20</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(211, 215, 207);</string>
     </property>
     <property name="text">
-     <string>-</string>
+     <string>-1</string>
     </property>
    </widget>
    <widget class="QPushButton" name="furyou_plus">
     <property name="geometry">
      <rect>
       <x>250</x>
-      <y>880</y>
+      <y>900</y>
       <width>41</width>
-      <height>41</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>20</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
      <string notr="true">color: rgb(211, 215, 207);</string>
     </property>
     <property name="text">
-     <string>+</string>
+     <string>+1</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_10">
@@ -1925,6 +1925,260 @@ Order Reset</string>
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QPushButton" name="kansei_plus_10">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>830</y>
+      <width>41</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>+10</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="kansei_minus_10">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>830</y>
+      <width>41</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>-10</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="furyou_plus_10">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>880</y>
+      <width>41</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>+10</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="furyou_minus_10">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>880</y>
+      <width>41</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>-10</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="status_furyou">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>870</y>
+      <width>41</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(192, 191, 188);</string>
+    </property>
+    <property name="text">
+     <string>0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_26">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>870</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>不良品</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>840</y>
+      <width>81</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(246, 245, 244);
+background-color: rgb(38, 162, 105);</string>
+    </property>
+    <property name="text">
+     <string>本日合計</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_24">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>840</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>完成品</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="status_kansei">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>840</y>
+      <width>41</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(192, 191, 188);</string>
+    </property>
+    <property name="text">
+     <string>0</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_25">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>830</y>
+      <width>211</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(28, 113, 216);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <zorder>label_25</zorder>
    <zorder>clip3Check</zorder>
    <zorder>clip2Check</zorder>
    <zorder>clip1Check</zorder>
@@ -1953,9 +2207,9 @@ Order Reset</string>
    <zorder>status_sio</zorder>
    <zorder>label_5</zorder>
    <zorder>label_6</zorder>
-   <zorder>status_kansei</zorder>
+   <zorder>current_kansei</zorder>
    <zorder>label_7</zorder>
-   <zorder>status_furyou</zorder>
+   <zorder>current_furyou</zorder>
    <zorder>kensain_name</zorder>
    <zorder>label_8</zorder>
    <zorder>counterReset</zorder>
@@ -1997,6 +2251,15 @@ Order Reset</string>
    <zorder>label_21</zorder>
    <zorder>label_22</zorder>
    <zorder>label_23</zorder>
+   <zorder>kansei_plus_10</zorder>
+   <zorder>kansei_minus_10</zorder>
+   <zorder>furyou_plus_10</zorder>
+   <zorder>furyou_minus_10</zorder>
+   <zorder>status_furyou</zorder>
+   <zorder>label_26</zorder>
+   <zorder>label_24</zorder>
+   <zorder>status_kansei</zorder>
+   <zorder>label_9</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

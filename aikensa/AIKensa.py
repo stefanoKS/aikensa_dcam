@@ -107,14 +107,14 @@ class AIKensa(QMainWindow):
         self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
 
         self.cam_thread.ctrplrLH_pitch_updated.connect(self._set_button_color_ctrplr)
-        # self.cam_thread.ctrplrRH_pitch_updated.connect(self._set_button_color_ctrplrRH)
+        self.cam_thread.ctrplrRH_pitch_updated.connect(self._set_button_color_ctrplr)
 
-        self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH)
-        self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH)
+        self.cam_thread.ctrplrLH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_current)
+        self.cam_thread.ctrplrRH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_current)
 
-        # self.cam_thread.cowl_pitch_updated.connect(self._set_button_color)
-        # self.cam_thread.cowl_numofPart_updated.connect(self._set_numlabel_text)
-        
+        self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_total)
+        self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_total)
+
         self.stackedWidget = QStackedWidget()
 
         for ui in UI_FILES:
@@ -270,15 +270,23 @@ class AIKensa(QMainWindow):
 
         self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
         self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
+        self.kanseihin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_kansei")
+        self.furyouhin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_furyou")
 
         self.kanseihin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_kansei")
         self.furyouhin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_furyou")
+        self.kanseihin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_kansei")
+        self.furyouhin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_furyou")
 
         for i in [3, 4]:
             self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
             self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
             self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
             self.connect_camparam_button(i, "furyou_minus", "furyou_minus", True)
+            self.connect_camparam_button(i, "kansei_plus_10", "kansei_plus_10", True)
+            self.connect_camparam_button(i, "kansei_minus_10", "kansei_minus_10", True)
+            self.connect_camparam_button(i, "furyou_plus_10", "furyou_plus_10", True)
+            self.connect_camparam_button(i, "furyou_minus_10", "furyou_minus_10", True)
 
        # Find and connect quit buttons and main menu buttons in all widgets
         for i in range(self.stackedWidget.count()):
@@ -424,13 +432,23 @@ class AIKensa(QMainWindow):
             color = colorOK if pitch_value else colorNG
             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
-    def _set_numlabel_text_ctrplr_LH(self, numofPart):
+    def _set_numlabel_text_ctrplr_LH_current(self, numofPart):
+        self.kanseihin_number_current_ctrplr_lh.setText(str(numofPart[0]))
+        self.furyouhin_number_current_ctrplr_lh.setText(str(numofPart[1]))
+
+    def _set_numlabel_text_ctrplr_RH_current(self, numofPart):
+        self.kanseihin_number_current_ctrplr_rh.setText(str(numofPart[0]))
+        self.furyouhin_number_current_ctrplr_rh.setText(str(numofPart[1]))
+
+    def _set_numlabel_text_ctrplr_LH_total(self, numofPart):
         self.kanseihin_number_ctrplr_lh.setText(str(numofPart[0]))
         self.furyouhin_number_ctrplr_lh.setText(str(numofPart[1]))
 
-    def _set_numlabel_text_ctrplr_RH(self, numofPart):
+    def _set_numlabel_text_ctrplr_RH_total(self, numofPart):
         self.kanseihin_number_ctrplr_rh.setText(str(numofPart[0]))
         self.furyouhin_number_ctrplr_rh.setText(str(numofPart[1]))
+
+    
 
     def _setFrameCam1(self, image):
         widget = self.stackedWidget.widget(1)

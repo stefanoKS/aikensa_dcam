@@ -1,7 +1,9 @@
 import cv2
 import os
 from datetime import datetime
+from networkx import jaccard_coefficient
 import numpy as np
+from sympy import fu
 import yaml
 import time
 import csv
@@ -68,7 +70,10 @@ class CameraConfig:
     furyou_minus: bool = False
     kansei_plus: bool = False
     kansei_minus: bool = False
-
+    furyou_plus_10: bool = False #to add 10
+    furyou_minus_10: bool = False
+    kansei_plus_10: bool = False
+    kansei_minus_10: bool = False
     kensainName: str = None
 
     HDRes: bool = False
@@ -80,15 +85,14 @@ class CameraConfig:
 
     ctrplrLHpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
     ctrplrLHnumofPart: Tuple[int, int] = (0, 0)
+    ctrplrLHcurrentnumofPart: Tuple[int, int] = (0, 0)
     resetCounter: bool = False
 
     ctrplrRHpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
     ctrplrRHnumofPart: Tuple[int, int] = (0, 0)
+    ctrplrRHcurrentnumofPart: Tuple[int, int] = (0, 0)
     ctrplrRH_resetCounter: bool = False
     
-
-
-
 class CameraThread(QThread):
 
     camFrame1 = pyqtSignal(QImage)
@@ -109,8 +113,12 @@ class CameraThread(QThread):
     ctrplrLH_pitch_updated = pyqtSignal(list)
     ctrplrRH_pitch_updated = pyqtSignal(list)
 
+    ctrplrLH_currentnumofPart_updated = pyqtSignal(tuple)
     ctrplrLH_numofPart_updated = pyqtSignal(tuple)
+
+    ctrplrRH_currentnumofPart_updated = pyqtSignal(tuple)
     ctrplrRH_numofPart_updated = pyqtSignal(tuple)
+    
 
     def __init__(self, cam_config: CameraConfig = None):
         super(CameraThread, self).__init__()
@@ -176,6 +184,10 @@ class CameraThread(QThread):
     def run(self):
 
         #initialize database
+        #make sure the ./aikensa/inspection_results exists
+        if not os.path.exists("./aikensa/inspection_results"):
+            os.makedirs("./aikensa/inspection_results")
+
         self.conn = sqlite3.connect('./aikensa/inspection_results/database_results.db')
         self.cursor = self.conn.cursor()
 
@@ -216,16 +228,6 @@ class CameraThread(QThread):
                 cameraMatrix2 = np.array(cam2calibration_param.get('camera_matrix'))
                 distortionCoeff2 = np.array(cam2calibration_param.get('distortion_coefficients'))
 
-        # if os.path.exists("./aikensa/cameracalibration/homography_param.yaml"):
-        #     with open("./aikensa/cameracalibration/homography_param.yaml") as file:
-        #         homography_param = yaml.load(file, Loader=yaml.FullLoader)
-        #         H = np.array(homography_param)
-
-        # if os.path.exists("./aikensa/cameracalibration/homography_param_lowres.yaml"):
-        #     with open("./aikensa/cameracalibration/homography_param_lowres.yaml") as file:
-        #         homography_param_lowres = yaml.load(file, Loader=yaml.FullLoader)
-        #         H_lowres = np.array(homography_param_lowres)
-
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam1.yaml"):
             with open("./aikensa/cameracalibration/homography_param_cam1.yaml") as file:
                 homography_param1 = yaml.load(file, Loader=yaml.FullLoader)
@@ -250,7 +252,6 @@ class CameraThread(QThread):
         self.cameraMatrix2 = self.adjust_camera_matrix(cameraMatrix2, self.scale_factor)
         self.distortionCoeff1 = distortionCoeff1
         self.distortionCoeff2 = distortionCoeff2
-        # self.H = self.adjust_transform_matrix(H, self.scale_factor)
 
         self.flexibleH1 = H1_lowres
         self.flexibleH2 = H2_lowres
@@ -268,6 +269,13 @@ class CameraThread(QThread):
         #make dark blank image with same size as homography_template
         homography_blank_canvas = np.zeros(homography_size, dtype=np.uint8)
         homography_blank_canvas = cv2.cvtColor(homography_blank_canvas, cv2.COLOR_GRAY2RGB)
+
+        
+        self.cam_config.ctrplrLHcurrentnumofPart = self.get_last_entry_currentnumofPart(self.widget_dir_map.get(3))
+        self.cam_config.ctrplrRHcurrentnumofPart = self.get_last_entry_currentnumofPart(self.widget_dir_map.get(4))
+
+        self.cam_config.ctrplrLHnumofPart = self.get_last_entry_total_numofPart(self.widget_dir_map.get(3))
+        self.cam_config.ctrplrRHnumofPart = self.get_last_entry_total_numofPart(self.widget_dir_map.get(4))
 
         while self.running is True:
             current_time = time.time()
@@ -567,7 +575,6 @@ class CameraThread(QThread):
                     self.clip2Frame.emit(self.convertQImage(clipFrame2))
                     self.clip3Frame.emit(self.convertQImage(clipFrame3))
 
-
             if self.cam_config.widget == 3 or self.cam_config.widget == 4:
 
                 if frame1 is None:
@@ -718,40 +725,64 @@ class CameraThread(QThread):
                     self.cam_config.kensaReset = False
 
                 if self.cam_config.widget == 3:
-                    ok_count, ng_count = self.cam_config.ctrplrLHnumofPart
-                    self.cam_config.ctrplrLHnumofPart = self.manual_adjustment(ok_count, 
-                                                                            ng_count, 
+                    ok_count_current, ng_count_current = self.cam_config.ctrplrLHcurrentnumofPart
+                    ok_count_total, ng_count_total = self.cam_config.ctrplrLHnumofPart
+
+                    self.cam_config.ctrplrLHcurrentnumofPart, self.cam_config.ctrplrLHnumofPart = self.manual_adjustment(ok_count_current, 
+                                                                            ng_count_current, 
+                                                                            ok_count_total,
+                                                                            ng_count_total,
                                                                             self.cam_config.furyou_plus, 
                                                                             self.cam_config.furyou_minus, 
+                                                                            self.cam_config.furyou_plus_10, 
+                                                                            self.cam_config.furyou_minus_10, 
                                                                             self.cam_config.kansei_plus, 
-                                                                            self.cam_config.kansei_minus)
+                                                                            self.cam_config.kansei_minus,
+                                                                            self.cam_config.kansei_plus_10,
+                                                                            self.cam_config.kansei_minus_10)
+                    
                     if self.cam_config.resetCounter == True:
-                        ok_count = 0
-                        ng_count = 0
-                        self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
+                        ok_count_current = 0
+                        ng_count_current = 0
+                        self.cam_config.ctrplrLHcurrentnumofPart = (ok_count_current, ng_count_current)
                         self.cam_config.resetCounter = False
 
                 if self.cam_config.widget == 4:
-                    ok_count, ng_count = self.cam_config.ctrplrRHnumofPart
-                    self.cam_config.ctrplrRHnumofPart = self.manual_adjustment(ok_count, 
-                                                                ng_count, 
-                                                                self.cam_config.furyou_plus, 
-                                                                self.cam_config.furyou_minus, 
-                                                                self.cam_config.kansei_plus, 
-                                                                self.cam_config.kansei_minus)
+                    ok_count_current, ng_count_current = self.cam_config.ctrplrRHcurrentnumofPart
+                    ok_count_total, ng_count_total = self.cam_config.ctrplrRHnumofPart
+
+                    self.cam_config.ctrplrRHcurrentnumofPart, self.cam_config.ctrplrRHnumofPart = self.manual_adjustment(ok_count_current, 
+                                                                            ng_count_current, 
+                                                                            ok_count_total,
+                                                                            ng_count_total,
+                                                                            self.cam_config.furyou_plus, 
+                                                                            self.cam_config.furyou_minus, 
+                                                                            self.cam_config.furyou_plus_10, 
+                                                                            self.cam_config.furyou_minus_10, 
+                                                                            self.cam_config.kansei_plus, 
+                                                                            self.cam_config.kansei_minus,
+                                                                            self.cam_config.kansei_plus_10,
+                                                                            self.cam_config.kansei_minus_10)
 
                     if self.cam_config.resetCounter == True:
-                        ok_count = 0
-                        ng_count = 0
-                        self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
+                        ok_count_current = 0
+                        ng_count_current = 0
+                        self.cam_config.ctrplrRHcurrentnumofPart = (ok_count_current, ng_count_current)
                         self.cam_config.resetCounter = False
 
+                    ##To use debug image
+
+                # combinedFrame_raw = cv2.imread("./aikensa/debug_image/OK.png")
+                # # combinedFrame_raw = cv2.imread("./aikensa/debug_image/NG.png")
+                # #RGB to BGR
+                # combinedFrame_raw = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_RGB2BGR)
+                # croppedFrame1 = self.frameCrop(combinedFrame_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
+                # croppedFrame2 = self.frameCrop(combinedFrame_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
+
                 
-
-
             
                     ##To manually set the work order
-                # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -817,20 +848,26 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="LH")
+                       
+                                if status == "OK":
+                                    ok_count_current += 1
+                                    ok_count_total += 1
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    ng_count_current += 1
+                                    ng_count_total += 1
+                                    self.inspection_result = False
+
+                                self.cam_config.ctrplrLHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                self.cam_config.ctrplrLHnumofPart = (ok_count_total, ng_count_total)
+
                                 dir_part = self.widget_dir_map.get(self.cam_config.widget)
                                 self.save_result_csv("82833W050P", dir_part, 
-                                                    self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrLHnumofPart, 
+                                                    self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrLHcurrentnumofPart, 
                                                     timestamp, deltaTime, 
                                                     self.cam_config.kensainName, 
                                                     pitch_results, delta_pitch, 
                                                     total_length=0)
-                       
-                                if status == "OK":
-                                    ok_count += 1
-                                    self.inspection_result = True
-                                elif status == "NG":
-                                    ng_count += 1
-                                    self.inspection_result = False
 
                             if self.cam_config.widget == 4:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
@@ -843,42 +880,41 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="RH")
+
+                                if status == "OK":
+                                    ok_count_current += 1
+                                    ok_count_total += 1
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    ng_count_current += 1
+                                    ng_count_total += 1
+                                    self.inspection_result = False
+                                    
+                                self.cam_config.ctrplrRHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                self.cam_config.ctrplrRHnumofPart = (ok_count_total, ng_count_total)
+
                                 dir_part = self.widget_dir_map.get(self.cam_config.widget)
                                 self.save_result_csv("82833W040P", dir_part, 
-                                                    self.cam_config.ctrplrRHnumofPart, self.cam_config.ctrplrRHnumofPart, 
+                                                    self.cam_config.ctrplrRHnumofPart, self.cam_config.ctrplrRHcurrentnumofPart, 
                                                     timestamp, deltaTime, 
                                                     self.cam_config.kensainName, 
                                                     pitch_results, delta_pitch, 
                                                     total_length=0)
-                                
-                                                            
-                                if status == "OK":
-                                    ok_count += 1
-                                    self.inspection_result = True
-                                elif status == "NG":
-                                    ng_count += 1
-                                    self.inspection_result = False
 
                             save_image_nama = combinedFrame_raw_copy
                             save_image_kekka = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
 
                             self.save_image(dir_part, save_image_nama, save_image_kekka, timestamp, self.cam_config.kensainName, self.inspection_result, rekensa_id = 0)
                             
-
                             # os.makedirs(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
                             # os.makedirs(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
                             
                             # cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", combinedFrame_raw_copy)
                             # cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
 
-                            self.cam_config.ctrplrLHnumofPart = (ok_count, ng_count)
-                            self.cam_config.ctrplrRHnumofPart = (ok_count, ng_count)
 
-                            print(ok_count, ng_count)
-                            print(detected_pitch)
-
-                            if ok_count % 20 == 0 and ok_count != 0 and all(result == 1 for result in detected_pitch):
-                                if ok_count % 200 == 0:
+                            if ok_count_current % 20 == 0 and ok_count_current != 0 and all(result == 1 for result in detected_pitch):
+                                if ok_count_current % 200 == 0:
                                     imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
                                     img_pil = Image.fromarray(imgresults)
                                     font = ImageFont.truetype(self.kanjiFontPath, 120)
@@ -887,6 +923,14 @@ class CameraThread(QThread):
                                     draw.text((centerpos[0]-650, centerpos[1]+150), u"箱に２００になっております\nCó 200 cái trong một hộp.", 
                                             font=font, fill=(5, 80, 160, 0))
                                     imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+                                    #reset ok and ng value evert 200 iteration
+                                    ok_count_current = 0
+                                    ng_count_current = 0
+                                    if self.cam_config.widget == 3:
+                                        self.cam_config.ctrplrLHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                    if self.cam_config.widget == 4:
+                                        self.cam_config.ctrplrRHcurrentnumofPart = (ok_count_current, ng_count_current)
                                     play_konpou_sound()
                                 else:
                                     imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
@@ -902,15 +946,16 @@ class CameraThread(QThread):
 
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
 
-
                             self.mergeFrame.emit(self.convertQImage(combinedImage))
                             if self.cam_config.widget == 3:
                                 self.kata2Frame.emit(self.convertQImage(katabumarkingResult))
+                                self.ctrplrLH_currentnumofPart_updated.emit(self.cam_config.ctrplrLHcurrentnumofPart)
                                 self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
                                 self.ctrplrLH_pitch_updated.emit(pitch_results)
 
                             if self.cam_config.widget == 4:
                                 self.kata1Frame.emit(self.convertQImage(katabumarkingResult))
+                                self.ctrplrRH_currentnumofPart_updated.emit(self.cam_config.ctrplrRHcurrentnumofPart)
                                 self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
                                 self.ctrplrRH_pitch_updated.emit(pitch_results)
 
@@ -961,9 +1006,11 @@ class CameraThread(QThread):
                 self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
 
                 if self.cam_config.widget == 3:
+                    self.ctrplrLH_currentnumofPart_updated.emit(self.cam_config.ctrplrLHcurrentnumofPart)
                     self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
                     self.ctrplrLH_pitch_updated.emit(self.cam_config.ctrplrLHpitch)
                 if self.cam_config.widget == 4:
+                    self.ctrplrRH_currentnumofPart_updated.emit(self.cam_config.ctrplrRHcurrentnumofPart)
                     self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
                     self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
 
@@ -972,6 +1019,44 @@ class CameraThread(QThread):
         print("Camera 1 released.")
         cap_cam2.release()
         print("Camera 2 released.")
+        
+
+    def get_last_entry_currentnumofPart(self, part_name):
+        self.cursor.execute('''
+        SELECT currentnumofPart 
+        FROM inspection_results 
+        WHERE partName = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name,))
+        
+        row = self.cursor.fetchone()
+        if row:
+            currentnumofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            return currentnumofPart
+        else:
+            return (0, 0)  # Default values if no entry is found
+            
+    def get_last_entry_total_numofPart(self, part_name):
+        # Get today's date in yyyymmdd format
+        today_date = datetime.now().strftime("%Y%m%d")
+
+        print (today_date)
+
+        self.cursor.execute('''
+        SELECT numofPart 
+        FROM inspection_results 
+        WHERE partName = ? AND timestampDate = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name, today_date))
+        
+        row = self.cursor.fetchone()
+        if row:
+            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            return numofPart
+        else:
+            return (0, 0)  # Default values if no entry is found
 
 
     def save_image(self, dir_part, save_image_nama, save_image_kekka, timestamp, kensainName, inspection_result, rekensa_id):
@@ -1237,23 +1322,53 @@ class CameraThread(QThread):
         return img
 
             
-    def manual_adjustment(self, ok_count, ng_count, furyou_plus, furyou_minus, kansei_plus, kansei_minus):
+    def manual_adjustment(self, ok_count_current, ng_count_current, ok_count_total, ng_count_total,
+                          furyou_plus, furyou_minus, 
+                          furyou_plus_10, furyou_minus_10,
+                          kansei_plus, kansei_minus,
+                          kansei_plus_10, kansei_minus_10):
+        
         if furyou_plus:
-            ng_count += 1
+            ng_count_current += 1
+            ng_count_total += 1
             self.cam_config.furyou_plus = False
 
-        if furyou_minus and ng_count > 0:
-            ng_count -= 1
+        if furyou_plus_10:
+            ng_count_current += 10
+            ng_count_total += 10
+            self.cam_config.furyou_plus_10 = False
+
+        if furyou_minus and ng_count_current > 0:
+            ng_count_current -= 1
+            ng_count_total -= 1
             self.cam_config.furyou_minus = False
 
+        if furyou_minus_10 and ng_count_current > 9:
+            ng_count_current -= 10
+            ng_count_total -= 10
+            self.cam_config.furyou_minus_10 = False
+
         if kansei_plus:
-            ok_count += 1
+            ok_count_current += 1
+            ok_count_total += 1
             self.cam_config.kansei_plus = False
 
-        if kansei_minus and ok_count > 0:
-            ok_count -= 1
+        if kansei_plus_10:
+            ok_count_current += 10
+            ok_count_total += 10
+            self.cam_config.kansei_plus_10 = False
+
+        if kansei_minus and ok_count_current > 0:
+            ok_count_current -= 1
+            ok_count_total -= 1
             self.cam_config.kansei_minus = False
-        return ok_count, ng_count
+
+        if kansei_minus_10 and ok_count_current > 9:
+            ok_count_current -= 10
+            ok_count_total -= 10
+            self.cam_config.kansei_minus_10 = False
+
+        return (ok_count_current, ng_count_current), (ok_count_total, ng_count_total)
 
     def initialize_model(self):
         #Change based on the widget
