@@ -354,6 +354,7 @@ def dailytenkencheck(img, img_katabumarking, detections, katabumarking_detection
         
         img = draw_status_text(img, status)
         img_katabumarking = draw_status_text(img_katabumarking, status, size="small")
+        # cv2.imwrite("img_katabumarking.jpg", img_katabumarking)
 
     if partid == "tenken01":
 
@@ -382,9 +383,8 @@ def dailytenkencheck(img, img_katabumarking, detections, katabumarking_detection
                 length = calclength(prev_center, center)*pixelMultiplier
                 middle_lengths.append(length)
                 line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
-                if i != 1 and i != len(sorted_detections) - 1:
-                    img = drawbox(img, line_center, length)
-                    img = drawtext(img, line_center, length)
+                img = drawbox(img, line_center, length)
+                img = drawtext(img, line_center, length)
             prev_center = center
 
 
@@ -396,7 +396,7 @@ def dailytenkencheck(img, img_katabumarking, detections, katabumarking_detection
         pitchresult = check_tolerance(checkedPitchResult, dailytenken01Spec, dailytenken01Tolerance)
 
         if len(checkedPitchResult) == 5:
-            deltaPitch = [checkedPitchResult[i] - pitchSpecLH[i] for i in range(len(pitchSpecLH))]
+            deltaPitch = [checkedPitchResult[i] - dailytenken01Spec[i] for i in range(len(dailytenken01Spec))]
         else:
             deltaPitch = [0, 0, 0, 0, 0]
             checkedPitchResult = [0, 0, 0, 0, 0]
@@ -530,11 +530,15 @@ def draw_status_text(image, status, size = "normal"):
     center_x = image.shape[1] // 2
     if size == "normal":
         top_y = 50  # Adjust this value to change the vertical position
+        font_scale = 5.0  # Increased font scale for bigger text
+
     elif size == "small":
         top_y = 10
+        font_scale = 2.0  # Increased font scale for bigger text
+    
 
     # Text properties
-    font_scale = 5.0  # Increased font scale for bigger text
+    
     font_thickness = 8  # Increased font thickness for bolder text
     outline_thickness = font_thickness + 2  # Slightly thicker for the outline
     text_color = (255, 0, 0) if status == "NG" else (0, 255, 0)  # Red for NG, Green for OK

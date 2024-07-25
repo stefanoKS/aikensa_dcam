@@ -1086,7 +1086,12 @@ class CameraThread(QThread):
                         font_size = 80
 
                         combinedImage_wait = self.add_text_to_image(combinedImage_wait, text, font_path, font_size)
-                        self.mergeFrame.emit(self.convertQImage(combinedImage_wait))
+                        if self.cam_config.widget in [21, 22]:
+                            self.mergeFrame.emit(self.convertQImage(combinedImage_wait))
+                        if self.cam_config.widget == 23:
+                            #resize image first
+                            croppedFrame1_copy = self.resizeImage(croppedFrame1, 640, 320)
+                            self.mergeFrame.emit(self.convertQImage(croppedFrame1_copy))
 
                         combinedFrame_raw_copy = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_BGR2RGB)
 
@@ -1107,12 +1112,12 @@ class CameraThread(QThread):
                             if self.cam_config.widget == 21:
                                 #black image for croppedFrame
                                 croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
-                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
                                                                                             stream=True, 
                                                                                             verbose=False,
                                                                                             conf=0.1, iou=0.5)
                                 self.hanire_detections = None
-                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame2,
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame1,
                                                                                                                                         self.clip_detection.object_prediction_list, 
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
@@ -1126,7 +1131,7 @@ class CameraThread(QThread):
                                 dir_part = self.widget_dir_map.get(self.cam_config.widget)
 
                                 timestamp = datetime.now()
-                                deltaTime = datetime.now()
+                                deltaTime = datetime.now() - timestamp #no usage, just to run the code (too lazy to modify the function)
                                 pitch_results = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
                                 delta_pitch = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
 
@@ -1140,12 +1145,12 @@ class CameraThread(QThread):
 
                             if self.cam_config.widget == 22:
                                 croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
-                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
                                                                                             stream=True, 
                                                                                             verbose=False,
                                                                                             conf=0.1, iou=0.5)
                                 self.hanire_detections = None
-                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame2,
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame1,
                                                                                                                                         self.clip_detection.object_prediction_list, 
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
@@ -1159,7 +1164,7 @@ class CameraThread(QThread):
                                 dir_part = self.widget_dir_map.get(self.cam_config.widget)
 
                                 timestamp = datetime.now()
-                                deltaTime = datetime.now()
+                                deltaTime = datetime.now() - timestamp #no usage, just to run the code (too lazy to modify the function)
                                 pitch_results = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
                                 delta_pitch = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
 
@@ -1173,12 +1178,12 @@ class CameraThread(QThread):
 
 
                             if self.cam_config.widget == 23:
-                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
                                                                                             stream=True, 
                                                                                             verbose=False,
                                                                                             conf=0.1, iou=0.5)
                                 self.hanire_detections = None
-                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame2,
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame1,
                                                                                                                                         self.clip_detection.object_prediction_list, 
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
@@ -1192,7 +1197,7 @@ class CameraThread(QThread):
                                 dir_part = self.widget_dir_map.get(self.cam_config.widget)
 
                                 timestamp = datetime.now()
-                                deltaTime = datetime.now()
+                                deltaTime = datetime.now() - timestamp #no usage, just to run the code (too lazy to modify the function)
                                 pitch_results = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
                                 delta_pitch = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
 
@@ -1211,12 +1216,13 @@ class CameraThread(QThread):
                             self.save_image(dir_part, save_image_nama, save_image_kekka, timestamp, self.cam_config.kensainName, self.inspection_result, rekensa_id = 0)
 
                             combinedImage = self.resizeImage(imgResult, 1791, 428)
-                            katabumarkingResult = self.resizeImage(katabumarkingResult, 1791, 428)
 
-                            self.mergeFrame.emit(self.convertQImage(combinedImage))
+                            if self.cam_config.widget in [21, 22]:
+                                self.mergeFrame.emit(self.convertQImage(combinedImage))
 
                             if self.cam_config.widget == 23: #daily tenken01
-                                self.kata2Frame.emit(self.convertQImage(katabumarkingResult))
+                                katabumarkingResult = self.resizeImage(katabumarkingResult, 640, 320)
+                                self.mergeFrame.emit(self.convertQImage(katabumarkingResult))
 
                             #sleep for self.inspection_delay
                             time.sleep(self.inspection_delay)
@@ -1238,7 +1244,8 @@ class CameraThread(QThread):
                 if self.cam_config.widget == 21 or self.cam_config.widget == 22:
                     self.mergeFrame.emit(self.convertQImage(combinedImage))
                 if self.cam_config.widget == 23:
-                    self.mergeFrame.emit(self.convertQImage(katabumarkingResult))
+                    croppedFrame1 = self.resizeImage(croppedFrame1, 640, 320)
+                    self.mergeFrame.emit(self.convertQImage(croppedFrame1))
                     
 
         cap_cam1.release()
@@ -1303,6 +1310,11 @@ class CameraThread(QThread):
 
         os.makedirs(base_dir_nama, exist_ok=True)
         os.makedirs(base_dir_kekka, exist_ok=True)
+
+        #resize the image into 1/8th of original image if result id is OK
+        if resultid == "OK":
+            save_image_nama = cv2.resize(save_image_nama, (save_image_nama.shape[1]//8, save_image_nama.shape[0]//8))
+            save_image_kekka = cv2.resize(save_image_kekka, (save_image_kekka.shape[1]//8, save_image_kekka.shape[0]//8))
 
         cv2.imwrite(img_path_nama, save_image_nama)
         cv2.imwrite(img_path_kekka, save_image_kekka)
@@ -1603,7 +1615,7 @@ class CameraThread(QThread):
         ctrplr_hanireDetectionModel = None
         ctrplr_markingDetectionModel = None
 
-        if self.cam_config.widget == 3 or self.cam_config.widget == 4:
+        if self.cam_config.widget in [3, 4, 21, 22, 23]:
             handClassificationModel = YOLO("./aikensa/custom_weights/handClassify.pt")
             ctrplr_clipDetectionModel = AutoDetectionModel.from_pretrained(model_type="yolov8",
                                                                            model_path="./aikensa/custom_weights/weights_5755A49X.pt",
@@ -1616,6 +1628,7 @@ class CameraThread(QThread):
         self.handClassificationModel = handClassificationModel
         self.ctrplr_clipDetectionModel = ctrplr_clipDetectionModel
         self.ctrplr_markingDetectionModel = ctrplr_markingDetectionModel
-
+        if ctrplr_clipDetectionModel is None:
+            print("ClipDetectionModel not initialized.")
         print("HandClassificationModel initialized.")
         

@@ -53,9 +53,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>130</y>
+      <y>210</y>
       <width>1811</width>
-      <height>611</height>
+      <height>451</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -64,13 +64,13 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="cameraFrame">
+    <widget class="QLabel" name="mergeFrame">
      <property name="geometry">
       <rect>
        <x>11</x>
        <y>10</y>
        <width>1791</width>
-       <height>591</height>
+       <height>428</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -86,8 +86,8 @@
     <widget class="QPushButton" name="rekensaButton">
      <property name="geometry">
       <rect>
-       <x>260</x>
-       <y>500</y>
+       <x>280</x>
+       <y>340</y>
        <width>91</width>
        <height>71</height>
       </rect>
@@ -120,8 +120,8 @@ background-color: rgb(117, 80, 123);</string>
     <widget class="QPushButton" name="delwarpbutton">
      <property name="geometry">
       <rect>
-       <x>770</x>
-       <y>510</y>
+       <x>790</x>
+       <y>350</y>
        <width>181</width>
        <height>51</height>
       </rect>
@@ -153,8 +153,8 @@ Del Warp Parm</string>
     <widget class="QPushButton" name="savewarpbutton">
      <property name="geometry">
       <rect>
-       <x>580</x>
-       <y>510</y>
+       <x>600</x>
+       <y>350</y>
        <width>181</width>
        <height>51</height>
       </rect>
@@ -186,8 +186,8 @@ Save Warp Parm</string>
     <widget class="QLabel" name="rtwarpcolor">
      <property name="geometry">
       <rect>
-       <x>440</x>
-       <y>490</y>
+       <x>460</x>
+       <y>330</y>
        <width>121</width>
        <height>20</height>
       </rect>
@@ -213,8 +213,8 @@ Save Warp Parm</string>
     <widget class="QPushButton" name="rtwarpbutton">
      <property name="geometry">
       <rect>
-       <x>440</x>
-       <y>510</y>
+       <x>460</x>
+       <y>350</y>
        <width>121</width>
        <height>51</height>
       </rect>
@@ -271,7 +271,7 @@ RT Pers.Warp</string>
     <zorder>rtwarpcolor</zorder>
     <zorder>savewarpbutton</zorder>
     <zorder>rekensaButton</zorder>
-    <zorder>cameraFrame</zorder>
+    <zorder>mergeFrame</zorder>
    </widget>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">

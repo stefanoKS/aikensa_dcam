@@ -310,7 +310,7 @@ class AIKensa(QMainWindow):
         self.button_kensa3 = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
         self.button_kensa4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
 
-        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 3, 4]]
+        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 3, 4, 21, 22, 23]]
 
         self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
         self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
@@ -356,6 +356,10 @@ class AIKensa(QMainWindow):
         self.button_dailyTenken01.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
         self.button_dailyTenken02.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
         self.button_dailyTenken03.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
+
+        self.button_dailyTenken01.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+        self.button_dailyTenken02.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+        self.button_dailyTenken03.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
         self.stackedWidget.currentChanged.connect(self._on_widget_changed)
 
@@ -417,7 +421,7 @@ class AIKensa(QMainWindow):
         self.button_kensa4.click()
 
     def _on_widget_changed(self, idx: int):
-        if idx == 3 or idx == 4:
+        if idx in [3, 4, 21, 22, 23]:
             #Change widget value to equal to index of stacked widget first
             self._set_cam_params(self.cam_thread, 'widget', idx)
             self.cam_thread.initialize_model()
