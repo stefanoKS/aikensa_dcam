@@ -1,3 +1,4 @@
+import stat
 import numpy as np
 import cv2
 import math
@@ -21,6 +22,12 @@ pitchToleranceLH = [2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
 pitchToleranceRH = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
 clipSpecLH = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
 clipSpecRH = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2] #white is 0, brown is 1, yellow is 2, orange is 3
+
+dailytenken01Spec = [100, 100, 100, 100, 100]
+dailytenken01Tolerance = [1.5, 1.5, 1.5, 1.5, 1.5]
+dailytenken01ClipSpec = [0, 1, 3, 0, 1, 3]
+
+dailytenken02ClipSpec = [2, 0, 1, 3]
 
 pitchSpecKatabu = [14]
 pitchToleranceKatabu = [1.5]
@@ -266,6 +273,196 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
 
     return img, img_katabumarking, allpitchresult, pitchresult, deltaPitch, flag_clip_hanire, status
 
+
+
+def dailytenkencheck(img, img_katabumarking, detections, katabumarking_detection, hanire_detection, partid=None):
+
+    sorted_detections = sorted(detections, key=lambda d: d.bbox.minx)
+
+
+    middle_lengths = []
+    katabumarking_lengths = []
+
+    detectedid = []
+    customid = []
+
+    detectedPitch = []
+    deltaPitch = []
+    deltaPitchKatabu = []
+
+    detectedposX = []
+    detectedposY = []
+
+
+    detectedposX_katabumarking = []
+    detectedposY_katabumarking = []
+
+    pitchresult = []
+    checkedPitchResult = []
+
+    katabupitchresult = []
+
+    allpitchresult = []
+
+    prev_center = None
+    prev_center_katabumarking = None
+
+    flag_pitchfuryou = 0
+    flag_clip_furyou = 0
+    flag_clip_hanire = 0
+
+    #KATABU MARKING DETECTION
+    #class 0 is for clip, class 1 is for katabu marking
+    if partid == "tenken03":
+        status = "NG"
+        for r in katabumarking_detection:
+            for box in r.boxes:
+                x_marking, y_marking = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
+                w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
+                class_id_marking = int(box.cls.cpu())
+
+                if class_id_marking == 0:
+                    color = (0, 255, 0)
+                elif class_id_marking == 1:
+                    color = (100, 100, 200)
+
+                center_katabumarking = draw_bounding_box(img_katabumarking, 
+                                        x_marking, y_marking, 
+                                        w_marking, h_marking, 
+                                        [img_katabumarking.shape[1], img_katabumarking.shape[0]], color=color,
+                                        bbox_offset=3, thickness=2)
+                
+                if x_marking is not None:
+                    status = "OK"
+            
+            katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpecKatabu, pitchToleranceKatabu)
+
+
+            xy_pairs_katabumarking = list(zip(detectedposX_katabumarking, detectedposY_katabumarking))
+            draw_pitch_line(img_katabumarking, xy_pairs_katabumarking, katabupitchresult, endoffset_y, thickness=2)
+
+            #pick only the first element if array consists of more than 1 element
+            if len(katabumarking_lengths) > 1:
+                katabumarking_lengths = katabumarking_lengths[:1]
+            if len(katabupitchresult) > 1:
+                katabupitchresult = katabupitchresult[:1]
+            #since there is only one katabu marking, we can just use the first element
+            if katabumarking_lengths:
+                deltaPitchKatabu = [katabumarking_lengths[0] - pitchSpecKatabu[0]]
+            else:
+                deltaPitchKatabu = [0]
+        
+        img = draw_status_text(img, status)
+        img_katabumarking = draw_status_text(img_katabumarking, status, size="small")
+
+    if partid == "tenken01":
+
+        for i, detection in enumerate(sorted_detections):
+            
+            bbox = detection.bbox
+            x, y = get_center(bbox)
+            w = bbox.maxx - bbox.minx
+            h = bbox.maxy - bbox.miny
+            class_id = detection.category.id
+            class_name = detection.category.name
+            score = detection.score.value
+
+            detectedid.append(class_id)
+            detectedposX.append(x)
+            detectedposY.append(y)
+
+            if i < len(dailytenken01ClipSpec) and class_id == dailytenken01ClipSpec[i]:
+                color = (0, 255, 0)
+            else:
+                color = (255, 0, 0)
+
+            center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=color)
+
+            if prev_center is not None:
+                length = calclength(prev_center, center)*pixelMultiplier
+                middle_lengths.append(length)
+                line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
+                if i != 1 and i != len(sorted_detections) - 1:
+                    img = drawbox(img, line_center, length)
+                    img = drawtext(img, line_center, length)
+            prev_center = center
+
+
+        detectedPitch = middle_lengths
+        checkedPitchResult = detectedPitch
+        detectedposX = detectedposX
+        detectedposY = detectedposY
+
+        pitchresult = check_tolerance(checkedPitchResult, dailytenken01Spec, dailytenken01Tolerance)
+
+        if len(checkedPitchResult) == 5:
+            deltaPitch = [checkedPitchResult[i] - pitchSpecLH[i] for i in range(len(pitchSpecLH))]
+        else:
+            deltaPitch = [0, 0, 0, 0, 0]
+            checkedPitchResult = [0, 0, 0, 0, 0]
+
+        allpitchresult = checkedPitchResult #weird naming, this is a list of all the clip pitch and the katabu marking pitch
+        pitchresult = pitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
+        deltaPitch = deltaPitch #this is the delta (difference) between the nominal pitch and the detected pitch
+
+        if any(result != 1 for result in pitchresult):
+            flag_pitchfuryou = 1
+
+        #check whether the detectedid matches with the tenken01
+        if detectedid != dailytenken01ClipSpec:
+            flag_clip_furyou = 1
+
+        if flag_clip_furyou or flag_clip_hanire or flag_pitchfuryou:
+            status = "NG"
+        else:
+            status = "OK"
+
+        xy_pairs = list(zip(detectedposX, detectedposY))
+        draw_pitch_line(img, xy_pairs, pitchresult, endoffset_y)
+
+        play_sound(status)
+        img = draw_status_text(img, status)
+        img_katabumarking = np.zeros((160, 320, 3), dtype=np.uint8)
+
+    if partid == "tenken02":
+        
+        for i, detection in enumerate(sorted_detections):
+            
+            bbox = detection.bbox
+            x, y = get_center(bbox)
+            w = bbox.maxx - bbox.minx
+            h = bbox.maxy - bbox.miny
+            class_id = detection.category.id
+            class_name = detection.category.name
+            score = detection.score.value
+
+            detectedid.append(class_id)
+            detectedposX.append(x)
+            detectedposY.append(y)
+
+            if i < len(dailytenken02ClipSpec) and class_id == dailytenken02ClipSpec[i]:
+                color = (0, 255, 0)
+            else:
+                color = (255, 0, 0)
+
+            center = draw_bounding_box(img, x, y, w, h, [img.shape[1], img.shape[0]], color=color)
+
+        #check whether the detectedid matches with the tenken01
+        if detectedid != dailytenken02ClipSpec:
+            flag_clip_furyou = 1
+
+        if flag_clip_furyou or flag_clip_hanire or flag_pitchfuryou:
+            status = "NG"
+        else:
+            status = "OK"
+
+        play_sound(status)
+        img = draw_status_text(img, status)
+        img_katabumarking = np.zeros((160, 320, 3), dtype=np.uint8)
+
+    return img, img_katabumarking, allpitchresult, pitchresult, deltaPitch, flag_clip_hanire, status
+
+
 def play_sound(status):
     if status == "OK":
         # ok_sound.play()
@@ -328,10 +525,13 @@ def draw_pitch_line(image, xy_pairs, pitchresult, endoffset_y=0, thickness=4):
 
 
 #add "OK" and "NG"
-def draw_status_text(image, status):
+def draw_status_text(image, status, size = "normal"):
     # Define the position for the text: Center top of the image
     center_x = image.shape[1] // 2
-    top_y = 50  # Adjust this value to change the vertical position
+    if size == "normal":
+        top_y = 50  # Adjust this value to change the vertical position
+    elif size == "small":
+        top_y = 10
 
     # Text properties
     font_scale = 5.0  # Increased font scale for bigger text

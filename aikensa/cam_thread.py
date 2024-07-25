@@ -26,6 +26,7 @@ from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_r
 
 from ultralytics import YOLO
 from aikensa.parts_config.ctrplr_8283XW0W0P import partcheck as ctrplrCheck
+from aikensa.parts_config.ctrplr_8283XW0W0P import dailytenkencheck
 
 from PIL import ImageFont, ImageDraw, Image
 
@@ -133,7 +134,10 @@ class CameraThread(QThread):
 
         self.widget_dir_map={
             3: "82833W050P",
-            4: "82833W040P"
+            4: "82833W040P",
+            21: "dailytenken01",
+            22: "dailytenken02",
+            23: "dailytenken03",
         }
 
         self.previous_HDRes = self.cam_config.HDRes
@@ -1014,6 +1018,228 @@ class CameraThread(QThread):
                     self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
                     self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
 
+            if self.cam_config.widget in [21, 22, 23]:
+
+                if frame1 is None:
+                    frame1 = np.zeros((2048, 3072, 3), dtype=np.uint8)
+                if frame2 is None:
+                    frame2 = np.zeros((2048, 3072, 3), dtype=np.uint8) 
+                homography_blank = homography_blank_canvas.copy()
+
+                if ret1 and ret2:
+                    frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2RGB)
+                    frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
+
+                if self.cam_config.HDRes != self.previous_HDRes:
+                    if not self.cam_config.HDRes:
+                        self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, self.scale_factor)
+                        self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, self.scale_factor)
+                        self.flexibleH1 = self.H1_lowres
+                        self.flexibleH2 = self.H2_lowres
+                    else:
+                        self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, 1/self.scale_factor)
+                        self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, 1/self.scale_factor)
+                        self.flexibleH1 = self.H1
+                        self.flexibleH2 = self.H2
+
+                    self.previous_HDRes = self.cam_config.HDRes  
+
+
+                if self.cam_config.HDRes == False:
+                    frame1 = self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor))
+                    frame2 = self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor))
+                    homography_blank = self.resizeImage(homography_blank, 
+                                                        int(homography_blank.shape[1]//self.scale_factor), 
+                                                        int(homography_blank.shape[0]//self.scale_factor))
+
+                
+                frame1 = self.undistortFrame(frame1, self.cameraMatrix1, self.distortionCoeff1)
+                frame2 = self.undistortFrame(frame2, self.cameraMatrix1, self.distortionCoeff1)
+
+                # combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, self.flexibleH)
+                combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames_template(frame1, frame2, homography_blank, self.flexibleH1, self.flexibleH2)
+
+                if self.cam_config.HDRes == False:
+                    clipFrame1 = self.frameCrop(frame1, x=int(590/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=int(1900/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=int(600/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+
+                if self.cam_config.HDRes == True:
+                    clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=1900, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=600, y=0, w=600, h=600, wout = 128, hout = 128)
+
+                if self.cam_config.triggerKensa == True or self.oneLoop == True:
+
+                    if current_time - self.last_inspection_time < self.inspection_delay: #extra 3 sec after inspection to prevent multiple inspection
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        continue
+
+                    self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                    if self.cam_config.ctrplrWorkOrder == [1, 1, 1, 1, 1]:
+                        self.cam_config.HDRes = True
+
+                        combinedImage_wait = combinedImage.copy()
+                        text = '検査実施中'
+                        font_path = self.kanjiFontPath
+                        font_size = 80
+
+                        combinedImage_wait = self.add_text_to_image(combinedImage_wait, text, font_path, font_size)
+                        self.mergeFrame.emit(self.convertQImage(combinedImage_wait))
+
+                        combinedFrame_raw_copy = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_BGR2RGB)
+
+
+                        if self.oneLoop == True:
+                            #Detect Clip
+                            self.clip_detection = get_sliced_prediction(combinedFrame_raw, 
+                                                                        self.ctrplr_clipDetectionModel, 
+                                                                        slice_height=968, slice_width=968, 
+                                                                        overlap_height_ratio=0.3, overlap_width_ratio=0.2,
+                                                                        postprocess_match_metric = "IOS",
+                                                                        postprocess_match_threshold = 0.2,
+                                                                        postprocess_class_agnostic = True,
+                                                                        postprocess_type = "GREEDYNMM",
+                                                                        verbose = 0,
+                                                                        perform_standard_pred = False)
+                            
+                            if self.cam_config.widget == 21:
+                                #black image for croppedFrame
+                                croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame2,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="tenken01")
+                       
+                                if status == "OK":
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    self.inspection_result = False
+
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
+
+                                timestamp = datetime.now()
+                                deltaTime = datetime.now()
+                                pitch_results = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+                                delta_pitch = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+
+
+                                self.save_result_csv("dailytenken01", dir_part, 
+                                                    (0, 0), (0,0), 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
+
+                            if self.cam_config.widget == 22:
+                                croppedFrame2 = np.zeros((160, 320, 3), dtype=np.uint8)
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame2,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="tenken02")
+                       
+                                if status == "OK":
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    self.inspection_result = False
+
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
+
+                                timestamp = datetime.now()
+                                deltaTime = datetime.now()
+                                pitch_results = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+                                delta_pitch = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+
+
+                                self.save_result_csv("dailytenken01", dir_part, 
+                                                    (0, 0), (0,0), 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
+
+
+                            if self.cam_config.widget == 23:
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = dailytenkencheck(combinedFrame_raw, croppedFrame2,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="tenken03")
+                       
+                                if status == "OK":
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    self.inspection_result = False
+
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
+
+                                timestamp = datetime.now()
+                                deltaTime = datetime.now()
+                                pitch_results = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+                                delta_pitch = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0) 
+
+
+                                self.save_result_csv("dailytenken01", dir_part, 
+                                                    (0, 0), (0,0), 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
+
+
+                            save_image_nama = combinedFrame_raw_copy
+                            save_image_kekka = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+
+                            self.save_image(dir_part, save_image_nama, save_image_kekka, timestamp, self.cam_config.kensainName, self.inspection_result, rekensa_id = 0)
+
+                            combinedImage = self.resizeImage(imgResult, 1791, 428)
+                            katabumarkingResult = self.resizeImage(katabumarkingResult, 1791, 428)
+
+                            self.mergeFrame.emit(self.convertQImage(combinedImage))
+
+                            if self.cam_config.widget == 23: #daily tenken01
+                                self.kata2Frame.emit(self.convertQImage(katabumarkingResult))
+
+                            #sleep for self.inspection_delay
+                            time.sleep(self.inspection_delay)
+
+                            self.last_inspection_time = time.time()
+
+                            self.clip_detection = None
+                            self.oneLoop = False
+                            self.cam_config.HDRes = False
+                            self.cam_config.ctrplrWorkOrder = [0, 0, 0, 0, 0]
+                            self.kensa_order = [] #reinitialize the kensa order
+                            self.kensa_cycle = False #reinitialize the kensa cycle
+
+                            continue
+
+                        self.oneLoop = True
+                        self.cam_config.triggerKensa = False
+
+                if self.cam_config.widget == 21 or self.cam_config.widget == 22:
+                    self.mergeFrame.emit(self.convertQImage(combinedImage))
+                if self.cam_config.widget == 23:
+                    self.mergeFrame.emit(self.convertQImage(katabumarkingResult))
+                    
 
         cap_cam1.release()
         print("Camera 1 released.")

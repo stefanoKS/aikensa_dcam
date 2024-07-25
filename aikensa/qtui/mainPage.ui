@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1920</width>
-    <height>825</height>
+    <height>1080</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,7 +50,7 @@ Camera Calib.</string>
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>340</y>
+      <y>460</y>
       <width>1901</width>
       <height>20</height>
      </rect>
@@ -63,7 +63,7 @@ Camera Calib.</string>
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>420</y>
+      <y>540</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -87,7 +87,7 @@ W/STRIP-RR DOOR LH</string>
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>350</y>
+      <y>470</y>
       <width>1901</width>
       <height>20</height>
      </rect>
@@ -100,7 +100,7 @@ W/STRIP-RR DOOR LH</string>
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>380</y>
+      <y>500</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -363,7 +363,7 @@ Edge Params</string>
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>420</y>
+      <y>540</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -407,6 +407,29 @@ Edge Params</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="dailytenkenbutton">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>350</y>
+      <width>231</width>
+      <height>91</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(46, 194, 126);</string>
+    </property>
+    <property name="text">
+     <string extracomment="Generate intrinsic camera parameter">日常点検
+Daily Check</string>
     </property>
    </widget>
   </widget>
