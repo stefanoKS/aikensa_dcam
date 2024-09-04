@@ -214,9 +214,11 @@ class CameraThread(QThread):
 
         self.conn.commit()
 
-        cap_cam1 = initialize_camera(2)
+        # cap_cam1 = initialize_camera(2)
+        cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_07420990-video-index0")
         print(f"Initiliazing Camera 1.... Located on {cap_cam1}")
-        cap_cam2 = initialize_camera(0)
+        # cap_cam2 = initialize_camera(0)
+        cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_02420129-video-index0")
         print(f"Initiliazing Camera 2.... Located on {cap_cam2}")
 
         #Read the yaml param once
@@ -685,7 +687,7 @@ class CameraThread(QThread):
                         elif self.kensa_cycle is True and self.result_handframe1 == 0 and self.cam_config.ctrplrWorkOrder == [1, 0, 0, 0, 0]:
                             self.handinFrameTimer = time.time()
                             play_picking_sound()
-                            self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 0]
+                            self.cam_config.ctrplrWorkOrder = [1, 1, 0, 0, 0]
 
                         elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrder == [1, 1, 0, 0, 0]:
                             self.handinFrameTimer = time.time()
@@ -786,7 +788,7 @@ class CameraThread(QThread):
                 
             
                     ##To manually set the work order
-                self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                #self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -809,6 +811,21 @@ class CameraThread(QThread):
                         self.cam_config.triggerKensa = False
                         self.oneLoop = False
                         continue
+
+                    if self.cam_config.kensainName == None:
+                        play_alarm_sound()
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        text = "社員番号 入れてください Vui lòng nhập số nhân viên. "
+                        font_path = self.kanjiFontPath
+                        font_size = 40
+                        combinedImage = self.add_text_to_image(combinedImage, text, font_path, font_size)
+                        self.mergeFrame.emit(self.convertQImage(combinedImage))
+                        # self.cam_config.ctrplrWorkOrder == [0, 0, 0, 0, 0]
+                        #time sleep
+                        time.sleep(2)
+                        continue
+
 
                     # if self.cam_config.ctrplrWorkOrder == [0,0,0,0,0]:
                     if self.cam_config.ctrplrWorkOrder == [1, 1, 1, 1, 1]:

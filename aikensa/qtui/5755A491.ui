@@ -843,7 +843,8 @@ background-color: rgb(238, 238, 236);</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>検査員(Worker)：</string>
+     <string>検査員番号
+(Worker No)：</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
