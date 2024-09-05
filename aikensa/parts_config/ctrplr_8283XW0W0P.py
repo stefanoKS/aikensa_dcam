@@ -18,8 +18,8 @@ kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
 pitchSpecLH = [85, 87, 98, 98, 78, 113, 103]
 pitchSpecRH = [103, 113, 78, 98, 98, 87, 85]
-pitchToleranceLH = [2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
-pitchToleranceRH = [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
+pitchToleranceLH = [2.0, 1.6, 1.6, 1.6, 1.6, 1.6, 1.6]
+pitchToleranceRH = [1.6, 1.6, 1.6, 1.6, 1.6, 1.6, 2.0]
 clipSpecLH = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
 clipSpecRH = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2] #white is 0, brown is 1, yellow is 2, orange is 3
 
@@ -30,7 +30,7 @@ dailytenken01ClipSpec = [0, 1, 3, 0, 1, 3]
 dailytenken02ClipSpec = [2, 0, 1, 3]
 
 pitchSpecKatabu = [14]
-pitchToleranceKatabu = [1.5]
+pitchToleranceKatabu = [1.6]
 
 pixelMultiplier = 0.19968499 #basically multiplier from 1/arucoplanarize param -> will create a constant for this later
 pixelMultiplier_katabumarking = 0.2
