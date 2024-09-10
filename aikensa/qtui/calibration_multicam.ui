@@ -248,27 +248,6 @@
      <string>Calibrate Cam 2</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="mergeCam">
-    <property name="geometry">
-     <rect>
-      <x>1380</x>
-      <y>460</y>
-      <width>191</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>18</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>MergeCam</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="takeImage2">
     <property name="geometry">
      <rect>
@@ -395,55 +374,11 @@
      <string>Check</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="calcH">
-    <property name="geometry">
-     <rect>
-      <x>1170</x>
-      <y>460</y>
-      <width>121</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>13</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(114, 159, 207);</string>
-    </property>
-    <property name="text">
-     <string>Calculate
-H</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="delH">
-    <property name="geometry">
-     <rect>
-      <x>1300</x>
-      <y>460</y>
-      <width>71</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(239, 41, 41);</string>
-    </property>
-    <property name="text">
-     <string>del
-H</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="saveImage">
     <property name="geometry">
      <rect>
-      <x>1660</x>
-      <y>840</y>
+      <x>1605</x>
+      <y>695</y>
       <width>191</width>
       <height>101</height>
      </rect>
@@ -463,8 +398,8 @@ H</string>
    <widget class="QPushButton" name="delPlanarize">
     <property name="geometry">
      <rect>
-      <x>1660</x>
-      <y>770</y>
+      <x>1605</x>
+      <y>625</y>
       <width>141</width>
       <height>41</height>
      </rect>
@@ -484,8 +419,8 @@ H</string>
    <widget class="QPushButton" name="savePlanarize">
     <property name="geometry">
      <rect>
-      <x>1660</x>
-      <y>700</y>
+      <x>1605</x>
+      <y>555</y>
       <width>141</width>
       <height>61</height>
      </rect>
@@ -505,8 +440,8 @@ H</string>
    <widget class="QPushButton" name="quitbutton">
     <property name="geometry">
      <rect>
-      <x>1660</x>
-      <y>1010</y>
+      <x>1605</x>
+      <y>865</y>
       <width>211</width>
       <height>41</height>
      </rect>
@@ -527,8 +462,8 @@ H</string>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">
      <rect>
-      <x>1660</x>
-      <y>960</y>
+      <x>1605</x>
+      <y>815</y>
       <width>211</width>
       <height>41</height>
      </rect>
@@ -546,170 +481,12 @@ H</string>
      <string>&lt;&lt;&lt; Main Menu</string>
     </property>
    </widget>
-   <widget class="QLabel" name="kata1Frame">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>920</y>
-      <width>256</width>
-      <height>128</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 52, 54);</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="kata2Frame">
-    <property name="geometry">
-     <rect>
-      <x>1300</x>
-      <y>920</y>
-      <width>256</width>
-      <height>128</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 52, 54);</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="clip2Frame">
-    <property name="geometry">
-     <rect>
-      <x>1060</x>
-      <y>130</y>
-      <width>128</width>
-      <height>128</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 52, 54);</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="clip1Frame">
-    <property name="geometry">
-     <rect>
-      <x>920</x>
-      <y>130</y>
-      <width>128</width>
-      <height>128</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 52, 54);</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="clip3Frame">
-    <property name="geometry">
-     <rect>
-      <x>1200</x>
-      <y>130</y>
-      <width>128</width>
-      <height>128</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 52, 54);</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="takeImageClip1">
-    <property name="geometry">
-     <rect>
-      <x>920</x>
-      <y>270</y>
-      <width>101</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(252, 175, 62);</string>
-    </property>
-    <property name="text">
-     <string>Take Image</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="takeImageClip2">
-    <property name="geometry">
-     <rect>
-      <x>1060</x>
-      <y>270</y>
-      <width>101</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(252, 175, 62);</string>
-    </property>
-    <property name="text">
-     <string>Take Image</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="takeImageClip3">
-    <property name="geometry">
-     <rect>
-      <x>1200</x>
-      <y>270</y>
-      <width>101</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(252, 175, 62);</string>
-    </property>
-    <property name="text">
-     <string>Take Image</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="calcH_cam1">
     <property name="geometry">
      <rect>
-      <x>1010</x>
+      <x>985</x>
       <y>460</y>
-      <width>61</width>
+      <width>86</width>
       <height>61</height>
      </rect>
     </property>
@@ -732,7 +509,7 @@ Cam1</string>
      <rect>
       <x>1080</x>
       <y>460</y>
-      <width>61</width>
+      <width>86</width>
       <height>61</height>
      </rect>
     </property>
@@ -747,7 +524,7 @@ Cam1</string>
     <property name="text">
      <string>Calculate
 H
-Cam1</string>
+Cam2</string>
     </property>
    </widget>
   </widget>
@@ -757,7 +534,7 @@ Cam1</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
