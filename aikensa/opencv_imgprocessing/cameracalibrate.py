@@ -6,10 +6,10 @@ import os
 from dataclasses import dataclass
 
 
-dict_type = cv2.aruco.DICT_6X6_250
+dict_type = cv2.aruco.DICT_4X4_250
 squares = (24, 16)
-square_length = 0.020
-marker_length = 0.017
+square_length = 0.025
+marker_length = 0.020
 aruco_dict = cv2.aruco.getPredefinedDictionary(dict_type)
 charboard = cv2.aruco.CharucoBoard(squares, square_length, marker_length, aruco_dict)
 detector = cv2.aruco.CharucoDetector(charboard)
@@ -27,6 +27,16 @@ allObjectPoints = []
 allImagePoints = []
 imageSize = None
 calibration_image = 0
+
+allCharucoCorners_scaledImage = []
+allCharucoIds_scaledImage = []
+allObjectPoints_scaledImage = []
+allImagePoints_scaledImage = []
+imageSize_scaledImage = None
+calibration_image_scaledImage = 0
+
+
+
 
 @dataclass
 class FontConfig:
@@ -59,7 +69,30 @@ def detectCharucoBoard(image):
     #Lets draw the markers
     image = cv2.aruco.drawDetectedMarkers(image, markerCorners, markersIds)
 
-    #print (allCharucoIds)
+    # print (allCharucoIds)
+
+    return image, charucoCorners, charucoIds
+
+#make the exact same function but different naming for the global variables
+
+def detectCharucoBoard_scaledImage(image):
+    global allCharucoCorners_scaledImage, allCharucoIds_scaledImage, allObjectPoints_scaledImage, allImagePoints_scaledImage, imageSize_scaledImage, calibration_image_scaledImage
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    height, width = gray.shape
+    imageSize_scaledImage = (width, height)
+
+    charucoCorners, charucoIds, markerCorners, markersIds = detector.detectBoard(gray)   
+    
+    if charucoCorners is not None and charucoIds is not None:
+        # print("Charuco board detected.")
+        allCharucoCorners_scaledImage.append(charucoCorners)
+        allCharucoIds_scaledImage.append(charucoIds)
+        currentObjectPoints, currentImagePoints = charboard.matchImagePoints(charucoCorners, charucoIds)
+        allObjectPoints_scaledImage.append(currentObjectPoints)
+        allImagePoints_scaledImage.append(currentImagePoints)
+
+    image = cv2.aruco.drawDetectedMarkers(image, markerCorners, markersIds)
 
     return image, charucoCorners, charucoIds
 
@@ -96,8 +129,41 @@ def detectCharucoBoardLarge(image):
 
     return image, charucoCorners, charucoIds
     
+def detectCharucoBoard_aprilTag(image):
+    dict_type = cv2.aruco.DICT_APRILTAG_36H10
+    squares = (30, 20)
+    square_length = 0.030
+    marker_length = 0.025
+    aruco_dict = cv2.aruco.getPredefinedDictionary(dict_type)
+    charboard = cv2.aruco.CharucoBoard(squares, square_length, marker_length, aruco_dict)
+    detector = cv2.aruco.CharucoDetector(charboard)
 
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    charucoCorners, charucoIds, markerCorners, markersIds = detector.detectBoard(gray)   
+    # image = cv2.aruco.drawDetectedMarkers(image, markerCorners, markersIds)
 
+    return image, charucoCorners, charucoIds
+    
+
+def detectCharucoBoard_6_6(image):
+    dict_type = cv2.aruco.DICT_6X6_1000
+    squares = (67, 13)
+    square_length = 0.030
+    marker_length = 0.025
+    aruco_dict = cv2.aruco.getPredefinedDictionary(dict_type)
+    charboard = cv2.aruco.CharucoBoard(squares, square_length, marker_length, aruco_dict)
+    detector = cv2.aruco.CharucoDetector(charboard)
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    height, width = gray.shape
+    imageSize = (width, height)
+
+    charucoCorners, charucoIds, markerCorners, markersIds = detector.detectBoard(gray)   
+    # image = cv2.aruco.drawDetectedMarkers(image, markerCorners, markersIds)
+
+    return image, charucoCorners, charucoIds
+    
 def calculatecameramatrix():
     global allCharucoCorners, allCharucoIds, allObjectPoints, allImagePoints, imageSize, calibration_image
 
@@ -131,12 +197,51 @@ def calculatecameramatrix():
 
         return calibration_data
     else:
-        print("Calibration was unsuccessful.")
+        print("Calibration failed.")
         return None
 
+
+def calculatecameramatrix_scaledImage():
+    global allCharucoCorners_scaledImage, allCharucoIds_scaledImage, allObjectPoints_scaledImage, allImagePoints_scaledImage, imageSize_scaledImage, calibration_image_scaledImage
+
+    if not allObjectPoints_scaledImage or not allImagePoints_scaledImage:
+        print("Insufficient data for calibration.")
+        return None
+
+    calibration_flags = 0  # You can adjust flags here if necessary
+
+    # The cameraMatrix and distCoeffs will be initialized internally by the calibrateCamera function
+    ret, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.calibrateCamera(
+        allObjectPoints_scaledImage, allImagePoints_scaledImage, imageSize_scaledImage, None, None, flags=calibration_flags
+    )
+
+    if ret:
+        calibration_data = {
+            'camera_matrix': cameraMatrix.tolist(),
+            'distortion_coefficients': distCoeffs.tolist(),
+            'rotation_vectors': [r.tolist() for r in rvecs],
+            'translation_vectors': [t.tolist() for t in tvecs]
+        }
+        # print(calibration_data)
+
+        # Clear the lists and variables after successful calibration
+        allCharucoCorners_scaledImage = []
+        allCharucoIds_scaledImage = []
+        allObjectPoints_scaledImage = []
+        allImagePoints_scaledImage = []
+        imageSize_scaledImage = None
+        calibration_image_scaledImage = 0
+
+        return calibration_data
+    else:
+        print("Calibration failed.")
+        return None
+
+
+
 def calculateHomography(img1, img2):
-    _, charucoCorners1, charucoIds1 = detectCharucoBoard(img1)
-    _, charucoCorners2, charucoIds2 = detectCharucoBoard(img2)
+    _, charucoCorners1, charucoIds1 = detectCharucoBoard_6_6(img1)
+    _, charucoCorners2, charucoIds2 = detectCharucoBoard_6_6(img2)
     print("calculating homography")
 
     if charucoCorners1 is not None and charucoCorners2 is not None:
@@ -173,9 +278,23 @@ def calculateHomography(img1, img2):
         return results, M
     
 def calculateHomography_template(img1, img2):
-    _, charucoCorners1, charucoIds1 = detectCharucoBoardLarge(img1)
-    _, charucoCorners2, charucoIds2 = detectCharucoBoardLarge(img2)
-    print("calculating homography")
+    #init corner and id as empty
+    charucoCorners1 = None
+    charucoCorners2 = None
+    charucoIds1 = None
+    charucoIds2 = None
+
+    _, charucoCorners1, charucoIds1 = detectCharucoBoard_aprilTag(img1)
+    _, charucoCorners2, charucoIds2 = detectCharucoBoard_aprilTag(img2)
+    print("Calculating homography...\n")
+    # #print image size
+    # print(f"Image 1 size: {img1.shape}")
+    # print(f"Image 2 size: {img2.shape}")
+
+    # print (f"charucoCorners1: {charucoCorners1}")
+    # print (f"charucoCorners2: {charucoCorners2}")
+    # print (f"charucoIds1: {charucoIds1}")
+    # print (f"charucoIds2: {charucoIds2}")
 
     if charucoCorners1 is not None and charucoCorners2 is not None:
 
@@ -211,7 +330,7 @@ def calculateHomography_template(img1, img2):
 
 
         return results, M
-    
+
 
 def warpTwoImages(img1, img2, H):
     h1,w1 = img1.shape[:2]

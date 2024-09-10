@@ -13,7 +13,8 @@ from PyQt5.QtGui import QImage, QPixmap, QKeySequence
 from aikensa.opencv_imgprocessing.cannydetect import canny_edge_detection
 from aikensa.opencv_imgprocessing.detectaruco import detectAruco
 from aikensa.opencv_imgprocessing.cameracalibrate import detectCharucoBoard, calculatecameramatrix
-from aikensa.cam_thread import CameraThread, CameraConfig
+from aikensa.calibration_thread import CalibrationThread, CalibrationConfig
+from aikensa.inspection_thread import InspectionThread, InspectionConfig
 
 from aikensa.sio_thread import ServerMonitorThread
 from aikensa.time_thread import TimeMonitorThread
@@ -21,14 +22,14 @@ from aikensa.time_thread import TimeMonitorThread
 
 # List of UI files to be loaded
 UI_FILES = [
-    'aikensa/qtui/mainPage.ui',             # index 0
-    'aikensa/qtui/calibration_multicam.ui', # index 1
-    'aikensa/qtui/edgedetection.ui',        # index 2
-    "aikensa/qtui/5755A491.ui",             # index 3
-    "aikensa/qtui/5755A492.ui",             # index 4 
-    "aikensa/qtui/empty.ui", #empty 5
-    "aikensa/qtui/empty.ui", #empty 6
-    "aikensa/qtui/empty.ui", #empty 7
+    'aikensa/qtui/mainPage.ui', # index 0
+    'aikensa/qtui/calibration_cam1.ui', # index 1
+    'aikensa/qtui/calibration_cam2.ui', # index 2         
+    'aikensa/qtui/camera_merge.ui',            # index 3
+    "aikensa/qtui/empty.ui", #empty 4
+    "aikensa/qtui/P5902A509.ui",        # index 5
+    "aikensa/qtui/P5902A510.ui",        # index 6
+    "aikensa/qtui/P658207LE0A.ui", #empty 7
     "aikensa/qtui/empty.ui", #empty 8
     "aikensa/qtui/empty.ui", #empty 9
     "aikensa/qtui/empty.ui", #empty 10
@@ -51,13 +52,18 @@ UI_FILES = [
 class AIKensa(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.cam_thread = CameraThread(CameraConfig())
+
+        self.calibration_thread = CalibrationThread(CalibrationConfig())
+        self.inspection_thread = InspectionThread(InspectionConfig())   
         self._setup_ui()
-        self.cam_thread.start()
+
+        # self.cam_thread = CameraThread(CameraConfig())
+        # self._setup_ui()
+        # self.cam_thread.start()
 
         # Thread for SiO
         HOST = '192.168.0.100'  # Use the IP address from SiO settings
-        PORT = 40001  # Use the port number from SiO settings
+        PORT = 30001  # Use the port number from SiO settings
 
         self.server_monitor_thread = ServerMonitorThread(
             HOST, PORT, check_interval=0.08)
@@ -73,7 +79,8 @@ class AIKensa(QMainWindow):
 
     def timeUpdate(self, time):
         for label in self.timeLabel:
-            label.setText(time)
+            if label:
+                label.setText(time)
 
     def handle_server_status(self, is_up):
         status_text = "ON" if is_up else "OFF"
@@ -105,34 +112,20 @@ class AIKensa(QMainWindow):
         self.button_rekensa.click()
 
     def _setup_ui(self):
-        self.cam_thread.camFrame1.connect(self._setFrameCam1)
-        self.cam_thread.camFrame2.connect(self._setFrameCam2)
-        self.cam_thread.mergeFrame.connect(self._setFrameMerge)
-        
-        self.cam_thread.kata1Frame.connect(self._setFrameKata1)
-        self.cam_thread.kata2Frame.connect(self._setFrameKata2)
-        
-        self.cam_thread.clip1Frame.connect(self._setFrameClip1)
-        self.cam_thread.clip2Frame.connect(self._setFrameClip2)
-        self.cam_thread.clip3Frame.connect(self._setFrameClip3)
 
-        self.cam_thread.handFrame1.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip1Check"))
-        self.cam_thread.handFrame2.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip2Check"))
-        self.cam_thread.handFrame3.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(3), paramValue, "clip3Check"))
-        self.cam_thread.handFrame1.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip1Check"))
-        self.cam_thread.handFrame2.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip2Check"))
-        self.cam_thread.handFrame3.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip3Check"))
+        self.calibration_thread.CalibCamStream.connect(self._setCalibFrame)
 
-        self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
+        self.calibration_thread.CamMerge1.connect(self._setMergeFrame1)
+        self.calibration_thread.CamMerge2.connect(self._setMergeFrame2)
+        self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
 
-        self.cam_thread.ctrplrLH_pitch_updated.connect(self._set_button_color_ctrplr)
-        self.cam_thread.ctrplrRH_pitch_updated.connect(self._set_button_color_ctrplr)
+        self.inspection_thread.part1Cam.connect(self._setPartFrame1)
 
-        self.cam_thread.ctrplrLH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_current)
-        self.cam_thread.ctrplrRH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_current)
+        # self.cam_thread.ctrplrLH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_current)
+        # self.cam_thread.ctrplrRH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_current)
 
-        self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_total)
-        self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_total)
+        # self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_total)
+        # self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_total)
 
         self.stackedWidget = QStackedWidget()
 
@@ -148,50 +141,110 @@ class AIKensa(QMainWindow):
         dailytenken02_widget = self.stackedWidget.widget(22)
         dailytenken03_widget = self.stackedWidget.widget(23)
 
+        cameraCalibration1_widget = self.stackedWidget.widget(1)
+        cameraCalibration2_widget = self.stackedWidget.widget(2)
+        mergeCamera_widget = self.stackedWidget.widget(3)
+
+        partInspection_P5902A509 = self.stackedWidget.widget(5)
+        partInspection_P5902A510 = self.stackedWidget.widget(6)
+        partInspection_P658207LE0A = self.stackedWidget.widget(7)
+
+        cameraCalibration1_button = main_widget.findChild(QPushButton, "camcalibrationbutton1")
+        cameraCalibration2_button = main_widget.findChild(QPushButton, "camcalibrationbutton2")
+        mergeCamera_button = main_widget.findChild(QPushButton, "cameraMerge")
+        
+        partInspection_P5902A509_button = main_widget.findChild(QPushButton, "P5902A509button")
+        partInspection_P5902A510_button = main_widget.findChild(QPushButton, "P5902A510button")
+        partInspection_P658207LE0A_button = main_widget.findChild(QPushButton, "P658207LE0Abutton")
+
+        if cameraCalibration1_button:
+            cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
+            cameraCalibration1_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 1))
+            cameraCalibration1_button.clicked.connect(self.calibration_thread.start)
+
+        if cameraCalibration2_button:
+            cameraCalibration2_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))
+            cameraCalibration2_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 2))
+            cameraCalibration2_button.clicked.connect(self.calibration_thread.start)
+
+        if mergeCamera_button:
+            mergeCamera_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(3))
+            mergeCamera_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 3))
+            mergeCamera_button.clicked.connect(self.calibration_thread.start)
+
+        calcHomoCam1 = mergeCamera_widget.findChild(QPushButton, "calcH_cam1")
+        calcHomoCam2 = mergeCamera_widget.findChild(QPushButton, "calcH_cam2")
+
+        calcHomoCam1.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam1", True))
+        calcHomoCam2.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam2", True))
+
+        planarize_combined = mergeCamera_widget.findChild(QPushButton, "planarize")
+        planarize_combined.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize", True))
 
 
-        button_calib = main_widget.findChild(QPushButton, "calibrationbutton")
-        button_edgedetect = main_widget.findChild(QPushButton, "edgedetectbutton")
+        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button:
 
-        button_P5755A491 = main_widget.findChild(QPushButton, "P5755A491button")
-        button_P5755A492 = main_widget.findChild(QPushButton, "P5755A492button")
+            partInspection_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(5))
+            partInspection_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 5))
+            #if inspection thread is not running, start it:
+            partInspection_P5902A509_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            partInspection_P5902A509_button.clicked.connect(self.calibration_thread.stop)
+
+            partInspection_P5902A510_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(6))
+            partInspection_P5902A510_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 6))
+            partInspection_P5902A510_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            partInspection_P5902A510_button.clicked.connect(self.calibration_thread.stop)
+
+            partInspection_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(7))
+            partInspection_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 7))
+            partInspection_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            partInspection_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
 
 
-        button_dailytenken01 = main_widget.findChild(QPushButton, "dailytenkenbutton")
-        button_dailytenken02 = dailytenken01_widget.findChild(QPushButton, "nextButton")
-        button_dailytenken03 = dailytenken02_widget.findChild(QPushButton, "nextButton")
-        button_dailytenken_kanryou = dailytenken03_widget.findChild(QPushButton, "finishButton")
 
-        self.siostatus = main_widget.findChild(QLabel, "status_sio")
-        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 3, 4]]
 
-        if button_calib:
-            button_calib.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
-            button_calib.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 1))
+        # button_calib = main_widget.findChild(QPushButton, "calibrationbutton")
+        # button_edgedetect = main_widget.findChild(QPushButton, "edgedetectbutton")
 
-        if button_edgedetect:
-            button_edgedetect.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))
-            button_edgedetect.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 2))
+        # button_P5755A491 = main_widget.findChild(QPushButton, "P5755A491button")
+        # button_P5755A492 = main_widget.findChild(QPushButton, "P5755A492button")
 
-        if button_P5755A491:
-            button_P5755A491.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(3))
-            button_P5755A491.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 3))
 
-        if button_P5755A492:
-            button_P5755A492.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(4))
-            button_P5755A492.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 4))
+        # button_dailytenken01 = main_widget.findChild(QPushButton, "dailytenkenbutton")
+        # button_dailytenken02 = dailytenken01_widget.findChild(QPushButton, "nextButton")
+        # button_dailytenken03 = dailytenken02_widget.findChild(QPushButton, "nextButton")
+        # button_dailytenken_kanryou = dailytenken03_widget.findChild(QPushButton, "finishButton")
 
-        if button_dailytenken01:
-            button_dailytenken01.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
-            button_dailytenken01.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 21))
+        # self.siostatus = main_widget.findChild(QLabel, "status_sio")
+        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 1, 2, 3, 4, 5, 6, 7]]
 
-        if button_dailytenken02:
-            button_dailytenken02.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
-            button_dailytenken02.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 22))
+        # if button_calib:
+        #     button_calib.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
+        #     button_calib.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 1))
 
-        if button_dailytenken03:
-            button_dailytenken03.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(23))
-            button_dailytenken03.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 23))
+        # if button_edgedetect:
+        #     button_edgedetect.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))
+        #     button_edgedetect.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 2))
+
+        # if button_P5755A491:
+        #     button_P5755A491.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(3))
+        #     button_P5755A491.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 3))
+
+        # if button_P5755A492:
+        #     button_P5755A492.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(4))
+        #     button_P5755A492.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 4))
+
+        # if button_dailytenken01:
+        #     button_dailytenken01.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
+        #     button_dailytenken01.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 21))
+
+        # if button_dailytenken02:
+        #     button_dailytenken02.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
+        #     button_dailytenken02.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 22))
+
+        # if button_dailytenken03:
+        #     button_dailytenken03.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(23))
+        #     button_dailytenken03.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 23))
 
 
         # add extra widgets here
@@ -199,138 +252,138 @@ class AIKensa(QMainWindow):
         # Widget 0 -> <Main Page>
 
         
-        #Widget 1 # Calibration and Sample
-        captureButton1 = self.stackedWidget.widget(1).findChild(QPushButton, "takeImage1")
-        captureButton2 = self.stackedWidget.widget(1).findChild(QPushButton, "takeImage2")
-        captureButton1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam1", True))
-        captureButton2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam2", True))
+    #     #Widget 1 # Calibration and Sample
+    #     captureButton1 = self.stackedWidget.widget(1).findChild(QPushButton, "takeImage1")
+    #     captureButton2 = self.stackedWidget.widget(1).findChild(QPushButton, "takeImage2")
+    #     captureButton1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam1", True))
+    #     captureButton2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam2", True))
 
-        self.connect_camparam_button(1, "takeImageClip1", "captureClip1", True)
-        self.connect_camparam_button(1, "takeImageClip2", "captureClip2", True)
-        self.connect_camparam_button(1, "takeImageClip3", "captureClip3", True)
+    #     self.connect_camparam_button(1, "takeImageClip1", "captureClip1", True)
+    #     self.connect_camparam_button(1, "takeImageClip2", "captureClip2", True)
+    #     self.connect_camparam_button(1, "takeImageClip3", "captureClip3", True)
         
 
-        cam1CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam1")
-        cam1CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix1", True))
+    #     cam1CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam1")
+    #     cam1CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix1", True))
 
-        cam2CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam2")
-        cam2CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix2", True))
+    #     cam2CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam2")
+    #     cam2CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix2", True))
 
-        delCamMatrix1 = self.stackedWidget.widget(1).findChild(QPushButton, "delCalib1")
-        delCamMatrix2 = self.stackedWidget.widget(1).findChild(QPushButton, "delCalib2")
-        delCamMatrix1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delCamMatrix1", True))
-        delCamMatrix2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delCamMatrix2", True))
+    #     delCamMatrix1 = self.stackedWidget.widget(1).findChild(QPushButton, "delCalib1")
+    #     delCamMatrix2 = self.stackedWidget.widget(1).findChild(QPushButton, "delCalib2")
+    #     delCamMatrix1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delCamMatrix1", True))
+    #     delCamMatrix2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delCamMatrix2", True))
 
-        checkUndistort1 = self.stackedWidget.widget(1).findChild(QPushButton, "checkUndistort1")
-        checkUndistort2 = self.stackedWidget.widget(1).findChild(QPushButton, "checkUndistort2")
-        checkUndistort1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "checkUndistort1", True))
-        checkUndistort2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "checkUndistort2", True))
+    #     checkUndistort1 = self.stackedWidget.widget(1).findChild(QPushButton, "checkUndistort1")
+    #     checkUndistort2 = self.stackedWidget.widget(1).findChild(QPushButton, "checkUndistort2")
+    #     checkUndistort1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "checkUndistort1", True))
+    #     checkUndistort2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "checkUndistort2", True))
 
-        calculateHomo = self.stackedWidget.widget(1).findChild(QPushButton, "calcH")
-        calculateHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo", True))
+    #     calculateHomo = self.stackedWidget.widget(1).findChild(QPushButton, "calcH")
+    #     calculateHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo", True))
 
-        calculateHomo_cam1 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam1")
-        calculateHomo_cam1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam1", True))
+    #     calculateHomo_cam1 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam1")
+    #     calculateHomo_cam1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam1", True))
 
-        calculateHomo_cam2 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam2")
-        calculateHomo_cam2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam2", True))
+    #     calculateHomo_cam2 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam2")
+    #     calculateHomo_cam2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam2", True))
 
 
-        deleteHomo = self.stackedWidget.widget(1).findChild(QPushButton, "delH")
-        deleteHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "deleteHomo", True))
+    #     deleteHomo = self.stackedWidget.widget(1).findChild(QPushButton, "delH")
+    #     deleteHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "deleteHomo", True))
 
-        combineCam = self.stackedWidget.widget(1).findChild(QPushButton, "mergeCam")
-        combineCam.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "mergeCam", True))
+    #     combineCam = self.stackedWidget.widget(1).findChild(QPushButton, "mergeCam")
+    #     combineCam.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "mergeCam", True))
 
-        saveImg = self.stackedWidget.widget(1).findChild(QPushButton, "saveImage")
-        saveImg.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "saveImage", True))
+    #     saveImg = self.stackedWidget.widget(1).findChild(QPushButton, "saveImage")
+    #     saveImg.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "saveImage", True))
 
-        savePlanarize = self.stackedWidget.widget(1).findChild(QPushButton, "savePlanarize")
-        savePlanarize.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "savePlanarize", True))
+    #     savePlanarize = self.stackedWidget.widget(1).findChild(QPushButton, "savePlanarize")
+    #     savePlanarize.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "savePlanarize", True))
 
-        delPlanarize = self.stackedWidget.widget(1).findChild(QPushButton, "delPlanarize")
-        delPlanarize.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delPlanarize", True))
+    #     delPlanarize = self.stackedWidget.widget(1).findChild(QPushButton, "delPlanarize")
+    #     delPlanarize.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delPlanarize", True))
 
-        # Widget 2
-        button_saveparam = self.stackedWidget.widget(2).findChild(QPushButton, "saveparambutton")
-        button_saveparam.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "savecannyparams", True))
+    #     # Widget 2
+    #     button_saveparam = self.stackedWidget.widget(2).findChild(QPushButton, "saveparambutton")
+    #     button_saveparam.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "savecannyparams", True))
 
-        button_takecanny = self.stackedWidget.widget(2).findChild(QPushButton, "takeimagebutton")
-        button_takecanny.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "capture", True))
+    #     button_takecanny = self.stackedWidget.widget(2).findChild(QPushButton, "takeimagebutton")
+    #     button_takecanny.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "capture", True))
 
-        button_readwarp = self.stackedWidget.widget(2).findChild(QPushButton, "button_readwarp")
-        label_readwarp = self.stackedWidget.widget(2).findChild(QLabel, "label_readwarpcolor")
-        button_readwarp.pressed.connect(lambda: self._toggle_param_and_update_label("cannyreadwarp", label_readwarp))
+    #     button_readwarp = self.stackedWidget.widget(2).findChild(QPushButton, "button_readwarp")
+    #     label_readwarp = self.stackedWidget.widget(2).findChild(QLabel, "label_readwarpcolor")
+    #     button_readwarp.pressed.connect(lambda: self._toggle_param_and_update_label("cannyreadwarp", label_readwarp))
 
         
 
-        # frame = process_for_edge_detection(frame, self.slider_value)
-        slider_opacity = self.stackedWidget.widget(2).findChild(QSlider, "slider_opacity")
-        slider_blur = self.stackedWidget.widget(2).findChild(QSlider, "slider_blur")
-        slider_lowercanny = self.stackedWidget.widget(2).findChild(QSlider, "slider_lowercanny")
-        slider_uppercanny = self.stackedWidget.widget(2).findChild(QSlider, "slider_uppercanny")
-        slider_contrast = self.stackedWidget.widget(2).findChild(QSlider, "slider_contrast")
-        slider_brightness = self.stackedWidget.widget(2).findChild(QSlider, "slider_brightness")
+    #     # frame = process_for_edge_detection(frame, self.slider_value)
+    #     slider_opacity = self.stackedWidget.widget(2).findChild(QSlider, "slider_opacity")
+    #     slider_blur = self.stackedWidget.widget(2).findChild(QSlider, "slider_blur")
+    #     slider_lowercanny = self.stackedWidget.widget(2).findChild(QSlider, "slider_lowercanny")
+    #     slider_uppercanny = self.stackedWidget.widget(2).findChild(QSlider, "slider_uppercanny")
+    #     slider_contrast = self.stackedWidget.widget(2).findChild(QSlider, "slider_contrast")
+    #     slider_brightness = self.stackedWidget.widget(2).findChild(QSlider, "slider_brightness")
 
-        slider_opacity.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'opacity', x/100))
-        slider_blur.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'blur', x))
-        slider_lowercanny.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'lower_canny', x))
-        slider_uppercanny.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'upper_canny', x))
-        slider_contrast.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'contrast', x/100))
-        slider_brightness.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'brightness', x/100))
+    #     slider_opacity.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'opacity', x/100))
+    #     slider_blur.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'blur', x))
+    #     slider_lowercanny.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'lower_canny', x))
+    #     slider_uppercanny.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'upper_canny', x))
+    #     slider_contrast.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'contrast', x/100))
+    #     slider_brightness.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'brightness', x/100))
 
-        # Widget 3 and 4
+    #     # Widget 3 and 4
 
-        button_HDRes = self.connect_button_font_color_change(3, "button_HDResQT", "HDRes")
+    #     button_HDRes = self.connect_button_font_color_change(3, "button_HDResQT", "HDRes")
         
-        kensaButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
-        kensaButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+    #     kensaButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
+    #     kensaButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
-        button_HDRes4 = self.connect_button_font_color_change(4, "button_HDResQT", "HDRes")
+    #     button_HDRes4 = self.connect_button_font_color_change(4, "button_HDResQT", "HDRes")
         
-        kensaButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
-        kensaButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+    #     kensaButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
+    #     kensaButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
-        self.connect_camparam_button(3, "counterReset", "resetCounter", True)
-        self.connect_camparam_button(4, "counterReset", "resetCounter", True)
+    #     self.connect_camparam_button(3, "counterReset", "resetCounter", True)
+    #     self.connect_camparam_button(4, "counterReset", "resetCounter", True)
 
-        self.connect_line_edit_text_changed(widget_index=3, line_edit_name="kensain_name", cam_param="kensainName")
-        self.connect_line_edit_text_changed(widget_index=4, line_edit_name="kensain_name", cam_param="kensainName")
+    #     self.connect_line_edit_text_changed(widget_index=3, line_edit_name="kensain_name", cam_param="kensainName")
+    #     self.connect_line_edit_text_changed(widget_index=4, line_edit_name="kensain_name", cam_param="kensainName")
 
-        kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
-        kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
+    #     kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
+    #     kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
         
-        kensaresetButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensareset")
-        kensaresetButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
+    #     kensaresetButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensareset")
+    #     kensaresetButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
 
-        workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
-        workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
-        workorder3 = self.stackedWidget.widget(3).findChild(QLineEdit, "order3")
+    #     workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
+    #     workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
+    #     workorder3 = self.stackedWidget.widget(3).findChild(QLineEdit, "order3")
 
-        self.button_kensa3 = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
-        self.button_kensa4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
+    #     self.button_kensa3 = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
+    #     self.button_kensa4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
 
-        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 3, 4, 21, 22, 23]]
+        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23]]
 
-        self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
-        self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
-        self.kanseihin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_kansei")
-        self.furyouhin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_furyou")
+    #     self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
+    #     self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
+    #     self.kanseihin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_kansei")
+    #     self.furyouhin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_furyou")
 
-        self.kanseihin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_kansei")
-        self.furyouhin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_furyou")
-        self.kanseihin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_kansei")
-        self.furyouhin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_furyou")
+    #     self.kanseihin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_kansei")
+    #     self.furyouhin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_furyou")
+    #     self.kanseihin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_kansei")
+    #     self.furyouhin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_furyou")
 
-        for i in [3, 4]:
-            self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
-            self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
-            self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
-            self.connect_camparam_button(i, "furyou_minus", "furyou_minus", True)
-            self.connect_camparam_button(i, "kansei_plus_10", "kansei_plus_10", True)
-            self.connect_camparam_button(i, "kansei_minus_10", "kansei_minus_10", True)
-            self.connect_camparam_button(i, "furyou_plus_10", "furyou_plus_10", True)
-            self.connect_camparam_button(i, "furyou_minus_10", "furyou_minus_10", True)
+    #     for i in [3, 4]:
+    #         self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
+    #         self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
+    #         self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
+    #         self.connect_camparam_button(i, "furyou_minus", "furyou_minus", True)
+    #         self.connect_camparam_button(i, "kansei_plus_10", "kansei_plus_10", True)
+    #         self.connect_camparam_button(i, "kansei_minus_10", "kansei_minus_10", True)
+    #         self.connect_camparam_button(i, "furyou_plus_10", "furyou_plus_10", True)
+    #         self.connect_camparam_button(i, "furyou_minus_10", "furyou_minus_10", True)
 
        # Find and connect quit buttons and main menu buttons in all widgets
         for i in range(self.stackedWidget.count()):
@@ -343,30 +396,27 @@ class AIKensa(QMainWindow):
 
             if button_main_menu:
                 button_main_menu.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
-                button_main_menu.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 0))
-                button_dailytenken_kanryou.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
-                button_dailytenken_kanryou.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 0))
-                # checkaruco.clicked.connect(lambda: set_params(self.cam_thread, 'check_aruco', False))
+                button_main_menu.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 0))
+                # button_dailytenken_kanryou.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
+                # button_dailytenken_kanryou.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 0))
 
-        #kensabutton for dailytenken
-        self.button_dailyTenken01 = self.stackedWidget.widget(21).findChild(QPushButton, "checkButton")
-        self.button_dailyTenken02 = self.stackedWidget.widget(22).findChild(QPushButton, "checkButton")
-        self.button_dailyTenken03 = self.stackedWidget.widget(23).findChild(QPushButton, "checkButton")
+    #     #kensabutton for dailytenken
+    #     self.button_dailyTenken01 = self.stackedWidget.widget(21).findChild(QPushButton, "checkButton")
+    #     self.button_dailyTenken02 = self.stackedWidget.widget(22).findChild(QPushButton, "checkButton")
+    #     self.button_dailyTenken03 = self.stackedWidget.widget(23).findChild(QPushButton, "checkButton")
 
-        self.button_dailyTenken01.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
-        self.button_dailyTenken02.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
-        self.button_dailyTenken03.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
+    #     self.button_dailyTenken01.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
+    #     self.button_dailyTenken02.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
+    #     self.button_dailyTenken03.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "kensaButton", True))
 
-        self.button_dailyTenken01.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
-        self.button_dailyTenken02.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
-        self.button_dailyTenken03.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+    #     self.button_dailyTenken01.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+    #     self.button_dailyTenken02.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+    #     self.button_dailyTenken03.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
-        self.stackedWidget.currentChanged.connect(self._on_widget_changed)
+        # self.stackedWidget.currentChanged.connect(self._on_widget_changed)
 
         self.setCentralWidget(self.stackedWidget)
         self.showFullScreen()
-
-
 
     def connect_button_font_color_change(self, widget_index, qtbutton, cam_param):
         widget = self.stackedWidget.widget(widget_index)
@@ -416,19 +466,20 @@ class AIKensa(QMainWindow):
             button.pressed.connect(lambda: self._set_cam_params(self.cam_thread, cam_param, value))
             print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
-    def simulateButtonKensaClicks(self):
-        self.button_kensa3.click()
-        self.button_kensa4.click()
+    # def simulateButtonKensaClicks(self):
+    #     self.button_kensa3.click()
+    #     self.button_kensa4.click()
 
-    def _on_widget_changed(self, idx: int):
-        if idx in [3, 4, 21, 22, 23]:
-            #Change widget value to equal to index of stacked widget first
-            self._set_cam_params(self.cam_thread, 'widget', idx)
-            self.cam_thread.initialize_model()
-            
+    # def _on_widget_changed(self, idx: int):
+    #     if idx in [3, 4, 21, 22, 23]:
+    #         #Change widget value to equal to index of stacked widget first
+    #         self._set_cam_params(self.cam_thread, 'widget', idx)
+    #         self.cam_thread.initialize_model()
 
     def _close_app(self):
-        self.cam_thread.stop()
+        # self.cam_thread.stop()
+        self.calibration_thread.stop()
+        self.inspection_thread.stop()
         self.server_monitor_thread.stop()
         time.sleep(1.0)
         QCoreApplication.instance().quit()
@@ -489,74 +540,47 @@ class AIKensa(QMainWindow):
             color = colorOK if pitch_value else colorNG
             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
-    def _set_numlabel_text_ctrplr_LH_current(self, numofPart):
-        self.kanseihin_number_current_ctrplr_lh.setText(str(numofPart[0]))
-        self.furyouhin_number_current_ctrplr_lh.setText(str(numofPart[1]))
+    # def _set_numlabel_text_ctrplr_LH_current(self, numofPart):
+    #     self.kanseihin_number_current_ctrplr_lh.setText(str(numofPart[0]))
+    #     self.furyouhin_number_current_ctrplr_lh.setText(str(numofPart[1]))
 
-    def _set_numlabel_text_ctrplr_RH_current(self, numofPart):
-        self.kanseihin_number_current_ctrplr_rh.setText(str(numofPart[0]))
-        self.furyouhin_number_current_ctrplr_rh.setText(str(numofPart[1]))
+    # def _set_numlabel_text_ctrplr_RH_current(self, numofPart):
+    #     self.kanseihin_number_current_ctrplr_rh.setText(str(numofPart[0]))
+    #     self.furyouhin_number_current_ctrplr_rh.setText(str(numofPart[1]))
 
-    def _set_numlabel_text_ctrplr_LH_total(self, numofPart):
-        self.kanseihin_number_ctrplr_lh.setText(str(numofPart[0]))
-        self.furyouhin_number_ctrplr_lh.setText(str(numofPart[1]))
+    # def _set_numlabel_text_ctrplr_LH_total(self, numofPart):
+    #     self.kanseihin_number_ctrplr_lh.setText(str(numofPart[0]))
+    #     self.furyouhin_number_ctrplr_lh.setText(str(numofPart[1]))
 
-    def _set_numlabel_text_ctrplr_RH_total(self, numofPart):
-        self.kanseihin_number_ctrplr_rh.setText(str(numofPart[0]))
-        self.furyouhin_number_ctrplr_rh.setText(str(numofPart[1]))
+    # def _set_numlabel_text_ctrplr_RH_total(self, numofPart):
+    #     self.kanseihin_number_ctrplr_rh.setText(str(numofPart[0]))
+    #     self.furyouhin_number_ctrplr_rh.setText(str(numofPart[1]))
     
+    def _setCalibFrame(self, image):
+        for i in [1, 2 ]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "camFrame")
+            label.setPixmap(QPixmap.fromImage(image))
 
-    def _setFrameCam1(self, image):
-        widget = self.stackedWidget.widget(1)
-        label = widget.findChild(QLabel, "camFrame1")
+    def _setMergeFrame1(self, image):
+        widget = self.stackedWidget.widget(3)
+        label = widget.findChild(QLabel, "camMerge1")
         label.setPixmap(QPixmap.fromImage(image))
 
-    def _setFrameCam2(self, image):
-        widget = self.stackedWidget.widget(1)
-        label = widget.findChild(QLabel, "camFrame2") 
+    def _setMergeFrame2(self, image):
+        widget = self.stackedWidget.widget(3)
+        label = widget.findChild(QLabel, "camMerge2")
         label.setPixmap(QPixmap.fromImage(image))
 
-    def _setFrameMerge(self, image):
-        for i in [1, 3, 4, 21, 22, 23]:
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "mergeFrame")
-            label.setPixmap(QPixmap.fromImage(image))
+    def _setMergeFrameAll(self, image):
+        widget = self.stackedWidget.widget(3)
+        label = widget.findChild(QLabel, "camMergeAll")
+        label.setPixmap(QPixmap.fromImage(image))
 
-    def _setFrameKata1(self, image):
-        for i in [1, 3, 4]:
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "kata1Frame") 
-            label.setPixmap(QPixmap.fromImage(image))
-        # widget = self.stackedWidget.widget(1)
-        # label = widget.findChild(QLabel, "kata1Frame") 
-        # label.setPixmap(QPixmap.fromImage(image))    
-
-    def _setFrameKata2(self, image):
-        for i in [1, 3, 4]:
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "kata2Frame") 
-            label.setPixmap(QPixmap.fromImage(image))
-        # widget = self.stackedWidget.widget(1)
-        # label = widget.findChild(QLabel, "kata2Frame") 
-        # label.setPixmap(QPixmap.fromImage(image))   
-
-    def _setFrameClip1(self, image):
-        for i in [1, 3, 4]: #modify this later
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "clip1Frame") 
-            label.setPixmap(QPixmap.fromImage(image))
-
-    def _setFrameClip2(self, image):
-        for i in [1, 3, 4]: #modify this later
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "clip2Frame") 
-            label.setPixmap(QPixmap.fromImage(image))
-
-    def _setFrameClip3(self, image):
-        for i in [1, 3, 4]: #modify this later
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "clip3Frame") 
-            label.setPixmap(QPixmap.fromImage(image))
+    def _setPartFrame1(self, image):
+        widget = self.stackedWidget.widget(7)
+        label1 = widget.findChild(QLabel, "framePart")
+        label1.setPixmap(QPixmap.fromImage(image))
 
     def _extract_color(self, stylesheet):
         # Extracts the color value from the stylesheet string
@@ -573,47 +597,49 @@ class AIKensa(QMainWindow):
             self.initial_colors[widget_index][label.objectName()] = color
             # print(f"Stored initial color for {label.objectName()} in widget {widget_index}: {color}")
 
-    def _set_workorder_color_ctrplr(self, workOrder): # For rr side, consists of 6 pitches and Lsun (total Length)
-        colorOK = "green"
-        colorNG = "red"
-        label_names = ["order1", "order2", "order3", "order4", "order5"]
+    # def _set_workorder_color_ctrplr(self, workOrder): # For rr side, consists of 6 pitches and Lsun (total Length)
+    #     colorOK = "green"
+    #     colorNG = "red"
+    #     label_names = ["order1", "order2", "order3", "order4", "order5"]
 
-        if not self.initial_colors:
-            for widget_index in [3, 4]:
-                self._store_initial_colors(widget_index, label_names)
+    #     if not self.initial_colors:
+    #         for widget_index in [3, 4]:
+    #             self._store_initial_colors(widget_index, label_names)
 
-        for widget_index in [3, 4]:
-            labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+    #     for widget_index in [3, 4]:
+    #         labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
             
-            for i, pitch_value in enumerate(workOrder):
-                if pitch_value:
-                    color = colorOK
-                else:
-                    color = self.initial_colors[widget_index][labels[i].objectName()] # Use the initial color from the specific widget
-                labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
-                # print(f"Setting color for {labels[i].objectName()} in widget {widget_index} to {color}")
+    #         for i, pitch_value in enumerate(workOrder):
+    #             if pitch_value:
+    #                 color = colorOK
+    #             else:
+    #                 color = self.initial_colors[widget_index][labels[i].objectName()] # Use the initial color from the specific widget
+    #             labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
+    #             # print(f"Setting color for {labels[i].objectName()} in widget {widget_index} to {color}")
 
 
-    def _set_button_color_ctrplr(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
-        colorOK = "green"
-        colorNG = "red"
-        # print (pitch_data)
-        label_names = ["P1color", "P2color", "P3color",
-                        "P4color", "P5color", "P6color",
-                        "P7color", "P8color"]
+    # def _set_button_color_ctrplr(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
+    #     colorOK = "green"
+    #     colorNG = "red"
+    #     # print (pitch_data)
+    #     label_names = ["P1color", "P2color", "P3color",
+    #                     "P4color", "P5color", "P6color",
+    #                     "P7color", "P8color"]
         
-        for widget_index in [3, 4]:
-            labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+    #     for widget_index in [3, 4]:
+    #         labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
             
-            for i, pitch_value in enumerate(pitch_data):
-                if i >= len(labels):
-                    break #in case the number of pitches is more than the number of labels
-                color = colorOK if pitch_value else colorNG
-                labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+    #         for i, pitch_value in enumerate(pitch_data):
+    #             if i >= len(labels):
+    #                 break #in case the number of pitches is more than the number of labels
+    #             color = colorOK if pitch_value else colorNG
+    #             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
-            
-    def _set_cam_params(self, thread, key, value):
-        setattr(thread.cam_config, key, value)
+    def _set_calib_params(self, thread, key, value):
+        setattr(thread.calib_config, key, value)
+
+    def _set_inspection_params(self, thread, key, value):
+        setattr(thread.inspection_config, key, value)
 
 
 def main():

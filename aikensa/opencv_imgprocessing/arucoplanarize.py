@@ -97,3 +97,165 @@ def planarize(image, scale_factor=1.0):
         else:
             return image, None
 
+def planarize_image(image, target_width, target_height, top_offset, bottom_offset):
+    transform = None
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    desired_plane = np.array([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]], dtype='float32')
+    corners, ids, rejected = detector.detectMarkers(gray)
+
+    print (corners)
+    print (ids)
+    print (rejected)
+    
+    if corners and ids is not None:
+
+        top_left_corner = None
+        top_right_corner = None
+        bottom_left_corner = None
+        bottom_right_corner = None
+
+        for i, corner in zip(ids, corners):
+            marker_id = i[0]
+            if marker_id == 0:
+                # Top left corner of marker 0
+                top_left_corner = corner[0][0]
+            elif marker_id == 1:
+                # Top right corner of marker 1
+                # Made a mistake here -> when taping, accidentally rotated it by 180 degrees originally [0][1] -> [0][3]
+                top_right_corner = corner[0][3]
+            elif marker_id == 2:
+                # Bottom left corner of marker 2
+                bottom_left_corner = corner[0][3]
+            elif marker_id == 3:
+                # Bottom right corner of marker 3
+                bottom_right_corner = corner[0][2]
+
+        if top_left_corner is not None and top_right_corner is not None \
+        and bottom_left_corner is not None and bottom_right_corner is not None:
+            # Concatenate the corners in the desired order
+            ordered_corners = np.array([
+                top_left_corner, top_right_corner,
+                bottom_left_corner, bottom_right_corner
+            ], dtype='float32')
+
+            desired_plane = np.array([[0, top_offset], [target_width, top_offset], [0, target_height-bottom_offset], [target_width, target_height-bottom_offset]], dtype='float32')
+            # modified_desired_plane = np.array([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]], dtype='float32')
+            
+            transform = cv2.getPerspectiveTransform(ordered_corners, desired_plane)
+            image = cv2.warpPerspective(image, transform, (target_width, target_height))
+            #Squeezed image height by 1.26 comes from 340mm/270mm (distance of visible height/distance of arucho marker height)
+            image = cv2.resize(image, (target_width, int(target_height/1.26)))
+
+        return image, transform
+    
+    else:
+        return image, None
+
+
+def planarize_image_wide(image, target_width, target_height, top_offset, bottom_offset):
+    transform = None
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    desired_plane = np.array([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]], dtype='float32')
+    corners, ids, rejected = detector.detectMarkers(gray)
+
+    print (corners)
+    print (ids)
+    print (rejected)
+    
+    if corners and ids is not None:
+
+        top_left_corner = None
+        top_right_corner = None
+        bottom_left_corner = None
+        bottom_right_corner = None
+
+        for i, corner in zip(ids, corners):
+            marker_id = i[0]
+            if marker_id == 0:
+                # Top left corner of marker 0
+                top_left_corner = corner[0][3]
+            elif marker_id == 1:
+                # Top right corner of marker 1
+                top_right_corner = corner[0][2]
+            elif marker_id == 2:
+                # Bottom left corner of marker 2
+                bottom_left_corner = corner[0][0]
+            elif marker_id == 3:
+                # Bottom right corner of marker 3
+                bottom_right_corner = corner[0][1]
+
+        if top_left_corner is not None and top_right_corner is not None \
+        and bottom_left_corner is not None and bottom_right_corner is not None:
+            # Concatenate the corners in the desired order
+            ordered_corners = np.array([
+                top_left_corner, top_right_corner,
+                bottom_left_corner, bottom_right_corner
+            ], dtype='float32')
+
+            desired_plane = np.array([[0, top_offset], [target_width, top_offset], [0, target_height-bottom_offset], [target_width, target_height-bottom_offset]], dtype='float32')
+            # modified_desired_plane = np.array([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]], dtype='float32')
+            
+            transform = cv2.getPerspectiveTransform(ordered_corners, desired_plane)
+            image = cv2.warpPerspective(image, transform, (target_width, target_height))
+            #Squeezed image height by 1.26 comes from 340mm/270mm (distance of visible height/distance of arucho marker height)
+            # image = cv2.resize(image, (target_width, int(target_height/1.26)))
+
+        return image, transform
+    
+    else:
+        return image, None
+
+def planarize_image_narrow(image, target_width, target_height, top_offset, bottom_offset):
+    transform = None
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    desired_plane = np.array([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]], dtype='float32')
+    corners, ids, rejected = detector.detectMarkers(gray)
+
+    print (corners)
+    print (ids)
+    print (rejected)
+    
+    if corners and ids is not None:
+
+        top_left_corner = None
+        top_right_corner = None
+        bottom_left_corner = None
+        bottom_right_corner = None
+
+        for i, corner in zip(ids, corners):
+            marker_id = i[0]
+            if marker_id == 4:
+                # Top left corner of marker 0
+                top_left_corner = corner[0][2]
+            elif marker_id == 5:
+                # Top right corner of marker 1
+                top_right_corner = corner[0][3]
+            elif marker_id == 6:
+                # Bottom left corner of marker 2
+                bottom_left_corner = corner[0][1]
+            elif marker_id == 7:
+                # Bottom right corner of marker 3
+                bottom_right_corner = corner[0][0]
+
+        if top_left_corner is not None and top_right_corner is not None \
+        and bottom_left_corner is not None and bottom_right_corner is not None:
+            # Concatenate the corners in the desired order
+            ordered_corners = np.array([
+                top_left_corner, top_right_corner,
+                bottom_left_corner, bottom_right_corner
+            ], dtype='float32')
+
+            desired_plane = np.array([[0, top_offset], [target_width, top_offset], [0, target_height-bottom_offset], [target_width, target_height-bottom_offset]], dtype='float32')
+            # modified_desired_plane = np.array([[0, 0], [target_width, 0], [0, target_height], [target_width, target_height]], dtype='float32')
+            
+            transform = cv2.getPerspectiveTransform(ordered_corners, desired_plane)
+            image = cv2.warpPerspective(image, transform, (target_width, target_height))
+            #Squeezed image height by 1.26 comes from 340mm/270mm (distance of visible height/distance of arucho marker height)
+            # image = cv2.resize(image, (target_width, int(target_height/1.26)))
+
+        return image, transform
+    
+    else:
+        return image, None
+
+
