@@ -787,7 +787,7 @@ background-color: rgb(211, 215, 207);</string>
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="kensaButton">
+   <widget class="QPushButton" name="InspectButton">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -1563,7 +1563,7 @@ background-color: rgb(38, 162, 105);</string>
    <zorder>P5color</zorder>
    <zorder>Lsunlabel</zorder>
    <zorder>Lsuncolor</zorder>
-   <zorder>kensaButton</zorder>
+   <zorder>InspectButton</zorder>
    <zorder>partlabel_7</zorder>
    <zorder>partlabel_8</zorder>
    <zorder>status_sio</zorder>

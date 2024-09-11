@@ -6,10 +6,11 @@ from enum import Enum
 import time
 
 from PyQt5 import QtCore
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget, QLabel, QSlider, QMainWindow, QWidget, QCheckBox, QShortcut, QLineEdit
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QCoreApplication
-from PyQt5.QtGui import QImage, QPixmap, QKeySequence
+from PyQt5.QtGui import QImage, QPixmap, QKeySequence, QColor
 from aikensa.opencv_imgprocessing.cannydetect import canny_edge_detection
 from aikensa.opencv_imgprocessing.detectaruco import detectAruco
 from aikensa.opencv_imgprocessing.cameracalibrate import detectCharucoBoard, calculatecameramatrix
@@ -99,8 +100,6 @@ class AIKensa(QMainWindow):
         if input_states:
             if input_states[0] == 1:
                 self.trigger_kensa()
-            if input_states[1] == 1:
-                self.trigger_rekensa()
             else:
                 pass
 
@@ -120,6 +119,7 @@ class AIKensa(QMainWindow):
         self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
 
         self.inspection_thread.part1Cam.connect(self._setPartFrame1)
+        self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText)
 
         # self.cam_thread.ctrplrLH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_current)
         # self.cam_thread.ctrplrRH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_current)
@@ -148,6 +148,7 @@ class AIKensa(QMainWindow):
         partInspection_P5902A509 = self.stackedWidget.widget(5)
         partInspection_P5902A510 = self.stackedWidget.widget(6)
         partInspection_P658207LE0A = self.stackedWidget.widget(7)
+        partInspection_P5819A107 = self.stackedWidget.widget(8)
 
         cameraCalibration1_button = main_widget.findChild(QPushButton, "camcalibrationbutton1")
         cameraCalibration2_button = main_widget.findChild(QPushButton, "camcalibrationbutton2")
@@ -156,6 +157,7 @@ class AIKensa(QMainWindow):
         partInspection_P5902A509_button = main_widget.findChild(QPushButton, "P5902A509button")
         partInspection_P5902A510_button = main_widget.findChild(QPushButton, "P5902A510button")
         partInspection_P658207LE0A_button = main_widget.findChild(QPushButton, "P658207LE0Abutton")
+        partInspection_P5819A107_button = main_widget.findChild(QPushButton, "P5819A107button")
 
         if cameraCalibration1_button:
             cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -182,7 +184,7 @@ class AIKensa(QMainWindow):
         planarize_combined.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize", True))
 
 
-        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button:
+        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button and partInspection_P5819A107_button:
 
             partInspection_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(5))
             partInspection_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 5))
@@ -199,6 +201,11 @@ class AIKensa(QMainWindow):
             partInspection_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 7))
             partInspection_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
             partInspection_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
+
+            partInspection_P5819A107_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(8))
+            partInspection_P5819A107_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 8))
+            partInspection_P5819A107_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            partInspection_P5819A107_button.clicked.connect(self.calibration_thread.stop)
 
 
 
@@ -365,6 +372,14 @@ class AIKensa(QMainWindow):
 
         self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23]]
 
+        self.inspection_widget_indices = [5, 6, 7, 8]
+
+        for i in self.inspection_widget_indices:
+            button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButton")
+            if button:
+                button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspection", True))
+
+
     #     self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
     #     self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
     #     self.kanseihin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_kansei")
@@ -513,6 +528,50 @@ class AIKensa(QMainWindow):
         color = "green" if new_value else "red"
         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
+
+    # def _outputMeasurementText(self, measurementValue):
+    #     label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
+
+    #     for i, label_name in enumerate(label_names_part):
+    #         label = self.stackedWidget.widget(7).findChild(QLabel, label_name)
+    #         if label:
+    #             # Check if measurementValue exists, measurementValue[0] exists, and measurementValue[0][i] exists
+    #             if measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 and isinstance(measurementValue[0], list) and len(measurementValue[0]) > i:
+    #                 value = measurementValue[0][i] if measurementValue[0][i] is not None else "None"
+    #             else:
+    #                 value = "None"  # Fallback to "None" or "0"
+    #             label.setText(str(value))
+
+    def _outputMeasurementText(self, measurementValue, measurementResult):
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
+
+        for i, label_name in enumerate(label_names_part):
+            label = self.stackedWidget.widget(7).findChild(QLabel, label_name)
+            if label:
+                # Check if measurementValue and measurementResult exist, and handle missing values
+                if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
+                    and isinstance(measurementValue[0], list) and len(measurementValue[0]) > i):
+                    
+                    value = measurementValue[0][i] if measurementValue[0][i] is not None else "None"
+                else:
+                    value = "None"  # Fallback to "None" or "0"
+                
+                # Set text for the label
+                label.setText(str(value))
+
+                # Change text color based on the measurementResult (0 or 1)
+                if measurementResult and isinstance(measurementResult, list) and len(measurementResult) > i:
+                    result = measurementResult[i]
+                    if result == 1:  # OK result (1)
+                        label.setStyleSheet("color: green;")  # Green for OK
+                    elif result == 0:  # NG result (0)
+                        label.setStyleSheet("color: red;")  # Red for NG
+                else:
+                    # Default color if result is missing or invalid
+                    label.setStyleSheet("color: black;")
+
+
+
     # def _set_labelFrame1(self, widget, paramValue):
     #     colorOK = "green"
     #     colorNG = "red"
@@ -596,44 +655,6 @@ class AIKensa(QMainWindow):
             color = self._extract_color(label.styleSheet())
             self.initial_colors[widget_index][label.objectName()] = color
             # print(f"Stored initial color for {label.objectName()} in widget {widget_index}: {color}")
-
-    # def _set_workorder_color_ctrplr(self, workOrder): # For rr side, consists of 6 pitches and Lsun (total Length)
-    #     colorOK = "green"
-    #     colorNG = "red"
-    #     label_names = ["order1", "order2", "order3", "order4", "order5"]
-
-    #     if not self.initial_colors:
-    #         for widget_index in [3, 4]:
-    #             self._store_initial_colors(widget_index, label_names)
-
-    #     for widget_index in [3, 4]:
-    #         labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
-            
-    #         for i, pitch_value in enumerate(workOrder):
-    #             if pitch_value:
-    #                 color = colorOK
-    #             else:
-    #                 color = self.initial_colors[widget_index][labels[i].objectName()] # Use the initial color from the specific widget
-    #             labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
-    #             # print(f"Setting color for {labels[i].objectName()} in widget {widget_index} to {color}")
-
-
-    # def _set_button_color_ctrplr(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)
-    #     colorOK = "green"
-    #     colorNG = "red"
-    #     # print (pitch_data)
-    #     label_names = ["P1color", "P2color", "P3color",
-    #                     "P4color", "P5color", "P6color",
-    #                     "P7color", "P8color"]
-        
-    #     for widget_index in [3, 4]:
-    #         labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
-            
-    #         for i, pitch_value in enumerate(pitch_data):
-    #             if i >= len(labels):
-    #                 break #in case the number of pitches is more than the number of labels
-    #             color = colorOK if pitch_value else colorNG
-    #             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
     def _set_calib_params(self, thread, key, value):
         setattr(thread.calib_config, key, value)

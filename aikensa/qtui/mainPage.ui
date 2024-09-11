@@ -292,9 +292,9 @@
    <widget class="QLabel" name="timeLabel">
     <property name="geometry">
      <rect>
-      <x>1630</x>
+      <x>1435</x>
       <y>10</y>
-      <width>271</width>
+      <width>466</width>
       <height>51</height>
      </rect>
     </property>
@@ -557,6 +557,30 @@ Camera②Calib.</string>
     <property name="text">
      <string extracomment="Generate intrinsic camera parameter">カメラマージ 
 Camera Merge</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P5819A107button">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>540</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 0, 0);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+5819A107
+ W/STRIP, T/GATE UPR</string>
     </property>
    </widget>
   </widget>
