@@ -151,7 +151,6 @@ def partcheck(image, clip_detection_result, segmentation_result):
         detectedposY.append(right_edge[1])
 
         for i in range(len(detectedposX) - 1):
-            #draw the line
             measuredPitch.append(calclength((detectedposX[i], detectedposY[i]), (detectedposX[i+1], detectedposY[i+1])) * pixelMultiplier)
 
             if abs(measuredPitch[i] - pitchSpec[i]) < tolerance_pitch[i]:
@@ -160,8 +159,6 @@ def partcheck(image, clip_detection_result, segmentation_result):
             else:
                 linecolor = (0, 0, 255)
                 linethickness = 4
-                print_status = print_status + " ピッチ不良 "
-                status = "NG"
 
             image = cv2.line(image, (int(detectedposX[i]), int(detectedposY[i])), (int(detectedposX[i+1]), int(detectedposY[i+1])), linecolor, thickness=linethickness)
         
@@ -187,24 +184,24 @@ def partcheck(image, clip_detection_result, segmentation_result):
         else:
             linecolor = (0, 0, 255)
             linethickness = 4
-            print_status = print_status + " ピッチ不良 "
+            print_status = print_status + "ピッチ不良 "
             status = "NG"
 
         image = cv2.line(image, (int(detectedposX[-2]), int(detectedposY[-2])), (int(initialposX[-1]), int(initialposY[-1])), linecolor, thickness=linethickness)
 
-        if detectedposY[0] < detectedposY[1] or detectedposY[-1] < detectedposY[-2]:
-            print_status = print_status + " クリップ位置不良 "
+        if initialposY[0] > initialposY[1] or initialposY[3] > initialposY[2]:
+            print_status = print_status + "クリップ位置不良 "
             status = "NG"
 
         if print_status == "":
-            print_status = "OK"
+            status = "OK"
 
         measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
 
 
     #Add print status to the top center of the image
-    image = draw_status_text(image, print_status, size="small")
+    image = draw_status_text_PIL(image, status, print_status, size="normal")
 
     return image, measuredPitch, resultPitch, status
 
@@ -310,15 +307,14 @@ def draw_pitch_line(image, xy_pairs, pitchresult, thickness=2):
 
 #add "OK" and "NG"
 def draw_status_text(image, status, size = "normal"):
-    # Define the position for the text: Center top of the image
     center_x = image.shape[1] // 2
     if size == "normal":
-        top_y = 50  # Adjust this value to change the vertical position
-        font_scale = 5.0  # Increased font scale for bigger text
+        top_y = 50 
+        font_scale = 5.0 
 
     elif size == "small":
         top_y = 10
-        font_scale = 2.0  # Increased font scale for bigger text
+        font_scale = 2.0  
     
 
     # Text properties
@@ -340,6 +336,35 @@ def draw_status_text(image, status, size = "normal"):
     cv2.putText(image, status, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, text_color, font_thickness)
 
     return image
+
+    
+def draw_status_text_PIL(image, status, print_status, size = "normal"):
+
+    if size == "large":
+        font_scale = 130.0
+    if size == "normal":
+        font_scale = 100.0
+    elif size == "small":
+        font_scale = 50.0
+
+    if status == "OK":
+        color = (10, 60, 260)
+
+    elif status == "NG":
+        color = (200, 30, 50)
+    
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    img_pil = Image.fromarray(image_rgb)
+    draw = ImageDraw.Draw(img_pil)
+    font = ImageFont.truetype(kanjiFontPath, font_scale)
+
+    draw.text((120, 5), status, font=font, fill=color)  
+    draw.text((120, 100), print_status, font=font, fill=color)
+    image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+    return image
+
+    
 
 
 def check_tolerance(checkedPitchResult, pitchSpec, pitchTolerance):

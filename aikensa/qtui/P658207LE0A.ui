@@ -1023,7 +1023,7 @@ background-color: rgb(211, 215, 207);</string>
      <string>完成品：</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="current_kansei">
@@ -1080,7 +1080,7 @@ background-color: rgb(238, 238, 236);</string>
      <string>不良品：</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="current_furyou">

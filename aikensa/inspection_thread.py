@@ -2,12 +2,14 @@ from tabnanny import verbose
 import cv2
 import os
 from datetime import datetime
-from networkx import jaccard_coefficient
+from networkx import center, jaccard_coefficient
 import numpy as np
+from shapely import length
 from sympy import fu
 import yaml
 import time
 import logging
+import sqlite3
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -30,7 +32,6 @@ from ultralytics import YOLO
 from aikensa.parts_config.P658207LE0A import partcheck as P658207LE0A_check
 
 from PIL import ImageFont, ImageDraw, Image
-import datetime
 
 @dataclass
 class InspectionConfig:
@@ -45,28 +46,31 @@ class InspectionConfig:
     map2_downscaled: list = field(default_factory=lambda: [None]*10) #for 10 cameras
 
     doInspection: bool = False
-    # kouden_sensor: list =  field(default_factory=lambda: [0]*5)
     button_sensor: int = 0
+
+    kensainNumber: str = None
+    furyou_plus: bool = False
+    furyou_minus: bool = False
+    kansei_plus: bool = False
+    kansei_minus: bool = False
+    furyou_plus_10: bool = False #to add 10
+    furyou_minus_10: bool = False
+    kansei_plus_10: bool = False
+    kansei_minus_10: bool = False
+
+    today_numofPart: list = field(default_factory=lambda: [0, 0] * 10)
+    current_numofPart: list = field(default_factory=lambda: [0, 0] * 10)
 
 
 class InspectionThread(QThread):
 
     part1Cam = pyqtSignal(QImage)
 
-    # hoodFR_InspectionResult_PitchMeasured = pyqtSignal(list)
-    # hoodFR_InspectionResult_PitchResult = pyqtSignal(list)
 
     P5819A107_InspectionResult_PitchMeasured = pyqtSignal(list, list)
-    # P5819A107_InspectionResult_PitchResult = pyqtSignal(list)
-
     P5902A509_InspectionResult_PitchMeasured = pyqtSignal(list, list)
-    # P5902A509_InspectionResult_PitchResult = pyqtSignal(list)
-
     P5902A510_InspectionResult_PitchMeasured = pyqtSignal(list, list)
-    # P5902A510_InspectionResult_PitchResult = pyqtSignal(list)
-
     P658207LE0A_InspectionResult_PitchMeasured = pyqtSignal(list, list)
-    # P658207LE0A_InspectionResult_PitchResult = pyqtSignal(list)
 
 
 
@@ -90,6 +94,8 @@ class InspectionThread(QThread):
         self.cap_cam = None
         self.cap_cam1 = None
         self.cap_cam2 = None
+
+        self.emit = None
 
         self.bottomframe = None
         self.mergeframe1 = None
@@ -186,7 +192,6 @@ class InspectionThread(QThread):
             self.cap_cam2.release()
             print(f"Camera 2 released.")
 
-
     def initialize_single_camera(self, camID):
         if self.cap_cam is not None:
             self.cap_cam.release()  # Release the previous camera if it's already open
@@ -228,7 +233,32 @@ class InspectionThread(QThread):
 
     def run(self):
 
-        #print thread started
+        #initialize the database
+        if not os.path.exists("./aikensa/inspection_results"):
+            os.makedirs("./aikensa/inspection_results")
+
+        self.conn = sqlite3.connect('./aikensa/inspection_results/database_results.db')
+        self.cursor = self.conn.cursor()
+
+        # Create the table if it doesn't exist
+        self.cursor.execute('''
+        CREATE TABLE IF NOT EXISTS inspection_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partName TEXT,
+            numofPart TEXT,
+            currentnumofPart TEXT,
+            timestampHour TEXT,
+            timestampDate TEXT,
+            deltaTime REAL,
+            kensainName TEXT,
+            detected_pitch TEXT,
+            delta_pitch TEXT,
+            total_length REAL
+        )
+        ''')
+
+        self.conn.commit()
+
         print("Inspection Thread Started")
         self.initialize_model()
         print("AI Models Initialized")
@@ -241,12 +271,16 @@ class InspectionThread(QThread):
         self.homography_size = (self.homography_template.shape[0], self.homography_template.shape[1])
         self.homography_size_scaled = (self.homography_template.shape[0]//5, self.homography_template.shape[1]//5)
 
-        #make dark blank image with same size as homography_template
         self.homography_blank_canvas = np.zeros(self.homography_size, dtype=np.uint8)
         self.homography_blank_canvas = cv2.cvtColor(self.homography_blank_canvas, cv2.COLOR_GRAY2RGB)
         
         self.homography_template_scaled = cv2.resize(self.homography_template, (self.homography_template.shape[1]//5, self.homography_template.shape[0]//5), interpolation=cv2.INTER_LINEAR)
         self.homography_blank_canvas_scaled = cv2.resize(self.homography_blank_canvas, (self.homography_blank_canvas.shape[1]//5, self.homography_blank_canvas.shape[0]//5), interpolation=cv2.INTER_LINEAR)
+
+        for key, value in self.widget_dir_map.items():
+            self.inspection_config.current_numofPart[key] = self.get_last_entry_currentnumofPart(key)
+            self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(key)
+
 
 
         #INIT all variables
@@ -336,68 +370,64 @@ class InspectionThread(QThread):
 
                 if self.inspection_config.mapCalculated[1] is True: #Just checking the first camera to reduce loop time
 
-                    if self.inspection_config.doInspection is False:
 
-                        self.mergeframe1_scaled = cv2.remap(self.mergeframe1_scaled, self.inspection_config.map1_downscaled[1], self.inspection_config.map2_downscaled[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-                        self.mergeframe2_scaled = cv2.remap(self.mergeframe2_scaled, self.inspection_config.map1_downscaled[2], self.inspection_config.map2_downscaled[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                    self.mergeframe1_scaled = cv2.remap(self.mergeframe1_scaled, self.inspection_config.map1_downscaled[1], self.inspection_config.map2_downscaled[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                    self.mergeframe2_scaled = cv2.remap(self.mergeframe2_scaled, self.inspection_config.map1_downscaled[2], self.inspection_config.map2_downscaled[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
-                        self.mergeframe1_scaled = cv2.rotate(self.mergeframe1_scaled, cv2.ROTATE_180)
-                        self.mergeframe2_scaled = cv2.rotate(self.mergeframe2_scaled, cv2.ROTATE_180)
+                    self.mergeframe1_scaled = cv2.rotate(self.mergeframe1_scaled, cv2.ROTATE_180)
+                    self.mergeframe2_scaled = cv2.rotate(self.mergeframe2_scaled, cv2.ROTATE_180)
 
-                        self.combinedImage_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_scaled)
-                        self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
+                    self.combinedImage_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_scaled)
+                    self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
 
 
-                        self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_narrow_scaled, (int(self.narrow_planarize[1]/(self.scale_factor)), int(self.narrow_planarize[0]/(self.scale_factor))))
-                        self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
+                    self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_narrow_scaled, (int(self.narrow_planarize[1]/(self.scale_factor)), int(self.narrow_planarize[0]/(self.scale_factor))))
+                    self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
 
-                        self.InspectionResult_PitchMeasured = [None]*10
-                        self.InspectionResult_PitchResult = [None]*10
+                    self.InspectionResult_PitchMeasured = [None]*10
+                    self.InspectionResult_PitchResult = [None]*10
 
-                        if self.combinedImage_scaled is not None:
-                            self.part1Cam.emit(self.convertQImage(self.combinedImage_scaled))
-          
-                        self.P658207LE0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                        # self.P658207LE0A_InspectionResult_PitchResult.emit(self.InspectionResult_PitchResult)
+                    if self.combinedImage_scaled is not None:
+                        self.part1Cam.emit(self.convertQImage(self.combinedImage_scaled))
+        
+                    self.P658207LE0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
   
+
                     if self.inspection_config.doInspection is True:
+
                         self.inspection_config.doInspection = False
-                        print("Inspection Started") 
+
+                        self.emit = self.combinedImage_scaled
+                        if self.emit is None:
+                            self.emit = np.zeros((337, 1742, 3), dtype=np.uint8)
+
+                        self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
+                        self.part1Cam.emit(self.convertQImage(self.emit))
 
                         self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
                         self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[2], self.inspection_config.map2[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-
                         self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
                         self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                         self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
                         self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
-                                                                    
                         self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
-
-
 
                         self.InspectionImages[0] = self.combinedImage
 
-                        # # # Do the inspection
                         for i in range(len(self.InspectionImages)):
-                            # self.timerStart = time.time()
                             self.InspectionResult_ClipDetection[i] = self.P658207LE0A_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
                             self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.3, imgsz=1280, verbose=False)
-                            # self.timerFinish = time.time()
- 
                             self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_Status[i] = P658207LE0A_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i])
 
+                            self.save_result_database(self.widget_dir_map[self.inspection_config.widget],
+                                  self.inspection_config.today_numofPart[self.inspection_config.widget], self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                  self.inspection_config.kensainNumber, self.InspectionResult_PitchMeasured[i], 
+                                  self.InspectionResult_PitchResult[i], total_length=0)
 
                         self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=337)
-
-                        # self.hoodFR_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
-                        # self.hoodFR_InspectionResult_PitchResult.emit(self.InspectionResult_PitchResult)
-
                         self.P658207LE0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
-                        # self.P658207LE0A_InspectionResult_PitchResult.emit(self.InspectionResult_PitchResult)
-                        print("Inspection Finished")
 
                         # self.InspectionImages_prev[0] = self.InspectionImages[0]
           
@@ -407,10 +437,101 @@ class InspectionThread(QThread):
                         self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
                         self.part1Cam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
-                        time.sleep(4)
+                        time.sleep(3)
 
 
         self.msleep(1)
+
+
+    #database save method
+    def save_result_database(self, partname, numofPart, 
+                             currentnumofPart, deltaTime, 
+                             kensainName, detected_pitch_str, 
+                             delta_pitch_str, total_length):
+        # Ensure all inputs are strings or compatible types
+
+        timestamp = datetime.now()
+        timestamp_date = timestamp.strftime("%Y%m%d")
+        timestamp_hour = timestamp.strftime("%H:%M:%S")
+
+        partname = str(partname)
+        numofPart = str(numofPart)
+        currentnumofPart = str(currentnumofPart)
+        timestamp_hour = str(timestamp_hour)
+        timestamp_date = str(timestamp_date)
+        deltaTime = float(deltaTime)  # Ensure this is a float
+        kensainName = str(kensainName)
+        detected_pitch_str = str(detected_pitch_str)
+        delta_pitch_str = str(delta_pitch_str)
+        total_length = float(total_length)  # Ensure this is a float
+
+        self.cursor.execute('''
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        self.conn.commit()
+
+    def get_last_entry_currentnumofPart(self, part_name):
+        self.cursor.execute('''
+        SELECT currentnumofPart 
+        FROM inspection_results 
+        WHERE partName = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name,))
+        
+        row = self.cursor.fetchone()
+        if row:
+            currentnumofPart = eval(row[0])
+            return currentnumofPart
+        else:
+            return (0, 0) 
+            
+    def get_last_entry_total_numofPart(self, part_name):
+        # Get today's date in yyyymmdd format
+        today_date = datetime.now().strftime("%Y%m%d")
+
+        print (today_date)
+
+        self.cursor.execute('''
+        SELECT numofPart 
+        FROM inspection_results 
+        WHERE partName = ? AND timestampDate = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name, today_date))
+        
+        row = self.cursor.fetchone()
+        if row:
+            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            return numofPart
+        else:
+            return (0, 0)  # Default values if no entry is found
+
+    def draw_status_text_PIL(self, image, text, color, size = "normal", x_offset = 0, y_offset = 0):
+
+        center_x = image.shape[1] // 2
+        center_y = image.shape[0] // 2
+
+        if size == "large":
+            font_scale = 130.0
+
+        if size == "normal":
+            font_scale = 100.0
+
+        elif size == "small":
+            font_scale = 50.0
+        
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(image_rgb)
+        draw = ImageDraw.Draw(img_pil)
+        font = ImageFont.truetype(self.kanjiFontPath, font_scale)
+
+        draw.text((center_x + x_offset, center_y + y_offset), text, font=font, fill=color)  
+        # Convert back to BGR for OpenCV compatibility
+        image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+        return image
 
     def save_image(self, image):
         dir = "aikensa/inspection/" + self.widget_dir_map[self.inspection_config.widget]
@@ -521,8 +642,8 @@ class InspectionThread(QThread):
         
 
     def stop(self):
+        self.inspection_config.widget = -1
         self.running = False
         print("Releasing all cameras.")
         self.release_all_camera()
-        self.running = False
         print("Inspection thread stopped.")

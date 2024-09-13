@@ -4,6 +4,7 @@ import yaml
 import os
 from enum import Enum
 import time
+import datetime
 
 from PyQt5 import QtCore
 
@@ -615,6 +616,46 @@ class AIKensa(QMainWindow):
     #     self.kanseihin_number_ctrplr_rh.setText(str(numofPart[0]))
     #     self.furyouhin_number_ctrplr_rh.setText(str(numofPart[1]))
     
+
+    
+    def get_last_entry_currentnumofPart(self, part_name):
+        self.cursor.execute('''
+        SELECT currentnumofPart 
+        FROM inspection_results 
+        WHERE partName = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name,))
+        
+        row = self.cursor.fetchone()
+        if row:
+            currentnumofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            return currentnumofPart
+        else:
+            return (0, 0)  # Default values if no entry is found
+            
+    def get_last_entry_total_numofPart(self, part_name):
+        # Get today's date in yyyymmdd format
+        today_date = datetime.now().strftime("%Y%m%d")
+
+        print (today_date)
+
+        self.cursor.execute('''
+        SELECT numofPart 
+        FROM inspection_results 
+        WHERE partName = ? AND timestampDate = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name, today_date))
+        
+        row = self.cursor.fetchone()
+        if row:
+            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            return numofPart
+        else:
+            return (0, 0)  # Default values if no entry is found
+
+
     def _setCalibFrame(self, image):
         for i in [1, 2 ]:
             widget = self.stackedWidget.widget(i)
