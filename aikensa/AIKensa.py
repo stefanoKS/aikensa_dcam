@@ -1,3 +1,4 @@
+import re
 import cv2
 import sys
 import yaml
@@ -32,7 +33,7 @@ UI_FILES = [
     "aikensa/qtui/P5902A509.ui",        # index 5
     "aikensa/qtui/P5902A510.ui",        # index 6
     "aikensa/qtui/P658207LE0A.ui", #empty 7
-    "aikensa/qtui/empty.ui", #empty 8
+    "aikensa/qtui/P5819A107.ui", #empty 8
     "aikensa/qtui/empty.ui", #empty 9
     "aikensa/qtui/empty.ui", #empty 10
     "aikensa/qtui/empty.ui", #empty 11
@@ -79,6 +80,13 @@ class AIKensa(QMainWindow):
 
         self.initial_colors = {}#store initial colors of the labels
 
+        self.widget_dir_map = {
+            5: "5902A509",
+            6: "5902A510",
+            7: "658207LE0A",
+            8: "5819A107",
+        }
+
     def timeUpdate(self, time):
         for label in self.timeLabel:
             if label:
@@ -120,7 +128,12 @@ class AIKensa(QMainWindow):
         self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
 
         self.inspection_thread.part1Cam.connect(self._setPartFrame1)
-        self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText)
+        self.inspection_thread.P5902A509_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P5902A509)
+        self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P658207LE0A)
+
+
+        self.inspection_thread.current_numofPart_signal.connect(self._update_OKNG_label)
+        self.inspection_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
 
         # self.cam_thread.ctrplrLH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_current)
         # self.cam_thread.ctrplrRH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_current)
@@ -391,15 +404,15 @@ class AIKensa(QMainWindow):
     #     self.kanseihin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_kansei")
     #     self.furyouhin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_furyou")
 
-    #     for i in [3, 4]:
-    #         self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
-    #         self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
-    #         self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
-    #         self.connect_camparam_button(i, "furyou_minus", "furyou_minus", True)
-    #         self.connect_camparam_button(i, "kansei_plus_10", "kansei_plus_10", True)
-    #         self.connect_camparam_button(i, "kansei_minus_10", "kansei_minus_10", True)
-    #         self.connect_camparam_button(i, "furyou_plus_10", "furyou_plus_10", True)
-    #         self.connect_camparam_button(i, "furyou_minus_10", "furyou_minus_10", True)
+        for i in [5, 6, 7, 8]:
+            self.connect_inspectionConfig_button(i, "kansei_plus", "kansei_plus", True)
+            self.connect_inspectionConfig_button(i, "kansei_minus", "kansei_minus", True)
+            self.connect_inspectionConfig_button(i, "furyou_plus", "furyou_plus", True)
+            self.connect_inspectionConfig_button(i, "furyou_minus", "furyou_minus", True)
+            self.connect_inspectionConfig_button(i, "kansei_plus_10", "kansei_plus_10", True)
+            self.connect_inspectionConfig_button(i, "kansei_minus_10", "kansei_minus_10", True)
+            self.connect_inspectionConfig_button(i, "furyou_plus_10", "furyou_plus_10", True)
+            self.connect_inspectionConfig_button(i, "furyou_minus_10", "furyou_minus_10", True)
 
        # Find and connect quit buttons and main menu buttons in all widgets
         for i in range(self.stackedWidget.count()):
@@ -475,12 +488,12 @@ class AIKensa(QMainWindow):
         if line_edit:
             line_edit.textChanged.connect(lambda text: self._set_cam_params(self.cam_thread, cam_param, text))
 
-    def connect_camparam_button(self, widget_index, button_name, cam_param, value):
+    def connect_inspectionConfig_button(self, widget_index, button_name, cam_param, value):
         widget = self.stackedWidget.widget(widget_index)
         button = widget.findChild(QPushButton, button_name)
         if button:
-            button.pressed.connect(lambda: self._set_cam_params(self.cam_thread, cam_param, value))
-            print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
+            button.pressed.connect(lambda: self._set_inspection_params(self.inspection_thread, cam_param, value))
+            # print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
     # def simulateButtonKensaClicks(self):
     #     self.button_kensa3.click()
@@ -529,6 +542,37 @@ class AIKensa(QMainWindow):
         color = "green" if new_value else "red"
         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
+    def _update_OKNG_label(self, numofPart):
+        for widget_key, part_name in self.widget_dir_map.items():
+            # Get OK and NG values using widget_key as index
+            if 0 <= widget_key < len(numofPart):
+                ok, ng = numofPart[widget_key]
+                widget = self.stackedWidget.widget(widget_key)
+                if widget:
+                    current_kansei_label = widget.findChild(QLabel, "current_kansei")
+                    current_furyou_label = widget.findChild(QLabel, "current_furyou")
+                    if current_kansei_label:
+                        current_kansei_label.setText(str(ok))
+                    if current_furyou_label:
+                        current_furyou_label.setText(str(ng))
+            else:
+                print(f"Widget key {widget_key} is out of bounds for numofPart")
+
+    def _update_todayOKNG_label(self, numofPart):
+        for widget_key, part_name in self.widget_dir_map.items():
+            # Get OK and NG values using widget_key as index
+            if 0 <= widget_key < len(numofPart):
+                ok, ng = numofPart[widget_key]
+                widget = self.stackedWidget.widget(widget_key)
+                if widget:
+                    current_kansei_label = widget.findChild(QLabel, "status_kansei")
+                    current_furyou_label = widget.findChild(QLabel, "status_furyou")
+                    if current_kansei_label:
+                        current_kansei_label.setText(str(ok))
+                    if current_furyou_label:
+                        current_furyou_label.setText(str(ng))
+            else:
+                print(f"Widget key {widget_key} is out of bounds for todaynumofPart")
 
     # def _outputMeasurementText(self, measurementValue):
     #     label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
@@ -543,7 +587,7 @@ class AIKensa(QMainWindow):
     #                 value = "None"  # Fallback to "None" or "0"
     #             label.setText(str(value))
 
-    def _outputMeasurementText(self, measurementValue, measurementResult):
+    def _outputMeasurementText_P658207LE0A(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
 
         for i, label_name in enumerate(label_names_part):
@@ -560,18 +604,114 @@ class AIKensa(QMainWindow):
                 # Set text for the label
                 label.setText(str(value))
 
-                # Change text color based on the measurementResult (0 or 1)
-                if measurementResult and isinstance(measurementResult, list) and len(measurementResult) > i:
-                    result = measurementResult[i]
-                    if result == 1:  # OK result (1)
-                        label.setStyleSheet("color: green;")  # Green for OK
-                    elif result == 0:  # NG result (0)
-                        label.setStyleSheet("color: red;")  # Red for NG
+                if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
+                    and isinstance(measurementResult[0], list) and len(measurementResult[0]) > i):
+                    result = measurementResult[0][i] if measurementResult[0][i] is not None else "None"
                 else:
-                    # Default color if result is missing or invalid
-                    label.setStyleSheet("color: black;")
+                    result = "None"  # Fallback to "None" or "0"
+
+                if result == 1:  # OK result (1)
+                    label.setStyleSheet("background-color: green;")
+                elif result == 0:  # NG result (0)
+                    label.setStyleSheet("background-color: red;")
+                else:
+                    label.setStyleSheet("background-color: white;")
+                
+                
+                # # Set text for the label
+                # label.setText(str(value))
+
+                # if measurementResult and isinstance(measurementResult, list) and len(measurementResult) > i:
+                #     result = measurementResult[0][i]
+                #     print(result)
+                #     if result == 1:  # OK result (1)
+                #         label.setStyleSheet("color: green;")  # Green for OK
+                #     elif result == 0:  # NG result (0)
+                #         label.setStyleSheet("color: red;")  # Red for NG
+                # else:
+                #     label.setStyleSheet("color: black;")
+
+    # def _outputMeasurementText_P5902A509(self, measurementValue, measurementResult):
+    #     label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
+
+    #     for i, label_name in enumerate(label_names_part):
+    #         for i in [5, 6]:
+    #             label = self.stackedWidget.widget(i).findChild(QLabel, label_name)
+    #             if label:
+    #                 # Check if measurementValue and measurementResult exist, and handle missing values
+    #                 if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
+    #                     and isinstance(measurementValue[0], list) and len(measurementValue[0]) > i):
+                        
+    #                     value = measurementValue[0][i] if measurementValue[0][i] is not None else "None"
+    #                 else:
+    #                     value = "None"  # Fallback to "None" or "0"
+                    
+    #                 # Set text for the label
+    #                 label.setText(str(value))
+
+    #                 if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
+    #                     and isinstance(measurementResult[0], list) and len(measurementResult[0]) > i):
+    #                     result = measurementResult[0][i] if measurementResult[0][i] is not None else "None"
+    #                 else:
+    #                     result = "None"  # Fallback to "None" or "0"
+
+    #                 if result == 1:  # OK result (1)
+    #                     label.setStyleSheet("background-color: green;")
+    #                 elif result == 0:  # NG result (0)
+    #                     label.setStyleSheet("background-color: red;")
+    #                 else:
+    #                     label.setStyleSheet("background-color: white;")
+                    
+                    
+    #                 # # Set text for the label
+    #                 # label.setText(str(value))
+
+    #                 # if measurementResult and isinstance(measurementResult, list) and len(measurementResult) > i:
+    #                 #     result = measurementResult[0][i]
+    #                 #     print(result)
+    #                 #     if result == 1:  # OK result (1)
+    #                 #         label.setStyleSheet("color: green;")  # Green for OK
+    #                 #     elif result == 0:  # NG result (0)
+    #                 #         label.setStyleSheet("color: red;")  # Red for NG
+    #                 # else:
+    #                 #     label.setStyleSheet("color: black;")
 
 
+    def _outputMeasurementText_P5902A509(self, measurementValue, measurementResult):
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
+
+        # Loop through widget indices (5, 6)
+        for widget_index in [5, 6]:
+            # Loop through the label names (P1label, P2label, etc.)
+            for label_index, label_name in enumerate(label_names_part):
+                # Find the QLabel in the specified widget
+                label = self.stackedWidget.widget(widget_index).findChild(QLabel, label_name)
+                if label:
+                    # Get the measurement value for this label
+                    if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
+                        and isinstance(measurementValue[0], list) and len(measurementValue[0]) > label_index):
+                        
+                        value = measurementValue[0][label_index] if measurementValue[0][label_index] is not None else "None"
+                    else:
+                        value = "None"  # Fallback to "None" or "0"
+                    
+                    # Set text for the label
+                    label.setText(str(value))
+
+                    # Get the measurement result for this label
+                    if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
+                        and isinstance(measurementResult[0], list) and len(measurementResult[0]) > label_index):
+                        result = measurementResult[0][label_index] if measurementResult[0][label_index] is not None else "None"
+                    else:
+                        result = "None"  # Fallback to "None" or "0"
+
+                    # Set label background color based on result
+                    if result == 1:  # OK result (1)
+                        label.setStyleSheet("background-color: green;")
+                    elif result == 0:  # NG result (0)
+                        label.setStyleSheet("background-color: red;")
+                    else:
+                        label.setStyleSheet("background-color: white;")
 
     # def _set_labelFrame1(self, widget, paramValue):
     #     colorOK = "green"
@@ -600,61 +740,6 @@ class AIKensa(QMainWindow):
             color = colorOK if pitch_value else colorNG
             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
-    # def _set_numlabel_text_ctrplr_LH_current(self, numofPart):
-    #     self.kanseihin_number_current_ctrplr_lh.setText(str(numofPart[0]))
-    #     self.furyouhin_number_current_ctrplr_lh.setText(str(numofPart[1]))
-
-    # def _set_numlabel_text_ctrplr_RH_current(self, numofPart):
-    #     self.kanseihin_number_current_ctrplr_rh.setText(str(numofPart[0]))
-    #     self.furyouhin_number_current_ctrplr_rh.setText(str(numofPart[1]))
-
-    # def _set_numlabel_text_ctrplr_LH_total(self, numofPart):
-    #     self.kanseihin_number_ctrplr_lh.setText(str(numofPart[0]))
-    #     self.furyouhin_number_ctrplr_lh.setText(str(numofPart[1]))
-
-    # def _set_numlabel_text_ctrplr_RH_total(self, numofPart):
-    #     self.kanseihin_number_ctrplr_rh.setText(str(numofPart[0]))
-    #     self.furyouhin_number_ctrplr_rh.setText(str(numofPart[1]))
-    
-
-    
-    def get_last_entry_currentnumofPart(self, part_name):
-        self.cursor.execute('''
-        SELECT currentnumofPart 
-        FROM inspection_results 
-        WHERE partName = ? 
-        ORDER BY id DESC 
-        LIMIT 1
-        ''', (part_name,))
-        
-        row = self.cursor.fetchone()
-        if row:
-            currentnumofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-            return currentnumofPart
-        else:
-            return (0, 0)  # Default values if no entry is found
-            
-    def get_last_entry_total_numofPart(self, part_name):
-        # Get today's date in yyyymmdd format
-        today_date = datetime.now().strftime("%Y%m%d")
-
-        print (today_date)
-
-        self.cursor.execute('''
-        SELECT numofPart 
-        FROM inspection_results 
-        WHERE partName = ? AND timestampDate = ? 
-        ORDER BY id DESC 
-        LIMIT 1
-        ''', (part_name, today_date))
-        
-        row = self.cursor.fetchone()
-        if row:
-            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-            return numofPart
-        else:
-            return (0, 0)  # Default values if no entry is found
-
 
     def _setCalibFrame(self, image):
         for i in [1, 2 ]:
@@ -678,9 +763,13 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setPartFrame1(self, image):
-        widget = self.stackedWidget.widget(7)
-        label1 = widget.findChild(QLabel, "framePart")
-        label1.setPixmap(QPixmap.fromImage(image))
+        for i in [5, 6, 7, 8]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "framePart")
+            label.setPixmap(QPixmap.fromImage(image))
+        # widget = self.stackedWidget.widget(7)
+        # label1 = widget.findChild(QLabel, "framePart")
+        # label1.setPixmap(QPixmap.fromImage(image))
 
     def _extract_color(self, stylesheet):
         # Extracts the color value from the stylesheet string

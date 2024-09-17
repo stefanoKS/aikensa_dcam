@@ -1,5 +1,7 @@
 from calendar import c
 import stat
+from unittest import result
+from networkx import draw
 import numpy as np
 import cv2
 import math
@@ -16,9 +18,16 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
-pitchSpec = [13, 82, 82, 82, 13, 2, 2]
-idSpec = [ 0, 0, 0, 0]
-tolerance_pitch = [3.0, 1.5, 1.5, 1.5, 3.0, 0.8, 0.8]
+# pitchSpec = [13, 82, 82, 82, 13, 2, 2]
+# idSpec = [0, 0, 0, 0]
+# tolerance_pitch = [3.0, 1.5, 1.5, 1.5, 3.0, 0.8, 0.8]
+
+pitchSpecLH = [15, 41, 54, 93, 94, 20]#[20, 94, 93, 54, 41, 15]
+pitchSpecRH = [20, 94, 93, 54, 41, 15]
+
+totalLengthSpec = 317
+pitchTolerance = [3.0, 2.0, 2.0, 2.0, 2.0, 3.0]
+totalLengthTolerance = 10.0
 
 color = (0, 255, 0)
 linecolor = (20,120,120)
@@ -29,12 +38,11 @@ bbox_offset = 1
 pixelMultiplier = 0.1592
 
 
-def partcheck(image, clip_detection_result, segmentation_result):
+def partcheck(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
 
     # print(clip_detection_result)
-    
-
     detectedid = []
+    detectedHanireid = []
 
     measuredPitch = []
     resultPitch = []
@@ -44,6 +52,9 @@ def partcheck(image, clip_detection_result, segmentation_result):
 
     detectedposX = []
     detectedposY = []
+
+    detectedposHanireX = []
+    detectedposHanireY = []
 
     detectedWidth = []
     detectedHeight = []
@@ -61,13 +72,22 @@ def partcheck(image, clip_detection_result, segmentation_result):
     status = "OK"
     print_status = ""
 
+    if widgetNumber == 5:
+        pitchSpec = pitchSpecLH
+        idSpec = 0
+    elif widgetNumber == 6:
+        pitchSpec = pitchSpecRH
+        idSpec = 1
+
+    tolerance_pitch = pitchTolerance
+
     for r in clip_detection_result:
 
         sorted_boxes = sorted(r.boxes, key=lambda box: float(box.xywh[0][0].cpu()))
 
         for box in sorted_boxes:
 
-            detectedid.append(box.cls)
+            detectedid.append(box.cls.item())
 
             x, y = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
             w, h  = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
@@ -76,9 +96,55 @@ def partcheck(image, clip_detection_result, segmentation_result):
             detectedposY.append(y)
             detectedWidth.append(w)
             detectedHeight.append(h)
+            
+            if box.cls != idSpec:   
+                color = (0, 0, 255)
+
+            else:   
+                color = (0, 255, 0)
 
             center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
 
+    if widgetNumber == 5:
+        if 1 in detectedid:
+            flag_pitch_furyou = 1
+            print_status = print_status + " クリップ類不良"
+            status = "NG"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if widgetNumber == 6:
+        if 0 in detectedid:
+            flag_pitch_furyou = 0
+            print_status = print_status + " クリップ類不良"
+            status = "NG"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+
+    for h in hanire_detection_result:
+        # print(h.boxes)
+        # sorted_hanire = sorted(h.boxes, key=lambda box: float(box.xywh[0][0].cpu()))
+
+        for hanire in h.boxes:
+            detectedHanireid.append(int(hanire.cls.item()))
+            if int(hanire.cls.item()) == 0:
+                cls = 1
+            else:
+                cls = 0
+            x, y = float(hanire.xywh[0][0].cpu()), float(hanire.xywh[0][1].cpu())
+            w, h  = float(hanire.xywh[0][2].cpu()), float(hanire.xywh[0][3].cpu())
+
+            detectedposHanireX.append(x)
+            detectedposHanireY.append(y)
+
+            center = drawcircle(image, (x,y), cls, radius = 50)
+
+        #if there is a value of 1 inside the detectedhanireid list, set as ng
+        if 1 in detectedHanireid:
+            print_status = print_status + " クリップ半入れ "
+            status = "NG"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
 
     combined_mask = None
 
@@ -91,60 +157,33 @@ def partcheck(image, clip_detection_result, segmentation_result):
             combined_mask = np.zeros_like(mask)
         combined_mask = cv2.bitwise_or(combined_mask, mask)
 
-        #draw the mask as overlay
-        image_overlay = image.copy()
-        image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-        cv2.imwrite("mask_overlay.jpg", image_overlay)
+        # #draw the mask as overlay
+        # image_overlay = image.copy()
+        # image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
+        # cv2.imwrite("mask_overlay2.jpg", image_overlay)
 
 
-    if len(detectedid) < 4:
+    if len(detectedid) < 5:
         print_status = print_status + " クリップ数不足 "
         status = "NG"
-        resultPitch = [0] * len(pitchSpec)
-        measuredPitch = [0] * len(pitchSpec)
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
 
-    if len(detectedid) > 4:
+    if len(detectedid) > 5:
         print_status = print_status + " クリップ数過多 "
         status = "NG"
-        resultPitch = [0] * len(pitchSpec)
-        measuredPitch = [0] * len(pitchSpec)
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
 
-    if len(detectedid) == 4:
-
-        point1 = (detectedposX[0], detectedposY[0])
-        point2 = (detectedposX[1], detectedposY[1])
-        point3 = (detectedposX[2], detectedposY[2])
-        point4 = (detectedposX[3], detectedposY[3])
-
-        point1 = (int(point1[0]), int(point1[1]))
-        point2 = (int(point2[0]), int(point2[1]))
-        point3 = (int(point3[0]), int(point3[1]))
-        point4 = (int(point4[0]), int(point4[1]))
-
-        slope, intercept = extend_line(point2, point3)
-
-        closest_point_to_1 = closest_point_on_line(point2, point3, point1)
-        closest_point_to_4 = closest_point_on_line(point2, point3, point4)
-
-        closest_point_to_1 = (int(closest_point_to_1[0]), int(closest_point_to_1[1]))
-        closest_point_to_4 = (int(closest_point_to_4[0]), int(closest_point_to_4[1]))
-
-        initialposX = detectedposX.copy()
-        initialposY = detectedposY.copy() 
-
-        detectedposX[0] = closest_point_to_1[0]
-        detectedposY[0] = closest_point_to_1[1]
-        detectedposX[-1] = closest_point_to_4[0]
-        detectedposY[-1] = closest_point_to_4[1]
+    if len(detectedid) == 5 and status == "OK":
 
         leftmostCenter = (detectedposX[0], detectedposY[0])
         leftmostWidth = detectedWidth[0] # not really useful here since we use mask from inference
         rightmostCenter = (detectedposX[-1], detectedposY[-1])
         rightmostWidth = detectedWidth[-1] # not really useful here since we use mask from inference
         adjustment_offset = 0 # not really useful here since we use mask from inference
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = 0, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = 0)
-
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -100, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -100, Xoffsetval = 0)
 
         detectedposX.insert(0, left_edge[0])
         detectedposY.insert(0, left_edge[1])
@@ -164,35 +203,7 @@ def partcheck(image, clip_detection_result, segmentation_result):
             image = cv2.line(image, (int(detectedposX[i]), int(detectedposY[i])), (int(detectedposX[i+1]), int(detectedposY[i+1])), linecolor, thickness=linethickness)
         
 
-        #Draw the clip 1 and clip 4 line
-        measuredPitch.append(calclength((detectedposX[1], detectedposY[1]), (initialposX[0], initialposY[0])) * pixelMultiplier)
-        measuredPitch.append(calclength((detectedposX[-2], detectedposY[-2]), (initialposX[-1], initialposY[-1])) * pixelMultiplier)
-
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
-
-        if abs(measuredPitch[-2] - pitchSpec[-2]) < tolerance_pitch[-2]:
-            linecolor = (0, 255, 0)
-            linethickness = 2
-        else:
-            linecolor = (0, 0, 255)
-            linethickness = 4
-
-        image = cv2.line(image, (int(detectedposX[1]), int(detectedposY[1])), (int(initialposX[0]), int(initialposY[0])), linecolor, thickness=linethickness)
-
-        if abs(measuredPitch[-1] - pitchSpec[-1]) < tolerance_pitch[-1]:
-            linecolor = (0, 255, 0)
-            linethickness = 2
-        else:
-            linecolor = (0, 0, 255)
-            linethickness = 4
-            print_status = print_status + "ピッチ不良 "
-            status = "NG"
-
-        image = cv2.line(image, (int(detectedposX[-2]), int(detectedposY[-2])), (int(initialposX[-1]), int(initialposY[-1])), linecolor, thickness=linethickness)
-
-        if initialposY[0] > initialposY[1] or initialposY[3] > initialposY[2]:
-            print_status = print_status + "クリップ位置不良 "
-            status = "NG"
 
         if print_status == "":
             status = "OK"
@@ -203,6 +214,19 @@ def partcheck(image, clip_detection_result, segmentation_result):
         drawcircle(image, left_edge, resultPitch[0])
         drawcircle(image, right_edge, resultPitch[-3])
 
+        #Check whether the total of measured pitch is within tolerance
+        totalLength = sum(measuredPitch)
+        measuredPitch.append(round(totalLength, 1))
+        deltaTotalLength = totalLength - totalLengthSpec
+        deltaPitch.append(round(deltaTotalLength, 1))
+
+        if abs(totalLength - totalLengthSpec) <= totalLengthTolerance:
+            status = "OK"
+            resultPitch.append(1)
+        else:
+            status = "NG"
+            print_status = print_status + " 全長不良"
+            resultPitch.append(0)
 
     #Add print status to the top center of the image
     image = draw_status_text_PIL(image, status, print_status, size="normal")
@@ -352,7 +376,7 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
         font_scale = 50.0
 
     if status == "OK":
-        color = (10, 60, 260)
+        color = (10, 210, 60)
 
     elif status == "NG":
         color = (200, 30, 50)
@@ -447,7 +471,7 @@ def find_edge_point(image, center, direction="None", Xoffsetval = 0, Yoffsetval 
 
     return None  # If an invalid direction is provided
 
-def drawcircle(image, pos, class_id): #for ire and hanire
+def drawcircle(image, pos, class_id, radius=10): #for ire and hanire
     #draw either green or red circle depends on the detection
     if class_id == 1:
         color = (60, 200, 60)
@@ -456,7 +480,7 @@ def drawcircle(image, pos, class_id): #for ire and hanire
     #check if pos is tupple
     pos = (int(pos[0]), int(pos[1]))
 
-    cv2.circle(img=image, center=pos, radius=10, color=color, thickness=2, lineType=cv2.LINE_8)
+    cv2.circle(img=image, center=pos, radius=radius, color=color, thickness=2, lineType=cv2.LINE_8)
 
     return image
 

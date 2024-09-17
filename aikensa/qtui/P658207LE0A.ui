@@ -850,7 +850,7 @@ background-color: rgb(211, 215, 207);</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>車類：</string>
+     <string>車名：</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
