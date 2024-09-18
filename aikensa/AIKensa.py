@@ -46,9 +46,11 @@ UI_FILES = [
     "aikensa/qtui/empty.ui", #empty 18
     "aikensa/qtui/empty.ui", #empty 19
     "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/dailyTenken2go3go_01.ui",  # index 21
-    "aikensa/qtui/dailyTenken2go3go_02.ui",  # index 22
-    "aikensa/qtui/dailyTenken2go3go_03.ui",  # index 23
+    "aikensa/qtui/P5902A509_dailyTenken_01.ui",  # index 21
+    "aikensa/qtui/P5902A509_dailyTenken_02.ui",  # index 22
+    "aikensa/qtui/P5902A509_dailyTenken_03.ui",  # index 23
+    "aikensa/qtui/P658207LE0A_dailyTenken_01.ui",  # index 24
+    "aikensa/qtui/P658207LE0A_dailyTenken_02.ui",  # index 25
 ]
 
 
@@ -135,12 +137,6 @@ class AIKensa(QMainWindow):
         self.inspection_thread.current_numofPart_signal.connect(self._update_OKNG_label)
         self.inspection_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
 
-        # self.cam_thread.ctrplrLH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_current)
-        # self.cam_thread.ctrplrRH_currentnumofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_current)
-
-        # self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_total)
-        # self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_total)
-
         self.stackedWidget = QStackedWidget()
 
         for ui in UI_FILES:
@@ -151,9 +147,13 @@ class AIKensa(QMainWindow):
 
         main_widget = self.stackedWidget.widget(0)
 
-        dailytenken01_widget = self.stackedWidget.widget(21)
-        dailytenken02_widget = self.stackedWidget.widget(22)
-        dailytenken03_widget = self.stackedWidget.widget(23)
+        dailytenken01_P5902A509_widget = self.stackedWidget.widget(21)
+        dailytenken02_P5902A509_widget = self.stackedWidget.widget(22)
+        dailytenken03_P5902A509_widget = self.stackedWidget.widget(23)
+        dailytenken01_P658207LE0A_widget = self.stackedWidget.widget(24)
+        dailytenken02_P658207LE0A_widget = self.stackedWidget.widget(25)
+
+
 
         cameraCalibration1_widget = self.stackedWidget.widget(1)
         cameraCalibration2_widget = self.stackedWidget.widget(2)
@@ -173,6 +173,15 @@ class AIKensa(QMainWindow):
         partInspection_P658207LE0A_button = main_widget.findChild(QPushButton, "P658207LE0Abutton")
         partInspection_P5819A107_button = main_widget.findChild(QPushButton, "P5819A107button")
 
+        dailytenken01_P5902A509_button = main_widget.findChild(QPushButton, "dailytenkenbutton_P5902A509")
+        dailytenken02_P5902A509_button = dailytenken01_P5902A509_widget.findChild(QPushButton, "nextButton")
+        dailytenken03_P5902A509_button = dailytenken02_P5902A509_widget.findChild(QPushButton, "nextButton")
+        dailytenken_kanryou_P5902A509_button = dailytenken03_P5902A509_widget.findChild(QPushButton, "finishButton")
+
+        dailytenken01_P658207LE0A_button= main_widget.findChild(QPushButton, "dailytenkenbutton_P658207LE0A")
+        dailytenken02_P658207LE0A_button = dailytenken01_P658207LE0A_widget.findChild(QPushButton, "nextButton")
+        dailytenken_kanryou_P658207LE0A_button = dailytenken02_P658207LE0A_widget.findChild(QPushButton, "finishButton")
+
         if cameraCalibration1_button:
             cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
             cameraCalibration1_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 1))
@@ -188,6 +197,13 @@ class AIKensa(QMainWindow):
             mergeCamera_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 3))
             mergeCamera_button.clicked.connect(self.calibration_thread.start)
 
+        for i in range(1, 3):
+            CalibrateSingleFrame = self.stackedWidget.widget(i).findChild(QPushButton, "calibSingleFrame")
+            CalibrateSingleFrame.clicked.connect(lambda i=i: self._set_calib_params(self.calibration_thread, "calculateSingeFrameMatrix", True))
+
+            CalibrateFinalCameraMatrix = self.stackedWidget.widget(i).findChild(QPushButton, "calibCam")
+            CalibrateFinalCameraMatrix.clicked.connect(lambda i=i: self._set_calib_params(self.calibration_thread, "calculateCamMatrix", True))
+
         calcHomoCam1 = mergeCamera_widget.findChild(QPushButton, "calcH_cam1")
         calcHomoCam2 = mergeCamera_widget.findChild(QPushButton, "calcH_cam2")
 
@@ -198,11 +214,10 @@ class AIKensa(QMainWindow):
         planarize_combined.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize", True))
 
 
-        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button and partInspection_P5819A107_button:
+        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button and partInspection_P5819A107_button and dailytenken01_P5902A509_button and dailytenken01_P658207LE0A_button:
 
             partInspection_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(5))
             partInspection_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 5))
-            #if inspection thread is not running, start it:
             partInspection_P5902A509_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
             partInspection_P5902A509_button.clicked.connect(self.calibration_thread.stop)
 
@@ -221,188 +236,42 @@ class AIKensa(QMainWindow):
             partInspection_P5819A107_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
             partInspection_P5819A107_button.clicked.connect(self.calibration_thread.stop)
 
+            dailytenken01_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
+            dailytenken01_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 21))
+            dailytenken01_P5902A509_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            dailytenken01_P5902A509_button.clicked.connect(self.calibration_thread.stop)
+
+            dailytenken02_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
+            dailytenken02_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
+            dailytenken02_P5902A509_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            dailytenken02_P5902A509_button.clicked.connect(self.calibration_thread.stop)
+
+            dailytenken03_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(23))
+            dailytenken03_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 23))
+            dailytenken03_P5902A509_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            dailytenken03_P5902A509_button.clicked.connect(self.calibration_thread.stop)
+
+            dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(24))
+            dailytenken01_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 24))
+            dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            dailytenken01_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
+
+            dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(25))
+            dailytenken02_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 25))
+            dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            dailytenken02_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
 
 
+        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25]]
 
-        # button_calib = main_widget.findChild(QPushButton, "calibrationbutton")
-        # button_edgedetect = main_widget.findChild(QPushButton, "edgedetectbutton")
+        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25]]
 
-        # button_P5755A491 = main_widget.findChild(QPushButton, "P5755A491button")
-        # button_P5755A492 = main_widget.findChild(QPushButton, "P5755A492button")
-
-
-        # button_dailytenken01 = main_widget.findChild(QPushButton, "dailytenkenbutton")
-        # button_dailytenken02 = dailytenken01_widget.findChild(QPushButton, "nextButton")
-        # button_dailytenken03 = dailytenken02_widget.findChild(QPushButton, "nextButton")
-        # button_dailytenken_kanryou = dailytenken03_widget.findChild(QPushButton, "finishButton")
-
-        # self.siostatus = main_widget.findChild(QLabel, "status_sio")
-        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 1, 2, 3, 4, 5, 6, 7]]
-
-        # if button_calib:
-        #     button_calib.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
-        #     button_calib.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 1))
-
-        # if button_edgedetect:
-        #     button_edgedetect.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))
-        #     button_edgedetect.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 2))
-
-        # if button_P5755A491:
-        #     button_P5755A491.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(3))
-        #     button_P5755A491.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 3))
-
-        # if button_P5755A492:
-        #     button_P5755A492.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(4))
-        #     button_P5755A492.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 4))
-
-        # if button_dailytenken01:
-        #     button_dailytenken01.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
-        #     button_dailytenken01.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 21))
-
-        # if button_dailytenken02:
-        #     button_dailytenken02.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
-        #     button_dailytenken02.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 22))
-
-        # if button_dailytenken03:
-        #     button_dailytenken03.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(23))
-        #     button_dailytenken03.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 23))
-
-
-        # add extra widgets here
-
-        # Widget 0 -> <Main Page>
-
-        
-    #     #Widget 1 # Calibration and Sample
-    #     captureButton1 = self.stackedWidget.widget(1).findChild(QPushButton, "takeImage1")
-    #     captureButton2 = self.stackedWidget.widget(1).findChild(QPushButton, "takeImage2")
-    #     captureButton1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam1", True))
-    #     captureButton2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "captureCam2", True))
-
-    #     self.connect_camparam_button(1, "takeImageClip1", "captureClip1", True)
-    #     self.connect_camparam_button(1, "takeImageClip2", "captureClip2", True)
-    #     self.connect_camparam_button(1, "takeImageClip3", "captureClip3", True)
-        
-
-    #     cam1CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam1")
-    #     cam1CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix1", True))
-
-    #     cam2CalibrateButton = self.stackedWidget.widget(1).findChild(QPushButton, "calibCam2")
-    #     cam2CalibrateButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateCamMatrix2", True))
-
-    #     delCamMatrix1 = self.stackedWidget.widget(1).findChild(QPushButton, "delCalib1")
-    #     delCamMatrix2 = self.stackedWidget.widget(1).findChild(QPushButton, "delCalib2")
-    #     delCamMatrix1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delCamMatrix1", True))
-    #     delCamMatrix2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delCamMatrix2", True))
-
-    #     checkUndistort1 = self.stackedWidget.widget(1).findChild(QPushButton, "checkUndistort1")
-    #     checkUndistort2 = self.stackedWidget.widget(1).findChild(QPushButton, "checkUndistort2")
-    #     checkUndistort1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "checkUndistort1", True))
-    #     checkUndistort2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "checkUndistort2", True))
-
-    #     calculateHomo = self.stackedWidget.widget(1).findChild(QPushButton, "calcH")
-    #     calculateHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo", True))
-
-    #     calculateHomo_cam1 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam1")
-    #     calculateHomo_cam1.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam1", True))
-
-    #     calculateHomo_cam2 = self.stackedWidget.widget(1).findChild(QPushButton, "calcH_cam2")
-    #     calculateHomo_cam2.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "calculateHomo_cam2", True))
-
-
-    #     deleteHomo = self.stackedWidget.widget(1).findChild(QPushButton, "delH")
-    #     deleteHomo.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "deleteHomo", True))
-
-    #     combineCam = self.stackedWidget.widget(1).findChild(QPushButton, "mergeCam")
-    #     combineCam.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "mergeCam", True))
-
-    #     saveImg = self.stackedWidget.widget(1).findChild(QPushButton, "saveImage")
-    #     saveImg.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "saveImage", True))
-
-    #     savePlanarize = self.stackedWidget.widget(1).findChild(QPushButton, "savePlanarize")
-    #     savePlanarize.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "savePlanarize", True))
-
-    #     delPlanarize = self.stackedWidget.widget(1).findChild(QPushButton, "delPlanarize")
-    #     delPlanarize.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "delPlanarize", True))
-
-    #     # Widget 2
-    #     button_saveparam = self.stackedWidget.widget(2).findChild(QPushButton, "saveparambutton")
-    #     button_saveparam.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "savecannyparams", True))
-
-    #     button_takecanny = self.stackedWidget.widget(2).findChild(QPushButton, "takeimagebutton")
-    #     button_takecanny.pressed.connect(lambda: self._set_cam_params(self.cam_thread, "capture", True))
-
-    #     button_readwarp = self.stackedWidget.widget(2).findChild(QPushButton, "button_readwarp")
-    #     label_readwarp = self.stackedWidget.widget(2).findChild(QLabel, "label_readwarpcolor")
-    #     button_readwarp.pressed.connect(lambda: self._toggle_param_and_update_label("cannyreadwarp", label_readwarp))
-
-        
-
-    #     # frame = process_for_edge_detection(frame, self.slider_value)
-    #     slider_opacity = self.stackedWidget.widget(2).findChild(QSlider, "slider_opacity")
-    #     slider_blur = self.stackedWidget.widget(2).findChild(QSlider, "slider_blur")
-    #     slider_lowercanny = self.stackedWidget.widget(2).findChild(QSlider, "slider_lowercanny")
-    #     slider_uppercanny = self.stackedWidget.widget(2).findChild(QSlider, "slider_uppercanny")
-    #     slider_contrast = self.stackedWidget.widget(2).findChild(QSlider, "slider_contrast")
-    #     slider_brightness = self.stackedWidget.widget(2).findChild(QSlider, "slider_brightness")
-
-    #     slider_opacity.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'opacity', x/100))
-    #     slider_blur.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'blur', x))
-    #     slider_lowercanny.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'lower_canny', x))
-    #     slider_uppercanny.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'upper_canny', x))
-    #     slider_contrast.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'contrast', x/100))
-    #     slider_brightness.valueChanged.connect(lambda x: self._set_cam_params(self.cam_thread, 'brightness', x/100))
-
-    #     # Widget 3 and 4
-
-    #     button_HDRes = self.connect_button_font_color_change(3, "button_HDResQT", "HDRes")
-        
-    #     kensaButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
-    #     kensaButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
-
-    #     button_HDRes4 = self.connect_button_font_color_change(4, "button_HDResQT", "HDRes")
-        
-    #     kensaButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
-    #     kensaButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
-
-    #     self.connect_camparam_button(3, "counterReset", "resetCounter", True)
-    #     self.connect_camparam_button(4, "counterReset", "resetCounter", True)
-
-    #     self.connect_line_edit_text_changed(widget_index=3, line_edit_name="kensain_name", cam_param="kensainName")
-    #     self.connect_line_edit_text_changed(widget_index=4, line_edit_name="kensain_name", cam_param="kensainName")
-
-    #     kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
-    #     kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
-        
-    #     kensaresetButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensareset")
-    #     kensaresetButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
-
-    #     workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
-    #     workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
-    #     workorder3 = self.stackedWidget.widget(3).findChild(QLineEdit, "order3")
-
-    #     self.button_kensa3 = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
-    #     self.button_kensa4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
-
-        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23]]
-
-        self.inspection_widget_indices = [5, 6, 7, 8]
+        self.inspection_widget_indices = [5, 6, 7, 8, 21, 22, 23, 24, 25]
 
         for i in self.inspection_widget_indices:
             button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButton")
             if button:
                 button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspection", True))
-
-
-    #     self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
-    #     self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
-    #     self.kanseihin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_kansei")
-    #     self.furyouhin_number_current_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "current_furyou")
-
-    #     self.kanseihin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_kansei")
-    #     self.furyouhin_number_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "status_furyou")
-    #     self.kanseihin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_kansei")
-    #     self.furyouhin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_furyou")
 
         for i in [5, 6, 7, 8]:
             self.connect_inspectionConfig_button(i, "kansei_plus", "kansei_plus", True)
@@ -414,7 +283,6 @@ class AIKensa(QMainWindow):
             self.connect_inspectionConfig_button(i, "furyou_plus_10", "furyou_plus_10", True)
             self.connect_inspectionConfig_button(i, "furyou_minus_10", "furyou_minus_10", True)
 
-       # Find and connect quit buttons and main menu buttons in all widgets
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
             button_quit = widget.findChild(QPushButton, "quitbutton")
@@ -426,8 +294,12 @@ class AIKensa(QMainWindow):
             if button_main_menu:
                 button_main_menu.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
                 button_main_menu.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 0))
-                # button_dailytenken_kanryou.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
-                # button_dailytenken_kanryou.clicked.connect(lambda: self._set_cam_params(self.cam_thread, 'widget', 0))
+
+                # dailytenken_kanryou_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
+                # dailytenken_kanryou_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
+                # dailytenken_kanryou_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 0))
+                # dailytenken_kanryou_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 0))
+
 
     #     #kensabutton for dailytenken
     #     self.button_dailyTenken01 = self.stackedWidget.widget(21).findChild(QPushButton, "checkButton")
@@ -495,16 +367,6 @@ class AIKensa(QMainWindow):
             button.pressed.connect(lambda: self._set_inspection_params(self.inspection_thread, cam_param, value))
             # print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
-    # def simulateButtonKensaClicks(self):
-    #     self.button_kensa3.click()
-    #     self.button_kensa4.click()
-
-    # def _on_widget_changed(self, idx: int):
-    #     if idx in [3, 4, 21, 22, 23]:
-    #         #Change widget value to equal to index of stacked widget first
-    #         self._set_cam_params(self.cam_thread, 'widget', idx)
-    #         self.cam_thread.initialize_model()
-
     def _close_app(self):
         # self.cam_thread.stop()
         self.calibration_thread.stop()
@@ -534,11 +396,9 @@ class AIKensa(QMainWindow):
         setattr(thread.cam_config, key, value)
 
     def _toggle_param_and_update_label(self, param, label):
-        # Toggle the parameter value
         new_value = not getattr(self.cam_thread.cam_config, param)
         self._set_cam_params(self.cam_thread, param, new_value)
 
-        # Update the label color based on the new parameter value
         color = "green" if new_value else "red"
         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
@@ -574,19 +434,6 @@ class AIKensa(QMainWindow):
             else:
                 print(f"Widget key {widget_key} is out of bounds for todaynumofPart")
 
-    # def _outputMeasurementText(self, measurementValue):
-    #     label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
-
-    #     for i, label_name in enumerate(label_names_part):
-    #         label = self.stackedWidget.widget(7).findChild(QLabel, label_name)
-    #         if label:
-    #             # Check if measurementValue exists, measurementValue[0] exists, and measurementValue[0][i] exists
-    #             if measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 and isinstance(measurementValue[0], list) and len(measurementValue[0]) > i:
-    #                 value = measurementValue[0][i] if measurementValue[0][i] is not None else "None"
-    #             else:
-    #                 value = "None"  # Fallback to "None" or "0"
-    #             label.setText(str(value))
-
     def _outputMeasurementText_P658207LE0A(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
 
@@ -616,66 +463,6 @@ class AIKensa(QMainWindow):
                     label.setStyleSheet("background-color: red;")
                 else:
                     label.setStyleSheet("background-color: white;")
-                
-                
-                # # Set text for the label
-                # label.setText(str(value))
-
-                # if measurementResult and isinstance(measurementResult, list) and len(measurementResult) > i:
-                #     result = measurementResult[0][i]
-                #     print(result)
-                #     if result == 1:  # OK result (1)
-                #         label.setStyleSheet("color: green;")  # Green for OK
-                #     elif result == 0:  # NG result (0)
-                #         label.setStyleSheet("color: red;")  # Red for NG
-                # else:
-                #     label.setStyleSheet("color: black;")
-
-    # def _outputMeasurementText_P5902A509(self, measurementValue, measurementResult):
-    #     label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
-
-    #     for i, label_name in enumerate(label_names_part):
-    #         for i in [5, 6]:
-    #             label = self.stackedWidget.widget(i).findChild(QLabel, label_name)
-    #             if label:
-    #                 # Check if measurementValue and measurementResult exist, and handle missing values
-    #                 if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
-    #                     and isinstance(measurementValue[0], list) and len(measurementValue[0]) > i):
-                        
-    #                     value = measurementValue[0][i] if measurementValue[0][i] is not None else "None"
-    #                 else:
-    #                     value = "None"  # Fallback to "None" or "0"
-                    
-    #                 # Set text for the label
-    #                 label.setText(str(value))
-
-    #                 if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
-    #                     and isinstance(measurementResult[0], list) and len(measurementResult[0]) > i):
-    #                     result = measurementResult[0][i] if measurementResult[0][i] is not None else "None"
-    #                 else:
-    #                     result = "None"  # Fallback to "None" or "0"
-
-    #                 if result == 1:  # OK result (1)
-    #                     label.setStyleSheet("background-color: green;")
-    #                 elif result == 0:  # NG result (0)
-    #                     label.setStyleSheet("background-color: red;")
-    #                 else:
-    #                     label.setStyleSheet("background-color: white;")
-                    
-                    
-    #                 # # Set text for the label
-    #                 # label.setText(str(value))
-
-    #                 # if measurementResult and isinstance(measurementResult, list) and len(measurementResult) > i:
-    #                 #     result = measurementResult[0][i]
-    #                 #     print(result)
-    #                 #     if result == 1:  # OK result (1)
-    #                 #         label.setStyleSheet("color: green;")  # Green for OK
-    #                 #     elif result == 0:  # NG result (0)
-    #                 #         label.setStyleSheet("color: red;")  # Red for NG
-    #                 # else:
-    #                 #     label.setStyleSheet("color: black;")
-
 
     def _outputMeasurementText_P5902A509(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
@@ -713,14 +500,6 @@ class AIKensa(QMainWindow):
                     else:
                         label.setStyleSheet("background-color: white;")
 
-    # def _set_labelFrame1(self, widget, paramValue):
-    #     colorOK = "green"
-    #     colorNG = "red"
-    #     label_names = ["clip1Check"]  # Assuming this is a list of label names
-    #     labels = [widget.findChild(QLabel, name) for name in label_names]
-    #     for label in labels:
-    #         color = colorNG if paramValue else colorOK
-    #         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
     def _set_labelFrame(self, widget, paramValue, label_names):
         colorOK = "blue"
@@ -763,13 +542,10 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setPartFrame1(self, image):
-        for i in [5, 6, 7, 8]:
+        for i in [5, 6, 7, 8, 21, 22, 23, 24, 25]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "framePart")
             label.setPixmap(QPixmap.fromImage(image))
-        # widget = self.stackedWidget.widget(7)
-        # label1 = widget.findChild(QLabel, "framePart")
-        # label1.setPixmap(QPixmap.fromImage(image))
 
     def _extract_color(self, stylesheet):
         # Extracts the color value from the stylesheet string

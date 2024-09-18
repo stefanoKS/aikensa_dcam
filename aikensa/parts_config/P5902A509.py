@@ -25,6 +25,11 @@ kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 pitchSpecLH = [15, 41, 54, 93, 94, 20]#[20, 94, 93, 54, 41, 15]
 pitchSpecRH = [20, 94, 93, 54, 41, 15]
 
+pitchSpec_dailyTenken01 = [20, 80, 80, 80, 80, 20]
+
+idSpec_dailyTenken02 = [1, 0, 1, 0] 
+idSpec_dailyTenken03 = [0, 1, 0, 1]
+
 totalLengthSpec = 317
 pitchTolerance = [3.0, 2.0, 2.0, 2.0, 2.0, 3.0]
 totalLengthTolerance = 10.0
@@ -229,6 +234,326 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             resultPitch.append(0)
 
     #Add print status to the top center of the image
+    image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+    return image, measuredPitch, resultPitch, deltaPitch, status
+
+def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
+    
+    # print(clip_detection_result)
+    detectedid = []
+    detectedHanireid = []
+
+    measuredPitch = []
+    resultPitch = []
+    deltaPitch = []
+
+    resultid = []
+
+    detectedposX = []
+    detectedposY = []
+
+    detectedposHanireX = []
+    detectedposHanireY = []
+
+    detectedWidth = []
+    detectedHeight = []
+
+    prev_center = None
+
+    flag_pitch_furyou = 0
+    flag_clip_furyou = 0
+    flag_clip_hanire = 0
+    flag_hole_notfound = 0
+
+    leftmostPitch = 0
+    rightmostPitch = 0
+
+    status = "OK"
+    print_status = ""
+
+    pitchSpec = pitchSpec_dailyTenken01
+    tolerance_pitch = pitchTolerance
+
+    for r in clip_detection_result:
+
+        sorted_boxes = sorted(r.boxes, key=lambda box: float(box.xywh[0][0].cpu()))
+        
+        for i, box in enumerate(sorted_boxes):
+
+            detectedid.append(box.cls.item())
+
+            x, y = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
+            w, h  = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
+
+            detectedposX.append(x)
+            detectedposY.append(y)
+            detectedWidth.append(w)
+            detectedHeight.append(h)
+            
+            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+
+    # for h in hanire_detection_result:
+    #     # print(h.boxes)
+    #     # sorted_hanire = sorted(h.boxes, key=lambda box: float(box.xywh[0][0].cpu()))
+
+    #     for hanire in h.boxes:
+    #         detectedHanireid.append(int(hanire.cls.item()))
+    #         if int(hanire.cls.item()) == 0:
+    #             cls = 1
+    #         else:
+    #             cls = 0
+    #         x, y = float(hanire.xywh[0][0].cpu()), float(hanire.xywh[0][1].cpu())
+    #         w, h  = float(hanire.xywh[0][2].cpu()), float(hanire.xywh[0][3].cpu())
+
+    #         detectedposHanireX.append(x)
+    #         detectedposHanireY.append(y)
+
+    #         center = drawcircle(image, (x,y), cls, radius = 50)
+
+    #     #if there is a value of 1 inside the detectedhanireid list, set as ng
+    #     if 1 in detectedHanireid:
+    #         print_status = print_status + " クリップ半入れ "
+    #         status = "NG"
+    #         resultPitch = [0] * (len(pitchSpec)+1)
+    #         measuredPitch = [0] * (len(pitchSpec)+1)
+
+    combined_mask = None
+
+    for m in segmentation_result:
+        #use image size
+        orig_shape = (image.shape[0], image.shape[1])
+        segmentation_xyn = m.masks.xyn
+        mask = create_masks(segmentation_xyn, orig_shape)
+        if combined_mask is None:
+            combined_mask = np.zeros_like(mask)
+        combined_mask = cv2.bitwise_or(combined_mask, mask)
+        # #draw the mask as overlay
+        image_overlay = image.copy()
+        image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
+        cv2.imwrite("mask_overlay2.jpg", image_overlay)
+
+    if len(detectedid) < 5:
+        print_status = print_status + " クリップ数不足 "
+        status = "NG"
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if len(detectedid) > 5:
+        print_status = print_status + " クリップ数過多 "
+        status = "NG"
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if len(detectedid) == 5 and status == "OK":
+
+        leftmostCenter = (detectedposX[0], detectedposY[0])
+        leftmostWidth = detectedWidth[0] # not really useful here since we use mask from inference
+        rightmostCenter = (detectedposX[-1], detectedposY[-1])
+        rightmostWidth = detectedWidth[-1] # not really useful here since we use mask from inference
+        adjustment_offset = 0 # not really useful here since we use mask from inference
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -100, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -100, Xoffsetval = 0)
+
+        detectedposX.insert(0, left_edge[0])
+        detectedposY.insert(0, left_edge[1])
+        detectedposX.append(right_edge[0])
+        detectedposY.append(right_edge[1])
+
+        for i in range(len(detectedposX) - 1):
+            measuredPitch.append(calclength((detectedposX[i], detectedposY[i]), (detectedposX[i+1], detectedposY[i+1])) * pixelMultiplier)
+
+            if abs(measuredPitch[i] - pitchSpec[i]) < tolerance_pitch[i]:
+                linecolor = (0, 255, 0)
+                linethickness = 2
+            else:
+                linecolor = (0, 0, 255)
+                linethickness = 4
+
+            image = cv2.line(image, (int(detectedposX[i]), int(detectedposY[i])), (int(detectedposX[i+1]), int(detectedposY[i+1])), linecolor, thickness=linethickness)
+
+        resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
+
+        if print_status == "":
+            status = "OK"
+
+        measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
+        resultPitch, deltaPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
+        
+        drawcircle(image, left_edge, resultPitch[0])
+        drawcircle(image, right_edge, resultPitch[-3])
+
+        #Check whether the total of measured pitch is within tolerance
+        totalLength = sum(measuredPitch)
+        measuredPitch.append(round(totalLength, 1))
+        deltaTotalLength = totalLength - totalLengthSpec
+        deltaPitch.append(round(deltaTotalLength, 1))
+
+    #Add print status to the top center of the image
+    image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+    return image, measuredPitch, resultPitch, deltaPitch, status
+
+def dailyTenken02(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
+    
+    # print(clip_detection_result)
+    detectedid = []
+    detectedHanireid = []
+
+    measuredPitch = []
+    resultPitch = []
+    deltaPitch = []
+
+    resultid = []
+
+    detectedposX = []
+    detectedposY = []
+
+    detectedposHanireX = []
+    detectedposHanireY = []
+
+    detectedWidth = []
+    detectedHeight = []
+
+    prev_center = None
+
+    flag_pitch_furyou = 0
+    flag_clip_furyou = 0
+    flag_clip_hanire = 0
+    flag_hole_notfound = 0
+
+    leftmostPitch = 0
+    rightmostPitch = 0
+
+    status = "OK"
+    print_status = ""
+
+    pitchSpec = pitchSpec_dailyTenken01
+    tolerance_pitch = pitchTolerance
+
+    for r in clip_detection_result:
+
+        sorted_boxes = sorted(r.boxes, key=lambda box: float(box.xywh[0][0].cpu()))
+        
+        for i, box in enumerate(sorted_boxes):
+
+            detectedid.append(box.cls.item())
+
+            x, y = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
+            w, h  = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
+
+            detectedposX.append(x)
+            detectedposY.append(y)
+            detectedWidth.append(w)
+            detectedHeight.append(h)
+
+            if box.cls.item() == idSpec_dailyTenken02[i]:
+                color = (0, 255, 0)
+
+            else:
+                color = (0, 0, 255)
+            
+            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+
+    if len(detectedid) < 4:
+        print_status = print_status + " クリップ数不足 "
+        status = "NG"
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if len(detectedid) > 4:
+        print_status = print_status + " クリップ数過多 "
+        status = "NG"
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if len(detectedid) == 4:
+        result = check_id(detectedid, idSpec_dailyTenken02)
+        if 0 in result:
+            status = "NG"
+            print_status = print_status + " クリップ類不良"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+ 
+    image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+    return image, measuredPitch, resultPitch, deltaPitch, status
+
+def dailyTenken03(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
+    
+    # print(clip_detection_result)
+    detectedid = []
+    detectedHanireid = []
+
+    measuredPitch = []
+    resultPitch = []
+    deltaPitch = []
+
+    resultid = []
+
+    detectedposX = []
+    detectedposY = []
+
+    detectedposHanireX = []
+    detectedposHanireY = []
+
+    detectedWidth = []
+    detectedHeight = []
+
+    prev_center = None
+
+    flag_pitch_furyou = 0
+    flag_clip_furyou = 0
+    flag_clip_hanire = 0
+    flag_hole_notfound = 0
+
+    leftmostPitch = 0
+    rightmostPitch = 0
+
+    status = "OK"
+    print_status = ""
+
+    pitchSpec = pitchSpec_dailyTenken01
+    tolerance_pitch = pitchTolerance
+
+    for h in hanire_detection_result:
+        
+        sorted_hanire = sorted(h.boxes, key=lambda box: float(box.xywh[0][0].cpu()))
+
+        for i, hanire in enumerate(sorted_hanire):
+
+            detectedHanireid.append(int(hanire.cls.item()))
+
+            x, y = float(hanire.xywh[0][0].cpu()), float(hanire.xywh[0][1].cpu())
+            w, h  = float(hanire.xywh[0][2].cpu()), float(hanire.xywh[0][3].cpu())
+
+            if hanire.cls.item() == idSpec_dailyTenken03[i]:
+                color = (0, 255, 0)
+            else:
+                color = (0, 0, 255)
+            
+            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+
+    if len(detectedHanireid) < 4:
+        print_status = print_status + " クリップ数不足 "
+        status = "NG"
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if len(detectedHanireid) > 4:
+        print_status = print_status + " クリップ数過多 "
+        status = "NG"
+        resultPitch = [0] * (len(pitchSpec)+1)
+        measuredPitch = [0] * (len(pitchSpec)+1)
+
+    if len(detectedHanireid) == 4:
+        result = check_id(detectedHanireid, idSpec_dailyTenken03)
+        if 0 in result:
+            status = "NG"
+            print_status = print_status + " 半入れ認識不良"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+
     image = draw_status_text_PIL(image, status, print_status, size="normal")
 
     return image, measuredPitch, resultPitch, deltaPitch, status
@@ -528,24 +853,3 @@ def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=
     center_x, center_y = x, y
     return (center_x, center_y)
 
-# class BoundingBox:
-#     def __init__(self, minx, miny, maxx, maxy):
-#         self.minx = minx
-#         self.miny = miny
-#         self.maxx = maxx
-#         self.maxy = maxy
-
-# class PredictionScore:
-#     def __init__(self, value):
-#         self.value = value
-
-# class Category:
-#     def __init__(self, id, name):
-#         self.id = id
-#         self.name = name
-
-# class ObjectPrediction:
-#     def __init__(self, bbox, score, category):
-#         self.bbox = bbox
-#         self.score = score
-#         self.category = category

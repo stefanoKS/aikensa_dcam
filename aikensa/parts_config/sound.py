@@ -13,7 +13,14 @@ picking_sound = pygame.mixer.Sound("aikensa/sound/mixkit-kids-cartoon-close-bell
 picking_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-page-forward-single-chime-1107.wav")
 keisoku_sound = pygame.mixer.Sound("aikensa/sound/tabanete.wav") 
 konpou_sound = pygame.mixer.Sound("aikensa/sound/mixkit-software-interface-back-2575.wav")
+ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav")
+ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav")
 
+def play_ok_sound():
+    ok_sound.play()
+
+def play_ng_sound():
+    ng_sound.play()
 
 def play_do_sound():
     do_sound.play()

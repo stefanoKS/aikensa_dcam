@@ -194,15 +194,18 @@ def partcheck(image, clip_detection_result, segmentation_result):
             print_status = print_status + "クリップ位置不良 "
             status = "NG"
 
-        if print_status == "":
-            status = "OK"
+        # if print_status == "":
+        #     status = "OK"
 
         measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
         resultPitch, deltaPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
+
+        if 0 in resultPitch:
+            status = "NG"
+            print_status = print_status + "ピッチ不良 "
         
         drawcircle(image, left_edge, resultPitch[0])
         drawcircle(image, right_edge, resultPitch[-3])
-
 
     #Add print status to the top center of the image
     image = draw_status_text_PIL(image, status, print_status, size="normal")

@@ -211,7 +211,6 @@ class CalibrationThread(QThread):
                 self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
                 self.H2 = np.array(self.homography_matrix2)
 
-
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml"):
             with open("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml") as file:
                 self.homography_matrix1_scaled = yaml.load(file, Loader=yaml.FullLoader)
