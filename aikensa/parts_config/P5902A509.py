@@ -380,6 +380,10 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
         measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
         resultPitch, deltaPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         
+        if 0 in resultPitch:
+            status = "NG"
+            print_status = print_status + "ピッチ不良 "
+        
         drawcircle(image, left_edge, resultPitch[0])
         drawcircle(image, right_edge, resultPitch[-3])
 
