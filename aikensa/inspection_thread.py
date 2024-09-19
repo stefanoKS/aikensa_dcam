@@ -64,6 +64,8 @@ class InspectionConfig:
     kansei_plus_10: bool = False
     kansei_minus_10: bool = False
 
+    counterReset: bool = False
+
     today_numofPart: list = field(default_factory=lambda: [[0, 0] for _ in range(30)])
     current_numofPart: list = field(default_factory=lambda: [[0, 0] for _ in range(30)])
 
@@ -202,6 +204,9 @@ class InspectionThread(QThread):
             25: "658207LE0A_dailyTenken02",
         }
 
+        self.InspectionWaitTime = 1.0
+        self.InspectionTimeStart = None
+
     def release_all_camera(self):
         if self.cap_cam1 is not None:
             self.cap_cam1.release()
@@ -234,23 +239,26 @@ class InspectionThread(QThread):
             self.cap_cam2.release()
             print(f"Camera 2 released.")
 
-        self.cap_cam1 = initialize_camera(4)
-        self.cap_cam2 = initialize_camera(5)
+        self.cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_35420835-video-index0")
+        self.cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_30320216-video-index0")
+        # self.cap_cam1 = initialize_camera(0)
+        # self.cap_cam2 = initialize_camera(2)
+
 
         if not self.cap_cam1.isOpened():
-            print(f"Failed to open camera with ID 1")
+            print(f"Failed to open camera with ID 1, problem with camera 1.")
             self.cap_cam1 = None
         else:
             print(f"Initialized Camera on ID 1")
 
         if not self.cap_cam2.isOpened():
-            print(f"Failed to open camera with ID 2")
+            print(f"Failed to open camera with ID 2, problem with camera 2.")
             self.cap_cam2 = None
         else:
             print(f"Initialized Camera on ID 2")
 
-    def run(self):
 
+    def run(self):
         #initialize the database
         if not os.path.exists("./aikensa/inspection_results"):
             os.makedirs("./aikensa/inspection_results")
@@ -282,7 +290,7 @@ class InspectionThread(QThread):
         print("AI Models Initialized")
 
         self.current_cameraID = self.inspection_config.cameraID
-        self.initialize_single_camera(self.current_cameraID)
+        # self.initialize_single_camera(self.current_cameraID)
         self._save_dir = f"aikensa/cameracalibration/"
 
         self.homography_template = cv2.imread("aikensa/homography_template/homography_template_border.png")
@@ -359,6 +367,9 @@ class InspectionThread(QThread):
                 if self.multiCam_stream is False:
                     self.multiCam_stream = True
                     self.initialize_all_camera()
+                    # print("initialize all camera")    
+                    # self.cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_35420835-video-index0")
+                    # self.cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_30320216-video-index0")
 
                 _, self.mergeframe1 = self.cap_cam1.read()
                 _, self.mergeframe2 = self.cap_cam2.read()
@@ -435,8 +446,19 @@ class InspectionThread(QThread):
                     print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
                     print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
                     
-                if self.inspection_config.doInspection is True:
+                if self.inspection_config.counterReset is True:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
+                    self.inspection_config.counterReset = False
+                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                            numofPart = [0, 0], 
+                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            deltaTime = 0.0,
+                            kensainName = self.inspection_config.kensainNumber, 
+                            detected_pitch_str = "COUNTERRESET", 
+                            delta_pitch_str = "COUNTERRESET", 
+                            total_length=0)
 
+                if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
 
                     self.emit = self.combinedImage_scaled
@@ -455,13 +477,13 @@ class InspectionThread(QThread):
                     self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
                     self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
 
-                    self.InspectionImages[0] = self.combinedImage
+                    self.InspectionImages[0] = self.combinedImage.copy()
 
                     # self.save_image(self.InspectionImages[0])
 
                     for i in range(len(self.InspectionImages)):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
-                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.9, imgsz=960, verbose=False)
+                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
                         self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 
@@ -470,13 +492,15 @@ class InspectionThread(QThread):
                                 # Increment the 'OK' count at the appropriate index (1)
                                 self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
                                 self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
+                                play_ok_sound()
 
                             elif self.InspectionResult_Status[i] == "NG": 
                                 # Increment the 'NG' count at the appropriate index (0)
                                 self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
                                 self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
+                                play_ng_sound()
 
-
+                    self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
@@ -520,6 +544,18 @@ class InspectionThread(QThread):
                         self.inspection_config.kansei_plus_10,
                         self.inspection_config.kansei_minus_10)
                     
+                if self.inspection_config.counterReset is True:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
+                    self.inspection_config.counterReset = False
+                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                            numofPart = [0, 0], 
+                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            deltaTime = 0.0,
+                            kensainName = self.inspection_config.kensainNumber, 
+                            detected_pitch_str = "COUNTERRESET", 
+                            delta_pitch_str = "COUNTERRESET", 
+                            total_length=0)
+                    
                 if self.inspection_config.doInspection is True:
 
                     self.inspection_config.doInspection = False
@@ -540,13 +576,13 @@ class InspectionThread(QThread):
                     self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
                     self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
 
-                    self.InspectionImages[0] = self.combinedImage
+                    self.InspectionImages[0] = self.combinedImage.copy()
 
                     # self.save_image(self.InspectionImages[0])
 
                     for i in range(len(self.InspectionImages)):
                         self.InspectionResult_ClipDetection[i] = self.P658207LE0A_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
-                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.9, imgsz=960, verbose=False)
+                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P658207LE0A_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i])
 
                         for i in range(len(self.InspectionResult_Status)):
@@ -621,7 +657,7 @@ class InspectionThread(QThread):
 
                     for i in range(len(self.InspectionImages)):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
-                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.9, imgsz=960, verbose=False)
+                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
                         self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_dailyTenken01(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 
@@ -629,7 +665,6 @@ class InspectionThread(QThread):
                             if self.InspectionResult_Status[i] == "OK": 
                                 self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
                                 self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
-                                
 
                             elif self.InspectionResult_Status[i] == "NG": 
                                 self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
@@ -686,7 +721,7 @@ class InspectionThread(QThread):
 
                     for i in range(len(self.InspectionImages)):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
-                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.9, imgsz=960, verbose=False)
+                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
                         self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_dailyTenken02(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 
@@ -750,7 +785,7 @@ class InspectionThread(QThread):
 
                     for i in range(len(self.InspectionImages)):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
-                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.9, imgsz=960, verbose=False)
+                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
                         self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_dailyTenken03(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 

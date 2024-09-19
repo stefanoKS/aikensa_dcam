@@ -109,14 +109,15 @@ class AIKensa(QMainWindow):
     def handle_input_states(self, input_states):
         # check if input_stats is not empty
         if input_states:
+            # print(input_states)
             if input_states[0] == 1:
                 self.trigger_kensa()
             else:
                 pass
 
     def trigger_kensa(self):
-        self.button_kensa3.click()
-        self.button_kensa4.click()
+        self.Inspect_button.click()
+        # self.button_kensa4.click()
 
     def trigger_rekensa(self):
         self.button_rekensa.click()
@@ -269,9 +270,9 @@ class AIKensa(QMainWindow):
         self.inspection_widget_indices = [5, 6, 7, 8, 21, 22, 23, 24, 25]
 
         for i in self.inspection_widget_indices:
-            button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButton")
-            if button:
-                button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspection", True))
+            self.Inspect_button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButton")
+            if self.Inspect_button:
+                self.Inspect_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspection", True))
 
         for i in [5, 6, 7, 8]:
             self.connect_inspectionConfig_button(i, "kansei_plus", "kansei_plus", True)
@@ -282,6 +283,8 @@ class AIKensa(QMainWindow):
             self.connect_inspectionConfig_button(i, "kansei_minus_10", "kansei_minus_10", True)
             self.connect_inspectionConfig_button(i, "furyou_plus_10", "furyou_plus_10", True)
             self.connect_inspectionConfig_button(i, "furyou_minus_10", "furyou_minus_10", True)
+            #connect reset button
+            self.connect_inspectionConfig_button(i, "counterReset", "counterReset", True)
 
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)

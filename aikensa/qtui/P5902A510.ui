@@ -324,7 +324,7 @@ RT Pers.Warp</string>
       <rect>
        <x>400</x>
        <y>425</y>
-       <width>106</width>
+       <width>121</width>
        <height>26</height>
       </rect>
      </property>
@@ -351,7 +351,7 @@ RT Pers.Warp</string>
       <rect>
        <x>1080</x>
        <y>425</y>
-       <width>106</width>
+       <width>121</width>
        <height>26</height>
       </rect>
      </property>
@@ -546,7 +546,7 @@ background-color: rgb(211, 215, 207);</string>
       <rect>
        <x>1365</x>
        <y>425</y>
-       <width>106</width>
+       <width>121</width>
        <height>26</height>
       </rect>
      </property>
@@ -573,7 +573,7 @@ background-color: rgb(211, 215, 207);</string>
       <rect>
        <x>1615</x>
        <y>425</y>
-       <width>106</width>
+       <width>121</width>
        <height>26</height>
       </rect>
      </property>
@@ -600,7 +600,7 @@ background-color: rgb(211, 215, 207);</string>
       <rect>
        <x>45</x>
        <y>425</y>
-       <width>106</width>
+       <width>121</width>
        <height>26</height>
       </rect>
      </property>
@@ -1599,7 +1599,7 @@ background-color: rgb(38, 162, 105);</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

@@ -162,10 +162,10 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             combined_mask = np.zeros_like(mask)
         combined_mask = cv2.bitwise_or(combined_mask, mask)
 
-        # #draw the mask as overlay
-        # image_overlay = image.copy()
-        # image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-        # cv2.imwrite("mask_overlay2.jpg", image_overlay)
+        #draw the mask as overlay
+        image_overlay = image.copy()
+        image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
+        cv2.imwrite("mask_overlay2.jpg", image_overlay)
 
 
     if len(detectedid) < 5:

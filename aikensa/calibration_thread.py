@@ -162,8 +162,8 @@ class CalibrationThread(QThread):
             self.cap_cam2.release()
             print(f"Camera 2 released.")
         
-        self.cap_cam1 = initialize_camera(4)
-        self.cap_cam2 = initialize_camera(5)
+        self.cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_35420835-video-index0")
+        self.cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_30320216-video-index0")
 
         if not self.cap_cam1.isOpened():
             print(f"Failed to open camera with ID 1")
@@ -255,8 +255,12 @@ class CalibrationThread(QThread):
                         self.cap_cam.release()
                         print(f"Camera {self.current_cameraID} released.")
                     self.current_cameraID = self.calib_config.cameraID
-                    self.initialize_single_camera(self.current_cameraID)
-
+                    # self.initialize_single_camera(self.current_cameraID)
+                    if self.calib_config.widget == 1:
+                        self.initialize_single_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_35420835-video-index0")
+                    if self.calib_config.widget == 2:
+                        self.initialize_single_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_30320216-video-index0")
+                  
                 if self.cap_cam is not None:
                     try:
                         ret, self.frame = self.cap_cam.read()
@@ -272,7 +276,7 @@ class CalibrationThread(QThread):
                         print("An error occurred while reading frames from the cameras:", str(e))
 
                 # self.calib_config.cameraID = self.calib_config.widget
-                self.calib_config.cameraID = self.calib_config.widget + 3 #Don't forget to clean this up in deployment !!
+                self.calib_config.cameraID = self.calib_config.widget - 1 #Don't forget to clean this up in deployment !!
             
                 if self.calib_config.mapCalculated[self.calib_config.cameraID] is False and self.frame is not None:
                     if os.path.exists(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml"):
