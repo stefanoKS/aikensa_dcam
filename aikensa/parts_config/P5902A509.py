@@ -1,4 +1,5 @@
 from calendar import c
+import re
 import stat
 from unittest import result
 from networkx import draw
@@ -215,7 +216,9 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
 
         measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
         resultPitch, deltaPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
-        
+
+
+
         drawcircle(image, left_edge, resultPitch[0])
         drawcircle(image, right_edge, resultPitch[-3])
 
@@ -232,6 +235,10 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             status = "NG"
             print_status = print_status + " 全長不良"
             resultPitch.append(0)
+
+        if 0 in resultPitch:
+            status = "NG"
+            print_status = print_status + "ピッチ不良 "
 
     #Add print status to the top center of the image
     image = draw_status_text_PIL(image, status, print_status, size="normal")
@@ -380,9 +387,7 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
         measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
         resultPitch, deltaPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         
-        if 0 in resultPitch:
-            status = "NG"
-            print_status = print_status + "ピッチ不良 "
+
         
         drawcircle(image, left_edge, resultPitch[0])
         drawcircle(image, right_edge, resultPitch[-3])
