@@ -123,8 +123,13 @@ def partcheck(image, clip_detection_result, segmentation_result):
 
         slope, intercept = extend_line(point2, point3)
 
-        closest_point_to_1 = closest_point_on_line(point2, point3, point1)
-        closest_point_to_4 = closest_point_on_line(point2, point3, point4)
+        # closest_point_to_1 = closest_point_on_line(point2, point3, point1)
+        # closest_point_to_4 = closest_point_on_line(point2, point3, point4)
+
+        # Try to use Y pos difference between point 1 and point 2
+
+        closest_point_to_1 = (point1[0], point2[1])
+        closest_point_to_4 = (point4[0], point3[1])
 
         closest_point_to_1 = (int(closest_point_to_1[0]), int(closest_point_to_1[1]))
         closest_point_to_4 = (int(closest_point_to_4[0]), int(closest_point_to_4[1]))
