@@ -156,17 +156,28 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
 
     for m in segmentation_result:
         #use image size
-        orig_shape = (image.shape[0], image.shape[1])
-        segmentation_xyn = m.masks.xyn
-        mask = create_masks(segmentation_xyn, orig_shape)
-        if combined_mask is None:
-            combined_mask = np.zeros_like(mask)
-        combined_mask = cv2.bitwise_or(combined_mask, mask)
+        if m.masks is not None:
+            orig_shape = (image.shape[0], image.shape[1])
+            segmentation_xyn = m.masks.xyn
+            mask = create_masks(segmentation_xyn, orig_shape)
+            if combined_mask is None:
+                combined_mask = np.zeros_like(mask)
+            combined_mask = cv2.bitwise_or(combined_mask, mask)
 
-        #draw the mask as overlay
-        image_overlay = image.copy()
-        image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-        cv2.imwrite("mask_overlay2.jpg", image_overlay)
+            #draw the mask as overlay
+            image_overlay = image.copy()
+            image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
+            cv2.imwrite("mask_overlay2.jpg", image_overlay)
+        
+        if m.masks is None:
+            print_status = print_status + " 製品は見つかりません"
+            status = "NG"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            return image, measuredPitch, resultPitch, deltaPitch, status
 
 
     if len(detectedid) < 5:
@@ -327,18 +338,32 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
 
     combined_mask = None
 
+
     for m in segmentation_result:
         #use image size
-        orig_shape = (image.shape[0], image.shape[1])
-        segmentation_xyn = m.masks.xyn
-        mask = create_masks(segmentation_xyn, orig_shape)
-        if combined_mask is None:
-            combined_mask = np.zeros_like(mask)
-        combined_mask = cv2.bitwise_or(combined_mask, mask)
-        # #draw the mask as overlay
-        image_overlay = image.copy()
-        image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-        cv2.imwrite("mask_overlay2.jpg", image_overlay)
+        if m.masks is not None:
+            orig_shape = (image.shape[0], image.shape[1])
+            segmentation_xyn = m.masks.xyn
+            mask = create_masks(segmentation_xyn, orig_shape)
+            if combined_mask is None:
+                combined_mask = np.zeros_like(mask)
+            combined_mask = cv2.bitwise_or(combined_mask, mask)
+
+            #draw the mask as overlay
+            image_overlay = image.copy()
+            image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
+            cv2.imwrite("mask_overlay2.jpg", image_overlay)
+        
+        if m.masks is None:
+            print_status = print_status + " 製品は見つかりません"
+            status = "NG"
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            return image, measuredPitch, resultPitch, deltaPitch, status
+
 
     if len(detectedid) < 5:
         print_status = print_status + " クリップ数不足 "
