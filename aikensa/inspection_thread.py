@@ -531,14 +531,14 @@ class InspectionThread(QThread):
                             # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
 
                             #Add custom text to the image
-                            if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and elf.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
+                            if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and self.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
                                 if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 150 == 0:
                                     imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
                                     img_pil = Image.fromarray(imgresults)
                                     font = ImageFont.truetype(self.kanjiFontPath, 120)
                                     draw = ImageDraw.Draw(img_pil)
                                     centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                                    draw.text((centerpos[0]-650, centerpos[1]+150), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
+                                    draw.text((centerpos[0]-900, centerpos[1]+20), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
                                     imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
                                     play_konpou_sound()
                                     self.InspectionImages[0] = imgResult
@@ -549,7 +549,7 @@ class InspectionThread(QThread):
                                     font = ImageFont.truetype(self.kanjiFontPath, 120)
                                     draw = ImageDraw.Draw(img_pil)
                                     centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                                    draw.text((centerpos[0]-650, centerpos[1]+150), u"束ねてください", font=font, fill=(5, 80, 160, 0))
+                                    draw.text((centerpos[0]-900, centerpos[1]+20), u"束ねてください", font=font, fill=(5, 80, 160, 0))
                                     imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
                                     play_keisoku_sound()         
                                     self.InspectionImages[0] = imgResult                         
