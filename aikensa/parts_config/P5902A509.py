@@ -167,7 +167,7 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             #draw the mask as overlay
             image_overlay = image.copy()
             image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-            cv2.imwrite("mask_overlay2.jpg", image_overlay)
+            # cv2.imwrite("mask_overlay2.jpg", image_overlay)
         
         if m.masks is None:
             print_status = print_status + " 製品は見つかりません"
@@ -352,7 +352,7 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
             #draw the mask as overlay
             image_overlay = image.copy()
             image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-            cv2.imwrite("mask_overlay2.jpg", image_overlay)
+            # cv2.imwrite("mask_overlay2.jpg", image_overlay)
         
         if m.masks is None:
             print_status = print_status + " 製品は見つかりません"
