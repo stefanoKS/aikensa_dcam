@@ -210,7 +210,7 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
         for i in range(len(detectedposX) - 1):
             measuredPitch.append(calclength((detectedposX[i], detectedposY[i]), (detectedposX[i+1], detectedposY[i+1])) * pixelMultiplier)
 
-            if abs(measuredPitch[i] - pitchSpec[i]) < tolerance_pitch[i]:
+            if abs(measuredPitch[i] - pitchSpec[i]) <= tolerance_pitch[i]:
                 linecolor = (0, 255, 0)
                 linethickness = 2
             else:

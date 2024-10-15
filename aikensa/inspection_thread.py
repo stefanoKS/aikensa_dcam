@@ -410,8 +410,13 @@ class InspectionThread(QThread):
                     self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
 
 
-                    self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_narrow_scaled, (int(self.narrow_planarize[1]/(self.scale_factor)), int(self.narrow_planarize[0]/(self.scale_factor))))
-                    self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
+                    if self.inspection_config.widget in [5, 6, 7]:
+                        self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_narrow_scaled, (int(self.narrow_planarize[1]/(self.scale_factor)), int(self.narrow_planarize[0]/(self.scale_factor))))
+                        self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
+
+                    if self.inspection_config.widget in [8]:
+                        self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_wide_scaled, (int(self.wide_planarize[1]/(self.scale_factor)), int(self.wide_planarize[0]/(self.scale_factor))))
+                        self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
 
                     self.InspectionResult_PitchMeasured = [None]*30
                     self.InspectionResult_PitchResult = [None]*30
