@@ -113,9 +113,9 @@ class AIKensa(QMainWindow):
     def handle_input_states(self, input_states):
         # print(f"Input states: {input_states}")
         if input_states:
-            if input_states[5] == 1 and self.prevTriggerStates == 0:
+            if input_states[0] == 1 and self.prevTriggerStates == 0:
                 self.trigger_kensa()
-                self.prevTriggerStates = input_states[5]
+                self.prevTriggerStates = input_states[0]
                 # print("Triggered Kensa")
             if time.time() - self.currentTime > self.TriggerWaitTime:
                 # print("timePassed")
