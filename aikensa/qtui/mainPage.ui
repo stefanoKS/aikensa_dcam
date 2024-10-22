@@ -320,7 +320,7 @@
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>335</y>
+      <y>340</y>
       <width>231</width>
       <height>91</height>
      </rect>
@@ -416,7 +416,7 @@ COWLTOP</string>
     <property name="geometry">
      <rect>
       <x>195</x>
-      <y>765</y>
+      <y>895</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -442,8 +442,8 @@ COWLTOP</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>760</x>
-      <y>760</y>
+      <x>1020</x>
+      <y>890</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -470,7 +470,7 @@ COWLTOP</string>
     <property name="geometry">
      <rect>
       <x>660</x>
-      <y>645</y>
+      <y>540</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -478,7 +478,7 @@ COWLTOP</string>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>15</pointsize>
+      <pointsize>13</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -587,7 +587,7 @@ Camera Merge</string>
     <property name="geometry">
      <rect>
       <x>660</x>
-      <y>335</y>
+      <y>340</y>
       <width>231</width>
       <height>91</height>
      </rect>
@@ -606,6 +606,198 @@ Camera Merge</string>
 日常点検</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="P808387YA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>650</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(15, 190, 224);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+80838 7YA0A
+ SEAL-FR DOOR PARTING, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P828387YA1Abutton">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>760</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(98, 160, 234);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+82838 7YA1A
+ SEAL-RR DOOR PARTING, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658107YA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>650</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(111, 106, 252);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+65810 7YA0A
+ SEAL ASSY RAD CORE</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P828387YA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>650</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(15, 190, 224);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+82838 7YA0A
+ SEAL-RR DOOR PARTING, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P731957YA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>1380</x>
+      <y>650</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(192, 97, 203);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+73195 7YA0A
+ SEAL-ROOF</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P828387YA6Abutton">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>760</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(53, 132, 228);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+82838 7YA6A
+ SEAL-RR DOOR PARTING, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P828397YA1Abutton">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>760</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(98, 160, 234);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+82839 7YA1A
+ SEAL-RR DOOR PARTING, LH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P828397YA6Abutton">
+    <property name="geometry">
+     <rect>
+      <x>1380</x>
+      <y>760</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(53, 132, 228);</string>
+    </property>
+    <property name="text">
+     <string>J42U
+82839 7YA6A
+ SEAL-RR DOOR PARTING, LH</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -613,7 +805,7 @@ Camera Merge</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
