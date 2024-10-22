@@ -89,6 +89,10 @@ class AIKensa(QMainWindow):
             8: "5819A107",
         }
 
+        self.prevTriggerStates = 0
+        self.TriggerWaitTime = 2.0
+        self.currentTime = time.time()
+
     def timeUpdate(self, time):
         for label in self.timeLabel:
             if label:
@@ -107,11 +111,16 @@ class AIKensa(QMainWindow):
 
 
     def handle_input_states(self, input_states):
-        # check if input_stats is not empty
+        # print(f"Input states: {input_states}")
         if input_states:
-            # print(input_states)
-            if input_states[0] == 1:
+            if input_states[5] == 1 and self.prevTriggerStates == 0:
                 self.trigger_kensa()
+                self.prevTriggerStates = input_states[5]
+                # print("Triggered Kensa")
+            if time.time() - self.currentTime > self.TriggerWaitTime:
+                # print("timePassed")
+                self.prevTriggerStates = 0
+                self.currentTime = time.time()
             else:
                 pass
 
