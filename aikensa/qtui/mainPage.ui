@@ -637,7 +637,7 @@ Camera Merge</string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>1070</x>
+      <x>1100</x>
       <y>740</y>
       <width>211</width>
       <height>31</height>
@@ -655,18 +655,18 @@ Camera Merge</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>ダイハツ工業</string>
+     <string>スズキ株式会社</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="P84S">
+   <widget class="QPushButton" name="P8462284S00">
     <property name="geometry">
      <rect>
       <x>1080</x>
       <y>610</y>
-      <width>201</width>
+      <width>261</width>
       <height>61</height>
      </rect>
     </property>
@@ -680,9 +680,9 @@ Camera Merge</string>
      <string notr="true">background-color: rgb(170, 87, 88);</string>
     </property>
     <property name="text">
-     <string>84S
-73195 7YA0A
- SEAL-ROOF</string>
+     <string>YT3S
+84622 84S00A
+WEATHERSTRIP, REAR DOOR DUST</string>
     </property>
    </widget>
    <widget class="QPushButton" name="P828397YA1Abutton">
