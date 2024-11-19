@@ -38,7 +38,7 @@ UI_FILES = [
     "aikensa/qtui/P828387YA1A.ui", #empty 10
     "aikensa/qtui/P828397YA1A.ui", #empty 11
     "aikensa/qtui/P731957YA0A.ui", #empty 12
-    "aikensa/qtui/empty.ui", #empty 13
+    "aikensa/qtui/P8462284S00.ui", #empty 13
     "aikensa/qtui/empty.ui", #empty 14
     "aikensa/qtui/empty.ui", #empty 15
     "aikensa/qtui/empty.ui", #empty 16
@@ -248,6 +248,7 @@ class AIKensa(QMainWindow):
             "P828387YA1Abutton": {"widget_index": 10, "inspection_param": 10},
             "P828397YA1Abutton": {"widget_index": 11, "inspection_param": 11},
             "P731957YA0Abutton": {"widget_index": 12, "inspection_param": 12},
+            "P8462284S00button": {"widget_index": 13, "inspection_param": 13},
         }
 
         for button_name, config in button_config.items():
@@ -665,7 +666,7 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: white;")
 #10
     def _outputMeasurementText_P828387YA1A(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
         for widget_index in [10]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -699,7 +700,7 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: white;")
 #11
     def _outputMeasurementText_P828397YA1A(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
         for widget_index in [11]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -767,7 +768,7 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: white;")
 #13
     def _outputMeasurementText_P8462284S00(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label"]
         for widget_index in [13]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -841,7 +842,7 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setPartFrame1(self, image):
-        for i in [5, 6, 7, 8, 9, 10, 11, 12, 21, 22, 23, 24, 25]:
+        for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 21, 22, 23, 24, 25]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "framePart")
             label.setPixmap(QPixmap.fromImage(image))
