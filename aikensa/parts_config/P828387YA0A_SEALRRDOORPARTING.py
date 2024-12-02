@@ -61,12 +61,13 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     rightmostPitch = 0
 
     status = "OK"
+    print_status = ""
 
     # cannydetection_image = image.copy() #Make sure to copy the image to avoid modifying the original image
 
     combined_lmask = None
     for lm in leftSegmentation:
-        if lm is not None:
+        if lm.masks is not None:
             orig_shape = (image.shape[0], segmentation_width)
             segmentation_xyn = lm.masks.xyn
             lmask = create_masks(segmentation_xyn, orig_shape)
@@ -74,10 +75,22 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
                 combined_lmask = np.zeros_like(lmask)
             combined_lmask = cv2.bitwise_or(combined_lmask, lmask)
             # cv2.imwrite("leftmask.jpg", combined_lmask)
+
+        #Checkgate for mask segmentation handling
+        if lm.masks is None:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            resultid = [0] * len(idSpec)
+
+            return image, measuredPitch, resultPitch, resultid, status
             
     combined_rmask = None
     for rm in rightSegmentation:
-        if rm is not None:
+        if rm.masks is not None:
             orig_shape = (image.shape[0], segmentation_width)
             segmentation_xyn = rm.masks.xyn
             rmask = create_masks(segmentation_xyn, orig_shape)
@@ -85,6 +98,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
                 combined_rmask = np.zeros_like(rmask)
             combined_rmask = cv2.bitwise_or(combined_rmask, rmask)
             # cv2.imwrite("rightmask.jpg", combined_rmask)
+
+        #Checkgate for mask segmentation handling
+        if rm.masks is None:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            resultid = [0] * len(idSpec)
+
+            return image, measuredPitch, resultPitch, resultid, status
 
     combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
 
@@ -168,6 +193,32 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     
     return image, measuredPitch, resultPitch, resultid, status
 
+def draw_status_text_PIL(image, status, print_status, size = "normal"):
+
+    if size == "large":
+        font_scale = 130.0
+    if size == "normal":
+        font_scale = 100.0
+    elif size == "small":
+        font_scale = 50.0
+
+    if status == "OK":
+        color = (10, 210, 60)
+
+    elif status == "NG":
+        color = (200, 30, 50)
+    
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    img_pil = Image.fromarray(image_rgb)
+    draw = ImageDraw.Draw(img_pil)
+    font = ImageFont.truetype(kanjiFontPath, font_scale)
+
+    draw.text((120, 5), status, font=font, fill=color)  
+    draw.text((120, 100), print_status, font=font, fill=color)
+    image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+    return image
+    
 def create_masks(segmentation_result, orig_shape):
     mask = np.zeros((orig_shape[0], orig_shape[1]), dtype=np.uint8)
     for polygon in segmentation_result:
