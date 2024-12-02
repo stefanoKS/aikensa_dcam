@@ -313,7 +313,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P3:95±2.0</string>
+      <string> P3:95±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -340,7 +340,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P2: 128±2.0</string>
+      <string> P2: 128±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

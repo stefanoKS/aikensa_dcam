@@ -15,24 +15,36 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
-pitchSpec = [15, 142, 143, 143, 143, 139, 139, 113, 15, 992]
-idSpec = [1, 1, 1, 1, 1, 1, 1, 1]
-tolerance_pitch = [1.7] * 10
+
+pitchSpecRH = [15, 128, 95, 39, 120, 15, 412]
+pitchSpecLH = [15, 120, 39, 95, 128, 15, 412]
+idSpecRH = [0, 1, 0, 0, 0, 0]
+idSpecLH = [0, 0, 0, 0, 2, 0]
+
+tolerance_pitch = [1.7] * 7
 tolerance_pitch[0] = 3.0
 tolerance_pitch[-2] = 3.0
 tolerance_pitch[-1] = 10.0
+
+idSpec = []
 
 color = (0, 255, 0)
 text_offset = 40
 endoffset_y = 0
 bbox_offset = 10
 
-segmentation_width = 1280
+segmentation_width = 2400
 
-pixelMultiplier = 0.1654
+pixelMultiplier = 0.1655
 
 
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
+def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, side):
+    if side == "LH":
+        pitchSpec = pitchSpecLH
+        idSpec = idSpecLH
+    elif side == "RH":
+        pitchSpec = pitchSpecRH
+        idSpec = idSpecRH
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
 
@@ -95,7 +107,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     for i, detection in enumerate(sorted_detections):
         detectedid.append(detection.category.id)
-        if detection.category.id == 1:
+        # print(f"Detected ID: {detection.category.id}")
+        if detection.category.id == 0:
             bbox = detection.bbox
             x, y = get_center(bbox)
             w = bbox.maxx - bbox.minx
@@ -106,14 +119,49 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
             detectedposY.append(y)
             detectedWidth.append(w)
 
-            #id 0 object is brown clip
-            #id 1 object is white clip
+            #id 0 object is white clip
+            #id 1 object is holes (not implemented yet)
             center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
 
             if prev_center is not None:
                 length = calclength(prev_center, center)*pixelMultiplier
                 measuredPitch.append(length)
             prev_center = center
+
+        if side == "LH":
+            if detection.category.id == 2:
+                bbox = detection.bbox
+                x, y = get_center(bbox)
+                w = bbox.maxx - bbox.minx
+                h = bbox.maxy - bbox.miny
+
+                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=(0, 255, 255))
+            if detection.category.id == 1:
+                bbox = detection.bbox
+                x, y = get_center(bbox)
+                w = bbox.maxx - bbox.minx
+                h = bbox.maxy - bbox.miny
+
+                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=(255, 0, 0))
+        
+        if side == "RH":
+            if detection.category.id == 1:
+                bbox = detection.bbox
+                x, y = get_center(bbox)
+                w = bbox.maxx - bbox.minx
+                h = bbox.maxy - bbox.miny
+
+                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=(255, 128, 100))
+
+            if detection.category.id == 2:
+                bbox = detection.bbox
+                x, y = get_center(bbox)
+                w = bbox.maxx - bbox.minx
+                h = bbox.maxy - bbox.miny
+
+                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=(255, 0, 0))
+
+
     #Check if detectedposX is not empty
     if len(detectedposX) > 0:
         leftmostCenter = (detectedposX[0], detectedposY[0])
@@ -125,8 +173,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         # right_edge = find_edge_point(cannydetection_image, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = rightmostWidth + adjustment_offset)
 
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -80, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -80, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = 0, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
@@ -146,6 +194,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     totalLength = sum(measuredPitch)
     measuredPitch.append(round(totalLength, 1))
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
+    # print(f"Measured Pitch: {measuredPitch}")
 
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
@@ -156,11 +205,16 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     if any(result != 1 for result in resultPitch):
         flag_pitch_furyou = 1
+        resultid = [0] * len(idSpec)
         status = "NG"
 
-    # if any(result != 1 for result in resultid):
-    #     flag_clip_furyou = 1
-    #     status = "NG"
+    # print(f"Result ID: {resultid}")
+
+
+    if any(result != 1 for result in resultid):
+        flag_clip_furyou = 1
+        resultPitch = [0] * len(pitchSpec)
+        status = "NG"
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
@@ -384,7 +438,7 @@ def calclength(p1, p2):
     length = math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
     return length
 
-def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=3, bbox_offset=bbox_offset):
+def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=2, bbox_offset=bbox_offset):
     x = int(x)
     y = int(y)
     w = int(w)

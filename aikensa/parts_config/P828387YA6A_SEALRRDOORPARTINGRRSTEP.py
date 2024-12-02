@@ -16,34 +16,45 @@ ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
 
-pitchSpecRH = [15, 128, 95, 39, 120, 15, 412]
-pitchSpecLH = [15, 120, 39, 95, 128, 15, 412]
-idSpec = [0, 0, 0, 0, 0]
-tolerance_pitch = [1.5] * 7
-tolerance_pitch[0] = 3.0
-tolerance_pitch[-2] = 3.0
-tolerance_pitch[-1] = 10.0
+pitchSpecRH = [14, 130, 132, 132, 59, 61, 97, 83, 20, 708]
+pitchSpecLH = [83, 97, 61, 59, 132, 132, 130, 14, 20, 708] #20 is katabu
+pitchSpecKatabu = [20]
 
+idSpec = [0, 0, 0, 0, 0]
+
+tolerance_pitchRH = [1.7] * 10
+tolerance_pitchRH[0] = 3.0
+tolerance_pitchRH[-1] = 10.0
+tolerance_pitchRH[-2] = 2.0
+
+tolerance_pitchLH = [1.7] * 10
+tolerance_pitchLH[-3] = 3.0
+tolerance_pitchLH[-2] = 2.0
+tolerance_pitchLH[-1] = 10.0
+
+tolerance_pitchKatabu = [2.0]
 
 color = (0, 255, 0)
 text_offset = 40
 endoffset_y = 0
 bbox_offset = 10
 
-segmentation_width = 2400
+segmentation_width = 1640
 
-pixelMultiplier = 0.1655
+pixelMultiplier = 0.16413
+pixelMultiplier_katabumarking = 0.16413
 
+def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katabumarking_detection, side):
 
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, side):
     if side == "LH":
         pitchSpec = pitchSpecLH
+        tolerance_pitch = tolerance_pitchLH
     elif side == "RH":
         pitchSpec = pitchSpecRH
-
+        tolerance_pitch = tolerance_pitchRH
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
-
+    katabumarking_lengths = []
 
     detectedid = []
 
@@ -56,9 +67,13 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, s
     detectedposX = []
     detectedposY = []
 
+    detectedposX_katabumarking = []
+    detectedposY_katabumarking = []
+
     detectedWidth = []
 
     prev_center = None
+    prev_center_katabumarking = None
 
     flag_pitch_furyou = 0
     flag_clip_furyou = 0
@@ -72,56 +87,111 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, s
 
     # cannydetection_image = image.copy() #Make sure to copy the image to avoid modifying the original image
 
-    combined_lmask = None
-    for lm in leftSegmentation:
-        if lm is not None:
-            orig_shape = (image.shape[0], segmentation_width)
-            segmentation_xyn = lm.masks.xyn
-            lmask = create_masks(segmentation_xyn, orig_shape)
-            if combined_lmask is None:
-                combined_lmask = np.zeros_like(lmask)
-            combined_lmask = cv2.bitwise_or(combined_lmask, lmask)
-            # cv2.imwrite("leftmask.jpg", combined_lmask)
-            
-    combined_rmask = None
-    for rm in rightSegmentation:
-        if rm is not None:
-            orig_shape = (image.shape[0], segmentation_width)
-            segmentation_xyn = rm.masks.xyn
-            rmask = create_masks(segmentation_xyn, orig_shape)
-            if combined_rmask is None:
-                combined_rmask = np.zeros_like(rmask)
-            combined_rmask = cv2.bitwise_or(combined_rmask, rmask)
-            # cv2.imwrite("rightmask.jpg", combined_rmask)
+    combined_infer_mask = None
 
+    #KATABU MARKING DETECTION
+    #class 0 is for clip, class 1 is for katabu marking
+    for r in katabumarking_detection:
+        for box in r.boxes:
+            x_marking, y_marking = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
+            w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
+            class_id_marking = int(box.cls.cpu())
+
+            # print(class_id_marking)
+
+            if class_id_marking == 0:
+                color = (0, 255, 0)
+            elif class_id_marking == 1:
+                color = (100, 100, 200)
+
+            center_katabummarking = draw_bounding_box(img_katabumarking, 
+                                       x_marking, y_marking, 
+                                       w_marking, h_marking, 
+                                       [img_katabumarking.shape[1], img_katabumarking.shape[0]], color=color,
+                                       bbox_offset=3, thickness=2)
+
+            if class_id_marking == 1:
+                center_katabummarking = (int(x_marking), int(y_marking))
+            
+            if prev_center_katabumarking is not None:
+                length = calclength(prev_center_katabumarking, center_katabummarking)*pixelMultiplier_katabumarking
+                katabumarking_lengths.append(length)
+                line_center = ((prev_center_katabumarking[0] + center_katabummarking[0]) // 2, (prev_center_katabumarking[1] + center_katabummarking[1]) // 2)
+                img_katabumarking = drawbox(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
+                img_katabumarking = drawtext(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
+
+            prev_center_katabumarking = center_katabummarking
+
+            detectedposX_katabumarking.append(center_katabummarking[0])
+            detectedposY_katabumarking.append(center_katabummarking[1])
+  
+        katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpecKatabu, tolerance_pitchKatabu)
+
+        xy_pairs_katabumarking = list(zip(detectedposX_katabumarking, detectedposY_katabumarking))
+        draw_pitch_line(img_katabumarking, xy_pairs_katabumarking, katabupitchresult, thickness=2)
+
+        #pick only the first element if array consists of more than 1 element -> detection POKAYOKE (if detection is not that great)
+        if len(katabumarking_lengths) > 1:
+            katabumarking_lengths = katabumarking_lengths[:1]
+
+        #since there is only one katabu marking, we can just use the first element -> detection POKAYOKE (if detection is not that great)
+        print (f"Katabu Marking Length: {katabumarking_lengths}")
+    
+    for m in Segmentation:
+        if m is not None:
+            orig_shape = (image.shape[0], segmentation_width)
+            segmentation_xyn = m.masks.xyn
+            mask = create_masks(segmentation_xyn, orig_shape)
+            if combined_infer_mask is None:
+                combined_infer_mask = np.zeros_like(mask)
+            combined_infer_mask = cv2.bitwise_or(combined_infer_mask, mask)
+            # cv2.imwrite("leftmask.jpg", combined_mask)
+        
     combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
 
-    if combined_lmask is not None and combined_rmask is not None:
-        combined_mask[:, :segmentation_width] = combined_lmask 
-        combined_mask[:, -segmentation_width:] = combined_rmask 
-        # cv2.imwrite("combined_mask.jpg", combined_mask)
+    if combined_mask is not None:
+        if side == "RH":
+            combined_mask[:, :segmentation_width] = combined_infer_mask 
+        if side == "LH":    
+            combined_mask[:, -segmentation_width:] = combined_infer_mask 
 
     for i, detection in enumerate(sorted_detections):
         detectedid.append(detection.category.id)
-        if detection.category.id == 0:
-            bbox = detection.bbox
-            x, y = get_center(bbox)
-            w = bbox.maxx - bbox.minx
-            h = bbox.maxy - bbox.miny
-            # class_name = detection.category.name
+        if side == "RH":
+            if detection.category.id == 0:
+                bbox = detection.bbox
+                x, y = get_center(bbox)
+                w = bbox.maxx - bbox.minx
+                h = bbox.maxy - bbox.miny
 
-            detectedposX.append(x)
-            detectedposY.append(y)
-            detectedWidth.append(w)
+                detectedposX.append(x)
+                detectedposY.append(y)
+                detectedWidth.append(w)
 
-            #id 0 object is white clip
-            #id 1 object is holes (not implemented yet)
-            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
 
-            if prev_center is not None:
-                length = calclength(prev_center, center)*pixelMultiplier
-                measuredPitch.append(length)
-            prev_center = center
+                if prev_center is not None:
+                    length = calclength(prev_center, center)*pixelMultiplier
+                    measuredPitch.append(length)
+                prev_center = center
+
+        if side == "LH":
+            if detection.category.id == 1:
+                bbox = detection.bbox
+                x, y = get_center(bbox)
+                w = bbox.maxx - bbox.minx
+                h = bbox.maxy - bbox.miny
+
+                detectedposX.append(x)
+                detectedposY.append(y)
+                detectedWidth.append(w)
+
+                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+
+                if prev_center is not None:
+                    length = calclength(prev_center, center)*pixelMultiplier
+                    measuredPitch.append(length)
+                prev_center = center
 
     #Check if detectedposX is not empty
     if len(detectedposX) > 0:
@@ -134,28 +204,38 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, s
         # right_edge = find_edge_point(cannydetection_image, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = rightmostWidth + adjustment_offset)
 
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = 0, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = 0)
-
-        leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
-        rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
-
-        #append the leftmost and rightmost pitch to the measuredPitch
-        measuredPitch.insert(0, leftmostPitch)
-        measuredPitch.append(rightmostPitch)
-        #Reappend the leftmostcetner and rightmostcenter to the detectedposX and detectedposY
-        detectedposX.insert(0, left_edge[0])
-        detectedposY.insert(0, left_edge[1])
-        detectedposX.append(right_edge[0])
-        detectedposY.append(right_edge[1])
-
+        if side == "RH":
+            left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = 0, Xoffsetval = 0)
+            leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
+            measuredPitch.insert(0, leftmostPitch)
+            detectedposX.insert(0, left_edge[0])
+            detectedposY.insert(0, left_edge[1])
+            # remove the most right of the measured pitch
+            measuredPitch.pop(-1)
+            
+        if side == "LH":
+            right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = 0)
+            rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
+            measuredPitch.append(rightmostPitch)
+            detectedposX.append(right_edge[0])
+            detectedposY.append(right_edge[1])
+            # remove the most left of the measured pitch
+            measuredPitch.pop(0)
 
     #add total length
     #round the value to 1 decimal
     totalLength = sum(measuredPitch)
+
+    if katabumarking_lengths[0] != 0:
+        measuredPitch.append(round(katabumarking_lengths[0], 1))
+
     measuredPitch.append(round(totalLength, 1))
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
     # print(f"Measured Pitch: {measuredPitch}")
+
+    #print measured pitch, print ID
+    print(f"Measured Pitch: {measuredPitch}")
+    print(f"Detected ID: {detectedid}")
 
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
@@ -171,11 +251,17 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, s
     # if any(result != 1 for result in resultid):
     #     flag_clip_furyou = 1
     #     status = "NG"
-
+    #remove first element if LH remove last element if RH
+    if side == "LH":
+        detectedposX.pop(0)
+        detectedposY.pop(0)
+    if side == "RH":
+        detectedposX.pop(-1)
+        detectedposY.pop(-1)
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
     
-    return image, measuredPitch, resultPitch, resultid, status
+    return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
 
 def create_masks(segmentation_result, orig_shape):
     mask = np.zeros((orig_shape[0], orig_shape[1]), dtype=np.uint8)

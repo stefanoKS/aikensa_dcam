@@ -124,8 +124,8 @@ class CalibrationThread(QThread):
         self.homography_blank_canvas = None
         self.homography_blank_canvas_scaled = None
 
-        self.narrow_planarize = (497, 2659)
-        self.wide_planarize = (497, 6491)
+        self.narrow_planarize = (531, 2646)
+        self.wide_planarize = (531, 6491)
 
         self.combinedImage = None
         self.combinedImage_scaled = None

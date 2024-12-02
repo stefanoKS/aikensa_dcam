@@ -313,7 +313,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P3:132±2.0</string>
+      <string> P3:132±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -340,7 +340,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P2: 130±2.0</string>
+      <string> P2: 130±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -367,7 +367,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P4: 59±2.0</string>
+      <string> P4: 132±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -404,7 +404,7 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="P7label">
      <property name="geometry">
       <rect>
-       <x>1500</x>
+       <x>1330</x>
        <y>330</y>
        <width>181</width>
        <height>61</height>
@@ -460,7 +460,7 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="P5label">
      <property name="geometry">
       <rect>
-       <x>990</x>
+       <x>950</x>
        <y>330</y>
        <width>181</width>
        <height>61</height>
@@ -516,7 +516,7 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="P6label">
      <property name="geometry">
       <rect>
-       <x>1230</x>
+       <x>1140</x>
        <y>330</y>
        <width>181</width>
        <height>61</height>
@@ -544,7 +544,7 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="P5color">
      <property name="geometry">
       <rect>
-       <x>990</x>
+       <x>950</x>
        <y>320</y>
        <width>121</width>
        <height>26</height>
@@ -562,7 +562,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P5: 61±2.0</string>
+      <string> P5: 59±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -571,7 +571,7 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="P6color">
      <property name="geometry">
       <rect>
-       <x>1230</x>
+       <x>1140</x>
        <y>320</y>
        <width>121</width>
        <height>26</height>
@@ -589,7 +589,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P6: 97±3.0</string>
+      <string> P6: 61±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -625,7 +625,7 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="P7color">
      <property name="geometry">
       <rect>
-       <x>1500</x>
+       <x>1330</x>
        <y>320</y>
        <width>116</width>
        <height>26</height>
@@ -643,7 +643,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P7: 83±10</string>
+      <string> P7: 97±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -680,10 +680,10 @@ background-color: rgb(211, 215, 207);</string>
     <widget class="QLabel" name="frameKatabu">
      <property name="geometry">
       <rect>
-       <x>1560</x>
-       <y>420</y>
-       <width>241</width>
-       <height>81</height>
+       <x>1570</x>
+       <y>430</y>
+       <width>213</width>
+       <height>73</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -696,7 +696,7 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="P7label_2">
+    <widget class="QLabel" name="P9label">
      <property name="geometry">
       <rect>
        <x>1590</x>
@@ -724,7 +724,7 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="P7color_2">
+    <widget class="QLabel" name="P9color">
      <property name="geometry">
       <rect>
        <x>1590</x>
@@ -745,7 +745,117 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P8: 20±10</string>
+      <string> P9: 20±2.0</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="P10label">
+     <property name="geometry">
+      <rect>
+       <x>860</x>
+       <y>430</y>
+       <width>181</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu Mono</family>
+       <pointsize>15</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(46, 52, 54);
+background-color: rgb(211, 215, 207);</string>
+     </property>
+     <property name="text">
+      <string>XX</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="P10color">
+     <property name="geometry">
+      <rect>
+       <x>860</x>
+       <y>420</y>
+       <width>116</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu Mono</family>
+       <pointsize>13</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(252, 175, 62);</string>
+     </property>
+     <property name="text">
+      <string> P10: 708±10</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="P8label">
+     <property name="geometry">
+      <rect>
+       <x>1530</x>
+       <y>330</y>
+       <width>181</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu Mono</family>
+       <pointsize>15</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(46, 52, 54);
+background-color: rgb(211, 215, 207);</string>
+     </property>
+     <property name="text">
+      <string>XX</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="P8color">
+     <property name="geometry">
+      <rect>
+       <x>1530</x>
+       <y>320</y>
+       <width>116</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu Mono</family>
+       <pointsize>13</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(252, 175, 62);</string>
+     </property>
+     <property name="text">
+      <string> P8: 83±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -773,8 +883,12 @@ background-color: rgb(211, 215, 207);</string>
     <zorder>P3color</zorder>
     <zorder>P4color</zorder>
     <zorder>frameKatabu</zorder>
-    <zorder>P7label_2</zorder>
-    <zorder>P7color_2</zorder>
+    <zorder>P9label</zorder>
+    <zorder>P9color</zorder>
+    <zorder>P10label</zorder>
+    <zorder>P10color</zorder>
+    <zorder>P8label</zorder>
+    <zorder>P8color</zorder>
    </widget>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">

@@ -313,7 +313,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P3: 128±2.0</string>
+      <string> P3: 128±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -340,7 +340,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P2: 128±2.0</string>
+      <string> P2: 108±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -367,7 +367,7 @@ RT Pers.Warp</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P4: 128±2.0</string>
+      <string> P4: 128±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -562,7 +562,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P5: 128±2.0</string>
+      <string> P5: 128±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -589,7 +589,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P6: 128±2.0</string>
+      <string> P6: 128±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -643,7 +643,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P7: 128±2.0</string>
+      <string> P7: 128±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -753,7 +753,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P8: 137±3.0</string>
+      <string> P8: 137±1.5</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

@@ -145,6 +145,8 @@ class AIKensa(QMainWindow):
         self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
 
         self.inspection_thread.part1Cam.connect(self._setPartFrame1)
+        self.inspection_thread.partKatabu.connect(self._setFrameKatabu)
+        
         # self.inspection_thread.P5902A509_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P5902A509)
         # self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P658207LE0A)
 
@@ -598,7 +600,7 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: white;")
 #8
     def _outputMeasurementText_P828387YA6A(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
         for widget_index in [8]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -632,7 +634,7 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: white;")
 #9
     def _outputMeasurementText_P828397YA6A(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
         for widget_index in [9]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -845,6 +847,13 @@ class AIKensa(QMainWindow):
         for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 21, 22, 23, 24, 25]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "framePart")
+            label.setPixmap(QPixmap.fromImage(image))
+
+    
+    def _setFrameKatabu(self, image):
+        for i in [8, 9]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "frameKatabu")
             label.setPixmap(QPixmap.fromImage(image))
 
     def _extract_color(self, stylesheet):
