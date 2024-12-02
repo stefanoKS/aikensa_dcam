@@ -171,7 +171,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     totalLength = sum(measuredPitch)
     measuredPitch.append(round(totalLength, 1))
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
-    measuredPitch[1] = measuredPitch[1] + 1.0 #add 1mm to the first pitch
+    if len(measuredPitch) > 1:
+        measuredPitch[1] = measuredPitch[1] + 1.0 #add 1mm to the first pitch
 
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
