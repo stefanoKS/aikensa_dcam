@@ -125,8 +125,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         # right_edge = find_edge_point(cannydetection_image, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = rightmostWidth + adjustment_offset)
 
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -80, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -80, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -130, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -130, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
@@ -145,6 +145,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     #round the value to 1 decimal
     totalLength = sum(measuredPitch)
     measuredPitch.append(round(totalLength, 1))
+    measuredPitch[1] = measuredPitch[1] + 1.0 #add 1mm to the first pitch
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
 
     if len(measuredPitch) == len(pitchSpec):

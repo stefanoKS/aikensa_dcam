@@ -960,7 +960,7 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1280, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1280:, :]
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P828387YA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=960, verbose=False, retina_masks=True)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P828387YA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=960, verbose=False, retina_masks=True,)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P828387YA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=960, verbose=False, retina_masks=True)
 
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i] = P828387YA0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
@@ -2544,7 +2544,7 @@ class InspectionThread(QThread):
         path_P828387YA1A_CLIP_Model = "./aikensa/models/P828387YA1A_detect.pt"
         path_P828387YA1A_SEGMENT_Model = "./aikensa/models/P828387YA1A_segment.pt"
         P828387YA1A_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P828387YA1A_CLIP_Model,
-                                                                            confidence_threshold=0.5,
+                                                                            confidence_threshold=0.35,
                                                                             device="cuda:0")
         P828387YA1A_SEGMENT_Model = YOLO(path_P828387YA1A_SEGMENT_Model)
         self.P828387YA1A_CLIP_Model = P828387YA1A_CLIP_Model

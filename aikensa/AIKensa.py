@@ -68,7 +68,7 @@ class AIKensa(QMainWindow):
 
         # Thread for SiO
         HOST = '192.168.0.100'  # Use the IP address from SiO settings
-        PORT = 30001  # Use the port number from SiO settings
+        PORT = 40001  # Use the port number from SiO settings
 
         self.server_monitor_thread = ServerMonitorThread(
             HOST, PORT, check_interval=0.08)
