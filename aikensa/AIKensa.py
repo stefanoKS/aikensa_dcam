@@ -141,6 +141,7 @@ class AIKensa(QMainWindow):
 
         self.inspection_thread.part1Cam.connect(self._setPartFrame1)
         self.inspection_thread.P5902A509_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P5902A509)
+        self.inspection_thread.P5819A107_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P5819A107)
         self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P658207LE0A)
 
 
@@ -475,6 +476,36 @@ class AIKensa(QMainWindow):
                     label.setStyleSheet("background-color: red;")
                 else:
                     label.setStyleSheet("background-color: white;")
+
+
+    def _outputMeasurementText_P5819A107(self, measurementValue, measurementResult):
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]
+        for widget_index in [8]:
+            for label_index, label_name in enumerate(label_names_part):
+                label = self.stackedWidget.widget(widget_index).findChild(QLabel, label_name)
+                if label:
+                    if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
+                        and isinstance(measurementValue[0], list) and len(measurementValue[0]) > label_index):
+                        
+                        value = measurementValue[0][label_index] if measurementValue[0][label_index] is not None else "None"
+                    else:
+                        value = "None"  # Fallback to "None" or "0"
+                    
+                    label.setText(str(value))
+
+                    if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
+                        and isinstance(measurementResult[0], list) and len(measurementResult[0]) > label_index):
+                        result = measurementResult[0][label_index] if measurementResult[0][label_index] is not None else "None"
+                    else:
+                        result = "None"  # Fallback to "None" or "0"
+
+                    if result == 1:  # OK result (1)
+                        label.setStyleSheet("background-color: green;")
+                    elif result == 0:  # NG result (0)
+                        label.setStyleSheet("background-color: red;")
+                    else:
+                        label.setStyleSheet("background-color: white;")
+
 
     def _outputMeasurementText_P5902A509(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label"]

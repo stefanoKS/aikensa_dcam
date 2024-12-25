@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>part5902A509Window</class>
- <widget class="QMainWindow" name="part5902A509Window">
+ <class>part5819A107Window</class>
+ <widget class="QMainWindow" name="part5819A107Window">
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -95,9 +95,9 @@
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>90</y>
+       <y>120</y>
        <width>1742</width>
-       <height>241</height>
+       <height>184</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -274,7 +274,7 @@ RT Pers.Warp</string>
      <property name="geometry">
       <rect>
        <x>1550</x>
-       <y>375</y>
+       <y>240</y>
        <width>211</width>
        <height>41</height>
       </rect>
@@ -296,7 +296,7 @@ RT Pers.Warp</string>
      <property name="geometry">
       <rect>
        <x>940</x>
-       <y>450</y>
+       <y>385</y>
        <width>181</width>
        <height>61</height>
       </rect>
@@ -324,7 +324,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>940</x>
-       <y>435</y>
+       <y>370</y>
        <width>131</width>
        <height>26</height>
       </rect>
@@ -351,7 +351,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>640</x>
-       <y>450</y>
+       <y>385</y>
        <width>181</width>
        <height>61</height>
       </rect>
@@ -379,7 +379,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>450</y>
+       <y>385</y>
        <width>181</width>
        <height>61</height>
       </rect>
@@ -407,7 +407,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>360</x>
-       <y>435</y>
+       <y>370</y>
        <width>131</width>
        <height>26</height>
       </rect>
@@ -434,7 +434,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>360</x>
-       <y>450</y>
+       <y>385</y>
        <width>181</width>
        <height>61</height>
       </rect>
@@ -462,7 +462,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>435</y>
+       <y>370</y>
        <width>121</width>
        <height>26</height>
       </rect>
@@ -489,7 +489,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>1240</x>
-       <y>450</y>
+       <y>385</y>
        <width>181</width>
        <height>61</height>
       </rect>
@@ -517,7 +517,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>1240</x>
-       <y>435</y>
+       <y>370</y>
        <width>131</width>
        <height>26</height>
       </rect>
@@ -544,7 +544,7 @@ background-color: rgb(211, 215, 207);</string>
      <property name="geometry">
       <rect>
        <x>640</x>
-       <y>435</y>
+       <y>370</y>
        <width>131</width>
        <height>26</height>
       </rect>
@@ -567,11 +567,11 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="P7label">
+    <widget class="QLabel" name="P6label">
      <property name="geometry">
       <rect>
        <x>1550</x>
-       <y>450</y>
+       <y>385</y>
        <width>181</width>
        <height>61</height>
       </rect>
@@ -595,11 +595,11 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="P7color">
+    <widget class="QLabel" name="P6color">
      <property name="geometry">
       <rect>
        <x>1550</x>
-       <y>435</y>
+       <y>370</y>
        <width>121</width>
        <height>26</height>
       </rect>
@@ -622,6 +622,61 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
+    <widget class="QLabel" name="P7color">
+     <property name="geometry">
+      <rect>
+       <x>770</x>
+       <y>490</y>
+       <width>131</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu Mono</family>
+       <pointsize>15</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(252, 175, 62);</string>
+     </property>
+     <property name="text">
+      <string> P7: 735±5.0　↕</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="P7label">
+     <property name="geometry">
+      <rect>
+       <x>770</x>
+       <y>505</y>
+       <width>181</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu Mono</family>
+       <pointsize>15</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(46, 52, 54);
+background-color: rgb(211, 215, 207);</string>
+     </property>
+     <property name="text">
+      <string>XX</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
     <zorder>quitbutton</zorder>
     <zorder>rtwarpbutton</zorder>
     <zorder>delwarpbutton</zorder>
@@ -639,6 +694,8 @@ background-color: rgb(211, 215, 207);</string>
     <zorder>P5color</zorder>
     <zorder>P2color</zorder>
     <zorder>P1color</zorder>
+    <zorder>P6label</zorder>
+    <zorder>P6color</zorder>
     <zorder>P7label</zorder>
     <zorder>P7color</zorder>
    </widget>
@@ -1542,7 +1599,7 @@ background-color: rgb(38, 162, 105);</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
