@@ -71,7 +71,7 @@ class AIKensa(QMainWindow):
         PORT = 40001  # Use the port number from SiO settings
 
         self.server_monitor_thread = ServerMonitorThread(
-            HOST, PORT, check_interval=0.08)
+            HOST, PORT, check_interval=0.05)
         self.server_monitor_thread.server_status_signal.connect(self.handle_server_status)
         self.server_monitor_thread.input_states_signal.connect(self.handle_input_states)
         self.server_monitor_thread.start()
@@ -146,6 +146,9 @@ class AIKensa(QMainWindow):
 
         self.inspection_thread.part1Cam.connect(self._setPartFrame1)
         self.inspection_thread.partKatabu.connect(self._setFrameKatabu)
+        self.inspection_thread.gaikanCam.connect(self._setFrameGaikan)
+
+        self.inspection_thread.ethernetStatus.connect(self._setEthernetStatus)
         
         # self.inspection_thread.P5902A509_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P5902A509)
         # self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P658207LE0A)
@@ -849,6 +852,12 @@ class AIKensa(QMainWindow):
             label = widget.findChild(QLabel, "framePart")
             label.setPixmap(QPixmap.fromImage(image))
 
+    def _setFrameGaikan(self, image):
+        for i in [13]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "gaikanPart")
+            label.setPixmap(QPixmap.fromImage(image))
+
     
     def _setFrameKatabu(self, image):
         for i in [8, 9]:
@@ -876,6 +885,9 @@ class AIKensa(QMainWindow):
 
     def _set_inspection_params(self, thread, key, value):
         setattr(thread.inspection_config, key, value)
+
+    def _setEthernetStatus(self, input):
+        self.server_monitor_thread.server_config.eth_flag_0_4 = input
 
 
 def main():

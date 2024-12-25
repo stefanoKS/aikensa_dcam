@@ -787,6 +787,25 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
+    <widget class="QLabel" name="gaikanPart">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>20</y>
+       <width>147</width>
+       <height>110</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(46, 52, 54);</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
     <zorder>quitbutton</zorder>
     <zorder>rtwarpbutton</zorder>
     <zorder>rtwarpcolor</zorder>
@@ -812,6 +831,7 @@ background-color: rgb(211, 215, 207);</string>
     <zorder>P9color</zorder>
     <zorder>P8label</zorder>
     <zorder>P8color</zorder>
+    <zorder>gaikanPart</zorder>
    </widget>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">

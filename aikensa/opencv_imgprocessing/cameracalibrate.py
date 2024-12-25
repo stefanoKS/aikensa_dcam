@@ -324,10 +324,10 @@ def calculateHomography_template(img1, img2):
             M, mask = cv2.findHomography(corners2, corners1, cv2.RANSAC, 5.0)
             # print(M)
         
-
-        # results = warpTwoImages(img1, img2, M)
-        results = None
-
+        if M is not None:
+            results = warpTwoImages_template(img1, img2, M)
+        else:
+            results = None
 
         return results, M
 

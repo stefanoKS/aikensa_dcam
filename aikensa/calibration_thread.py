@@ -358,17 +358,17 @@ class CalibrationThread(QThread):
                 # self.calib_config.cameraID = self.calib_config.widget
                 self.calib_config.cameraID = self.calib_config.widget - 1 #Don't forget to clean this up in deployment !!
             
-                if self.calib_config.mapCalculated[self.calib_config.cameraID] is False and self.frame is not None:
-                    if os.path.exists(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml"):
-                        camera_matrix, dist_coeffs = self.load_matrix_from_yaml(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml")
-                        # Precompute the undistort and rectify map for faster processing
-                        h, w = self.frame.shape[:2]
-                        self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID] = cv2.initUndistortRectifyMap(camera_matrix, dist_coeffs, None, camera_matrix, (w, h), cv2.CV_16SC2)
-                        print(f"map1 and map2 value is calculated for camera {self.calib_config.cameraID}")
-                        self.calib_config.mapCalculated[self.calib_config.cameraID] = True
+                # if self.calib_config.mapCalculated[self.calib_config.cameraID] is False and self.frame is not None:
+                #     if os.path.exists(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml"):
+                #         camera_matrix, dist_coeffs = self.load_matrix_from_yaml(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml")
+                #         # Precompute the undistort and rectify map for faster processing
+                #         h, w = self.frame.shape[:2]
+                #         self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID] = cv2.initUndistortRectifyMap(camera_matrix, dist_coeffs, None, camera_matrix, (w, h), cv2.CV_16SC2)
+                #         print(f"map1 and map2 value is calculated for camera {self.calib_config.cameraID}")
+                #         self.calib_config.mapCalculated[self.calib_config.cameraID] = True
                 
-                if self.calib_config.mapCalculated[self.calib_config.cameraID] is True:
-                    self.frame = cv2.remap(self.frame, self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                # if self.calib_config.mapCalculated[self.calib_config.cameraID] is True:
+                    # self.frame = cv2.remap(self.frame, self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
                 if self.calib_config.calculateSingeFrameMatrix:
                     self.frame, _, _ = detectCharucoBoard(self.frame)
@@ -434,6 +434,8 @@ class CalibrationThread(QThread):
                     self.calib_config.calculateHomo_cam1 = False
                     if self.mergeframe1 is not None:
                         _, self.homography_matrix1 = calculateHomography_template(self.homography_template, self.mergeframe1)
+                        #save _
+                        cv2.imwrite("resultmergeframe1.png", _)
                         self.H1 = np.array(self.homography_matrix1)
                         print(f"Homography matrix is calculated for Camera 1 with value {self.homography_matrix1}")
                         os.makedirs(self._save_dir, exist_ok=True)
@@ -455,6 +457,7 @@ class CalibrationThread(QThread):
 
                     self.calib_config.calculateHomo_cam2 = False
                     _, self.homography_matrix2 = calculateHomography_template(self.homography_template, self.mergeframe2)
+                    cv2.imwrite("resultmergeframe2.png", _)
                     self.H2 = np.array(self.homography_matrix2)
                     print(f"Homography matrix is calculated for Camera 2 with value {self.homography_matrix2}")
                     os.makedirs(self._save_dir, exist_ok=True)
@@ -495,7 +498,6 @@ class CalibrationThread(QThread):
                         print(f"Homography scaled matrix is calculated for Camera 2 with value {self.homography_matrix2_high_scaled}")
                         with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml", "w") as file:
                             yaml.dump(self.homography_matrix2_high_scaled.tolist(), file)
-
 
                 if self.H1 is None:
                     print("H1 is None")
@@ -587,7 +589,7 @@ class CalibrationThread(QThread):
                 else:
                     self.combinedImage_high_scaled = self.homography_blank_canvas_scaled
 
-
+                # cv2.imwrite("combinedImagelatest.png", self.combinedImage)
                 # cv2.imwrite("combinedImage_scaled.png", self.combinedImage_scaled)
                 # combined_image_copy = self.combinedImage.copy()
                 # #bgr to rgb
@@ -597,40 +599,41 @@ class CalibrationThread(QThread):
                 if self.calib_config.savePlanarize is True:
                     self.calib_config.savePlanarize = False
                     print("Saving planarize")
-                    self.combinedImage_narrow, self.planarizeTransform_narrow = planarize_image_narrow(self.combinedImage, 
-                                                                                  target_width=self.narrow_planarize[1], target_height=self.narrow_planarize[0], 
-                                                                                  top_offset=0, bottom_offset=0, side_offset=0)
+                    # self.combinedImage_narrow, self.planarizeTransform_narrow = planarize_image_narrow(self.combinedImage, 
+                    #                                                               target_width=self.narrow_planarize[1], target_height=self.narrow_planarize[0], 
+                    #                                                               top_offset=0, bottom_offset=0, side_offset=0)
                     
-                    self.combinedImage_narrow_scaled, self.planarizeTransform_narrow_scaled = planarize_image_narrow(self.combinedImage_scaled,
-                                                                                                  target_width=int(self.narrow_planarize[1]/self.scale_factor), target_height=int(self.narrow_planarize[0]/self.scale_factor),
-                                                                                                  top_offset=0, bottom_offset=0, side_offset=0)
-                    
+                    # self.combinedImage_narrow_scaled, self.planarizeTransform_narrow_scaled = planarize_image_narrow(self.combinedImage_scaled,
+                    #                                                                               target_width=int(self.narrow_planarize[1]/self.scale_factor), target_height=int(self.narrow_planarize[0]/self.scale_factor),
+                    #                                                                               top_offset=0, bottom_offset=0, side_offset=0)
+                    cv2.imwrite("combinedImagelatest2.png", self.combinedImage)
                     self.combinedImage_wide, self.planarizeTransform_wide = planarize_image_wide(self.combinedImage, 
                                                                                   target_width=self.wide_planarize[1], target_height=self.wide_planarize[0], 
                                                                                   top_offset=0, bottom_offset=0, side_offset=100)
+                    cv2.imwrite("combinedImage_wide_latest.png", self.combinedImage_wide)
                     
                     self.combinedImage_wide_scaled, self.planarizeTransform_wide_scaled = planarize_image_wide(self.combinedImage_scaled,
                                                                                                   target_width=int(self.wide_planarize[1]/self.scale_factor), target_height=int(self.wide_planarize[0]/self.scale_factor),
                                                                                                   top_offset=0, bottom_offset=0, side_offset=int(100/self.scale_factor))
                     os.makedirs(self._save_dir, exist_ok=True)
-                    with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml", "w") as file:  
-                        yaml.dump(self.planarizeTransform_narrow.tolist(), file)
-                    with open("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_narrow_scaled.tolist(), file)
+                    # with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml", "w") as file:  
+                    #     yaml.dump(self.planarizeTransform_narrow.tolist(), file)
+                    # with open("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml", "w") as file:
+                    #     yaml.dump(self.planarizeTransform_narrow_scaled.tolist(), file)
                     with open("./aikensa/cameracalibration/planarizeTransform_wide.yaml", "w") as file:
                         yaml.dump(self.planarizeTransform_wide.tolist(), file)
                     with open("./aikensa/cameracalibration/planarizeTransform_wide_scaled.yaml", "w") as file:
                         yaml.dump(self.planarizeTransform_wide_scaled.tolist(), file)
 
-                    print(f"Image size after narrow warping is {self.combinedImage_narrow.shape}")
-                    print(f"Image size after narrow scaled warping is {self.combinedImage_narrow_scaled.shape}")
-                    print(f"Image size after wide warping is {self.combinedImage_wide.shape}")
-                    print(f"Image size after wide scaled warping is {self.combinedImage_wide_scaled.shape}")
+                    # print(f"Image size after narrow warping is {self.combinedImage_narrow.shape}")
+                    # print(f"Image size after narrow scaled warping is {self.combinedImage_narrow_scaled.shape}")
+                    # print(f"Image size after wide warping is {self.combinedImage_wide.shape}")
+                    # print(f"Image size after wide scaled warping is {self.combinedImage_wide_scaled.shape}")
 
-                    cv2.imwrite("combinedImage_narrow.png", self.combinedImage_narrow)
-                    cv2.imwrite("combinedImage_narrow_scaled.png", self.combinedImage_narrow_scaled)
-                    cv2.imwrite("combinedImage_wide.png", self.combinedImage_wide)
-                    cv2.imwrite("combinedImage_wide_scaled.png", self.combinedImage_wide_scaled)
+                    # cv2.imwrite("combinedImage_narrow.png", self.combinedImage_narrow)
+                    # cv2.imwrite("combinedImage_narrow_scaled.png", self.combinedImage_narrow_scaled)
+                    # cv2.imwrite("combinedImage_wide.png", self.combinedImage_wide)
+                    # cv2.imwrite("combinedImage_wide_scaled.png", self.combinedImage_wide_scaled)
 
                 if self.calib_config.savePlanarizeHigh is True:
                     self.calib_config.savePlanarizeHigh = False

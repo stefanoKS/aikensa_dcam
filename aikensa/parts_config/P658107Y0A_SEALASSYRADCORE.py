@@ -17,7 +17,7 @@ kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
 pitchSpec = [20, 111, 124, 216, 95, 140, 20, 726]
 idSpec = [0, 0, 0, 0, 0, 0]
-tolerance_pitch = [3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.0, 10.0]
+tolerance_pitch = [3.2, 2.2, 2.2, 2.2, 2.2, 2.2, 3.2, 10.0]
 # tolerance_pitch[0] = 3.5
 # tolerance_pitch[-1] = 3.5
 
@@ -28,7 +28,7 @@ bbox_offset = 10
 
 segmentation_width = 1680
 
-pixelMultiplier = 0.1655
+pixelMultiplier = 0.1650
 
 
 def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
@@ -125,8 +125,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         # right_edge = find_edge_point(cannydetection_image, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = rightmostWidth + adjustment_offset)
 
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -60, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -60, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -40, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -40, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
