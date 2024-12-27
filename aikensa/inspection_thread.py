@@ -818,7 +818,7 @@ class InspectionThread(QThread):
 
                             #Add custom text to the image
                             if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and self.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
-                                if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 150 == 0:
+                                if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 130 == 0:
                                     imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
                                     img_pil = Image.fromarray(imgresults)
                                     font = ImageFont.truetype(self.kanjiFontPath, 120)

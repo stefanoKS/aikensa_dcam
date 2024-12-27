@@ -67,7 +67,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     rightmostPitch = 0
 
     status = "OK"
-
+    print_status = ""
 
     combined_lmask = None
 
@@ -199,6 +199,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
+
+    image = draw_status_text_PIL(image, status, print_status, size="normal")
     
     return image, measuredPitch, resultPitch, resultid, status
 
