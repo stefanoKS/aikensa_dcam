@@ -26,8 +26,8 @@ UI_FILES = [
     'aikensa/qtui/edgedetection.ui',        # index 2
     "aikensa/qtui/5755A491.ui",             # index 3
     "aikensa/qtui/5755A492.ui",             # index 4 
-    "aikensa/qtui/empty.ui", #empty 5
-    "aikensa/qtui/empty.ui", #empty 6
+    "aikensa/qtui/82833W090P.ui", #empty 5
+    "aikensa/qtui/82832W080P.ui", #empty 6
     "aikensa/qtui/empty.ui", #empty 7
     "aikensa/qtui/empty.ui", #empty 8
     "aikensa/qtui/empty.ui", #empty 9
@@ -70,6 +70,15 @@ class AIKensa(QMainWindow):
         self.timeMonitorThread.start()
 
         self.initial_colors = {}#store initial colors of the labels
+        self.initial_colors_newspec = {}#store initial colors of the labels
+
+        self.widget_dir_map = {
+            # 3: "82833W050P",
+            # 4: "82833W040P",
+            5: "82833W090P",
+            6: "82832W080P",
+        }
+
 
     def timeUpdate(self, time):
         for label in self.timeLabel:
@@ -124,6 +133,7 @@ class AIKensa(QMainWindow):
         self.cam_thread.handFrame3.connect(lambda paramValue: self._set_labelFrame(self.stackedWidget.widget(4), paramValue, "clip3Check"))
 
         self.cam_thread.ctrplrworkorderSignal.connect(self._set_workorder_color_ctrplr)
+        self.cam_thread.ctrplrworkorderNewSpecSignal.connect(self._set_workorder_color_ctrplr_newspec)
 
         self.cam_thread.ctrplrLH_pitch_updated.connect(self._set_button_color_ctrplr)
         self.cam_thread.ctrplrRH_pitch_updated.connect(self._set_button_color_ctrplr)
@@ -133,6 +143,12 @@ class AIKensa(QMainWindow):
 
         self.cam_thread.ctrplrLH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_LH_total)
         self.cam_thread.ctrplrRH_numofPart_updated.connect(self._set_numlabel_text_ctrplr_RH_total)
+
+        self.cam_thread.P82833W090P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W090P)
+        self.cam_thread.P82832W080P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W080P)        
+
+        self.cam_thread.current_numofPart_signal.connect(self._update_OKNG_label)
+        self.cam_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
 
         self.stackedWidget = QStackedWidget()
 
@@ -153,6 +169,21 @@ class AIKensa(QMainWindow):
         button_calib = main_widget.findChild(QPushButton, "calibrationbutton")
         button_edgedetect = main_widget.findChild(QPushButton, "edgedetectbutton")
 
+        button_config = {
+            "P82833W090Pbutton": {"widget_index": 5, "inspection_param": 5},
+            "P82832W080Pbutton": {"widget_index": 6, "inspection_param": 6},
+        }
+
+        for button_name, config in button_config.items():
+            button = main_widget.findChild(QPushButton, button_name)
+            
+            if button:
+                # Connect each signal with the necessary parameters
+                button.clicked.connect(lambda _, idx=config["widget_index"]: self.stackedWidget.setCurrentIndex(idx))
+                button.clicked.connect(lambda _, param=config["inspection_param"]: self._set_cam_params(self.cam_thread, 'widget', param))
+                # button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+                # button.clicked.connect(self.calibration_thread.stop)
+
         button_P5755A491 = main_widget.findChild(QPushButton, "P5755A491button")
         button_P5755A492 = main_widget.findChild(QPushButton, "P5755A492button")
 
@@ -163,7 +194,7 @@ class AIKensa(QMainWindow):
         button_dailytenken_kanryou = dailytenken03_widget.findChild(QPushButton, "finishButton")
 
         self.siostatus = main_widget.findChild(QLabel, "status_sio")
-        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 3, 4]]
+        self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 3, 4, 5, 6]]
 
         if button_calib:
             button_calib.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -291,17 +322,31 @@ class AIKensa(QMainWindow):
         kensaButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
         kensaButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
 
+        kensaButton5 = self.stackedWidget.widget(5).findChild(QPushButton, "kensaButton")
+        kensaButton5.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+
+        kensaButton6 = self.stackedWidget.widget(6).findChild(QPushButton, "kensaButton")
+        kensaButton6.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "triggerKensa", True))
+
         self.connect_camparam_button(3, "counterReset", "resetCounter", True)
         self.connect_camparam_button(4, "counterReset", "resetCounter", True)
 
         self.connect_line_edit_text_changed(widget_index=3, line_edit_name="kensain_name", cam_param="kensainName")
         self.connect_line_edit_text_changed(widget_index=4, line_edit_name="kensain_name", cam_param="kensainName")
+        self.connect_line_edit_text_changed(widget_index=5, line_edit_name="kensain_name", cam_param="kensainName")
+        self.connect_line_edit_text_changed(widget_index=6, line_edit_name="kensain_name", cam_param="kensainName")
 
         kensaresetButton = self.stackedWidget.widget(3).findChild(QPushButton, "kensareset")
         kensaresetButton.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
         
         kensaresetButton4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensareset")
         kensaresetButton4.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
+
+        kensaresetButton5 = self.stackedWidget.widget(5).findChild(QPushButton, "kensareset")
+        kensaresetButton5.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
+
+        kensaresetButton6 = self.stackedWidget.widget(6).findChild(QPushButton, "kensareset")
+        kensaresetButton6.clicked.connect(lambda: self._set_cam_params(self.cam_thread, "kensaReset", True))
 
         workorder1 = self.stackedWidget.widget(3).findChild(QLineEdit, "order1")
         workorder2 = self.stackedWidget.widget(3).findChild(QLineEdit, "order2")
@@ -310,7 +355,7 @@ class AIKensa(QMainWindow):
         self.button_kensa3 = self.stackedWidget.widget(3).findChild(QPushButton, "kensaButton")
         self.button_kensa4 = self.stackedWidget.widget(4).findChild(QPushButton, "kensaButton")
 
-        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 3, 4, 21, 22, 23]]
+        self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 3, 4, 5, 6, 21, 22, 23]]
 
         self.kanseihin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_kansei")
         self.furyouhin_number_ctrplr_lh = self.stackedWidget.widget(3).findChild(QLabel, "status_furyou")
@@ -322,7 +367,7 @@ class AIKensa(QMainWindow):
         self.kanseihin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_kansei")
         self.furyouhin_number_current_ctrplr_rh = self.stackedWidget.widget(4).findChild(QLabel, "current_furyou")
 
-        for i in [3, 4]:
+        for i in [3, 4, 5, 6]:
             self.connect_camparam_button(i, "kansei_plus", "kansei_plus", True)
             self.connect_camparam_button(i, "kansei_minus", "kansei_minus", True)
             self.connect_camparam_button(i, "furyou_plus", "furyou_plus", True)
@@ -366,7 +411,73 @@ class AIKensa(QMainWindow):
         self.setCentralWidget(self.stackedWidget)
         self.showFullScreen()
 
+    def _outputMeasurementText_P82833W090P(self, measurementValue, measurementResult):
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
+        for widget_index in [5]:
+            # Loop through the label names (P1label, P2label, etc.)
+            for label_index, label_name in enumerate(label_names_part):
+                # Find the QLabel in the specified widget
+                label = self.stackedWidget.widget(widget_index).findChild(QLabel, label_name)
+                if label:
+                    # Get the measurement value for this label
+                    if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
+                        and isinstance(measurementValue[0], list) and len(measurementValue[0]) > label_index):
+                        
+                        value = measurementValue[0][label_index] if measurementValue[0][label_index] is not None else "None"
+                    else:
+                        value = "None"  # Fallback to "None" or "0"
+                    
+                    # Set text for the label
+                    label.setText(str(value))
 
+                    # Get the measurement result for this label
+                    if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
+                        and isinstance(measurementResult[0], list) and len(measurementResult[0]) > label_index):
+                        result = measurementResult[0][label_index] if measurementResult[0][label_index] is not None else "None"
+                    else:
+                        result = "None"  # Fallback to "None" or "0"
+
+                    # Set label background color based on result
+                    if result == 1:  # OK result (1)
+                        label.setStyleSheet("background-color: green;")
+                    elif result == 0:  # NG result (0)
+                        label.setStyleSheet("background-color: red;")
+                    else:
+                        label.setStyleSheet("background-color: white;")
+
+    def _outputMeasurementText_P82832W080P(self, measurementValue, measurementResult):
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
+        for widget_index in [6]:
+            # Loop through the label names (P1label, P2label, etc.)
+            for label_index, label_name in enumerate(label_names_part):
+                # Find the QLabel in the specified widget
+                label = self.stackedWidget.widget(widget_index).findChild(QLabel, label_name)
+                if label:
+                    # Get the measurement value for this label
+                    if (measurementValue and isinstance(measurementValue, list) and len(measurementValue) > 0 
+                        and isinstance(measurementValue[0], list) and len(measurementValue[0]) > label_index):
+                        
+                        value = measurementValue[0][label_index] if measurementValue[0][label_index] is not None else "None"
+                    else:
+                        value = "None"  # Fallback to "None" or "0"
+                    
+                    # Set text for the label
+                    label.setText(str(value))
+
+                    # Get the measurement result for this label
+                    if (measurementResult and isinstance(measurementResult, list) and len(measurementResult) > 0 
+                        and isinstance(measurementResult[0], list) and len(measurementResult[0]) > label_index):
+                        result = measurementResult[0][label_index] if measurementResult[0][label_index] is not None else "None"
+                    else:
+                        result = "None"  # Fallback to "None" or "0"
+
+                    # Set label background color based on result
+                    if result == 1:  # OK result (1)
+                        label.setStyleSheet("background-color: green;")
+                    elif result == 0:  # NG result (0)
+                        label.setStyleSheet("background-color: red;")
+                    else:
+                        label.setStyleSheet("background-color: white;")
 
     def connect_button_font_color_change(self, widget_index, qtbutton, cam_param):
         widget = self.stackedWidget.widget(widget_index)
@@ -414,14 +525,14 @@ class AIKensa(QMainWindow):
         button = widget.findChild(QPushButton, button_name)
         if button:
             button.pressed.connect(lambda: self._set_cam_params(self.cam_thread, cam_param, value))
-            print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
+            # print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
     def simulateButtonKensaClicks(self):
         self.button_kensa3.click()
         self.button_kensa4.click()
 
     def _on_widget_changed(self, idx: int):
-        if idx in [3, 4, 21, 22, 23]:
+        if idx in [3, 4, 5, 6, 21, 22, 23]:
             #Change widget value to equal to index of stacked widget first
             self._set_cam_params(self.cam_thread, 'widget', idx)
             self.cam_thread.initialize_model()
@@ -461,6 +572,38 @@ class AIKensa(QMainWindow):
         # Update the label color based on the new parameter value
         color = "green" if new_value else "red"
         label.setStyleSheet(f"QLabel {{ background-color: {color}; }}")
+
+    def _update_OKNG_label(self, numofPart):
+        for widget_key, part_name in self.widget_dir_map.items():
+            # Get OK and NG values using widget_key as index
+            if 0 <= widget_key < len(numofPart):
+                ok, ng = numofPart[widget_key]
+                widget = self.stackedWidget.widget(widget_key)
+                if widget:
+                    current_kansei_label = widget.findChild(QLabel, "current_kansei")
+                    current_furyou_label = widget.findChild(QLabel, "current_furyou")
+                    if current_kansei_label:
+                        current_kansei_label.setText(str(ok))
+                    if current_furyou_label:
+                        current_furyou_label.setText(str(ng))
+            else:
+                print(f"Widget key {widget_key} is out of bounds for numofPart")
+
+    def _update_todayOKNG_label(self, numofPart):
+        for widget_key, part_name in self.widget_dir_map.items():
+            # Get OK and NG values using widget_key as index
+            if 0 <= widget_key < len(numofPart):
+                ok, ng = numofPart[widget_key]
+                widget = self.stackedWidget.widget(widget_key)
+                if widget:
+                    current_kansei_label = widget.findChild(QLabel, "status_kansei")
+                    current_furyou_label = widget.findChild(QLabel, "status_furyou")
+                    if current_kansei_label:
+                        current_kansei_label.setText(str(ok))
+                    if current_furyou_label:
+                        current_furyou_label.setText(str(ng))
+            else:
+                print(f"Widget key {widget_key} is out of bounds for todaynumofPart")
 
     # def _set_labelFrame1(self, widget, paramValue):
     #     colorOK = "green"
@@ -517,13 +660,13 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameMerge(self, image):
-        for i in [1, 3, 4, 21, 22, 23]:
+        for i in [1, 3, 4, 5, 6, 21, 22, 23]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "mergeFrame")
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameKata1(self, image):
-        for i in [1, 3, 4]:
+        for i in [1, 3, 4, 5, 6]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "kata1Frame") 
             label.setPixmap(QPixmap.fromImage(image))
@@ -532,7 +675,7 @@ class AIKensa(QMainWindow):
         # label.setPixmap(QPixmap.fromImage(image))    
 
     def _setFrameKata2(self, image):
-        for i in [1, 3, 4]:
+        for i in [1, 3, 4, 5, 6]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "kata2Frame") 
             label.setPixmap(QPixmap.fromImage(image))
@@ -541,19 +684,19 @@ class AIKensa(QMainWindow):
         # label.setPixmap(QPixmap.fromImage(image))   
 
     def _setFrameClip1(self, image):
-        for i in [1, 3, 4]: #modify this later
+        for i in [1, 3, 4, 5, 6]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip1Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameClip2(self, image):
-        for i in [1, 3, 4]: #modify this later
+        for i in [1, 3, 4, 5, 6]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip2Frame") 
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setFrameClip3(self, image):
-        for i in [1, 3, 4]: #modify this later
+        for i in [1, 3, 4, 5, 6]: #modify this later
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "clip3Frame") 
             label.setPixmap(QPixmap.fromImage(image))
@@ -571,7 +714,14 @@ class AIKensa(QMainWindow):
         for label in labels:
             color = self._extract_color(label.styleSheet())
             self.initial_colors[widget_index][label.objectName()] = color
-            # print(f"Stored initial color for {label.objectName()} in widget {widget_index}: {color}")
+
+    def _store_initial_colors_newspec(self, widget_index, label_names):
+        if widget_index not in self.initial_colors_newspec:
+            self.initial_colors_newspec[widget_index] = {}
+        labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+        for label in labels:
+            color = self._extract_color(label.styleSheet())
+            self.initial_colors_newspec[widget_index][label.objectName()] = color
 
     def _set_workorder_color_ctrplr(self, workOrder): # For rr side, consists of 6 pitches and Lsun (total Length)
         colorOK = "green"
@@ -592,6 +742,27 @@ class AIKensa(QMainWindow):
                     color = self.initial_colors[widget_index][labels[i].objectName()] # Use the initial color from the specific widget
                 labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
                 # print(f"Setting color for {labels[i].objectName()} in widget {widget_index} to {color}")
+
+    def _set_workorder_color_ctrplr_newspec(self, workOrder):
+        colorOK = "green"
+        colorNG = "red"
+        label_names = ["order1", "order2", "order3", "order4", "order5", "order6"]
+
+        # print(workOrder)
+        if not self.initial_colors_newspec:
+            for widget_index in [5, 6]:
+                self._store_initial_colors_newspec(widget_index, label_names)
+
+        for widget_index in [5, 6]:
+            labels = [self.stackedWidget.widget(widget_index).findChild(QLabel, name) for name in label_names]
+            
+            for i, pitch_value in enumerate(workOrder):
+                if pitch_value:
+                    color = colorOK
+                else:
+                    color = self.initial_colors_newspec[widget_index][labels[i].objectName()] 
+                labels[i].setStyleSheet(f"QLabel {{background-color: {color};border-radius: 13px;min-height: 10px;min-width: 10px;}}")
+    
 
 
     def _set_button_color_ctrplr(self, pitch_data): #For rr side, consists of 6 pitches and Lsun (total Length)

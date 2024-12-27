@@ -26,6 +26,7 @@ from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_r
 
 from ultralytics import YOLO
 from aikensa.parts_config.ctrplr_8283XW0W0P import partcheck as ctrplrCheck
+from aikensa.parts_config.ctrplr_8283XW0W0P_NEW import partcheck as ctrplrCheckNEW
 from aikensa.parts_config.ctrplr_8283XW0W0P import dailytenkencheck
 
 from PIL import ImageFont, ImageDraw, Image
@@ -76,6 +77,7 @@ class CameraConfig:
     kansei_plus_10: bool = False
     kansei_minus_10: bool = False
     kensainName: str = None
+    kensainNumber: str = None
 
     HDRes: bool = False
     triggerKensa: bool = False
@@ -83,6 +85,8 @@ class CameraConfig:
 
     ctrplrpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
     ctrplrWorkOrder : List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0])
+    
+
 
     ctrplrLHpitch: List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0, 0, 0])
     ctrplrLHnumofPart: Tuple[int, int] = (0, 0)
@@ -93,6 +97,11 @@ class CameraConfig:
     ctrplrRHnumofPart: Tuple[int, int] = (0, 0)
     ctrplrRHcurrentnumofPart: Tuple[int, int] = (0, 0)
     ctrplrRH_resetCounter: bool = False
+
+    ctrplrWorkOrderNewSpec : List[int] = field(default_factory=lambda: [0, 0, 0, 0, 0, 0])
+
+    today_numofPart: list = field(default_factory=lambda: [[0, 0] for _ in range(30)])
+    current_numofPart: list = field(default_factory=lambda: [[0, 0] for _ in range(30)])
     
 class CameraThread(QThread):
 
@@ -110,6 +119,7 @@ class CameraThread(QThread):
     handFrame3 = pyqtSignal(int)
 
     ctrplrworkorderSignal = pyqtSignal(list)
+    ctrplrworkorderNewSpecSignal = pyqtSignal(list)
 
     ctrplrLH_pitch_updated = pyqtSignal(list)
     ctrplrRH_pitch_updated = pyqtSignal(list)
@@ -120,6 +130,12 @@ class CameraThread(QThread):
     ctrplrRH_currentnumofPart_updated = pyqtSignal(tuple)
     ctrplrRH_numofPart_updated = pyqtSignal(tuple)
     
+    P82833W090P_InspectionResult_PitchMeasured = pyqtSignal(list, list)
+    P82832W080P_InspectionResult_PitchMeasured = pyqtSignal(list, list)
+
+    today_numofPart_signal = pyqtSignal(list)
+    current_numofPart_signal = pyqtSignal(list)
+
 
     def __init__(self, cam_config: CameraConfig = None):
         super(CameraThread, self).__init__()
@@ -135,6 +151,8 @@ class CameraThread(QThread):
         self.widget_dir_map={
             3: "82833W050P",
             4: "82833W040P",
+            5: "82833W090P",
+            6: "82832W080P",
             21: "dailytenken01",
             22: "dailytenken02",
             23: "dailytenken03",
@@ -145,7 +163,7 @@ class CameraThread(QThread):
 
         self.handClassificationModel = None
 
-        self.clipHandWaitTime = 0.8 
+        self.clipHandWaitTime = 2.0 
         self.inspection_delay = 3.0
 
         self.handinFrame1 = False
@@ -214,11 +232,13 @@ class CameraThread(QThread):
 
         self.conn.commit()
 
-        # cap_cam1 = initialize_camera(2)
-        cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_07420990-video-index0")
+        cap_cam1 = initialize_camera(0)
+        # cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320359-video-index0")
+        # cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320361-video-index0")
         print(f"Initiliazing Camera 1.... Located on {cap_cam1}")
-        # cap_cam2 = initialize_camera(0)
-        cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_02420129-video-index0")
+        cap_cam2 = initialize_camera(1)
+        # cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320361-video-index0")
+        # cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320359-video-index0")
         print(f"Initiliazing Camera 2.... Located on {cap_cam2}")
 
         #Read the yaml param once
@@ -243,7 +263,6 @@ class CameraThread(QThread):
             with open("./aikensa/cameracalibration/homography_param_cam2.yaml") as file:
                 homography_param2 = yaml.load(file, Loader=yaml.FullLoader)
                 H2 = np.array(homography_param2)
-
 
         if os.path.exists("./aikensa/cameracalibration/homography_param_lowres_cam1.yaml") and os.path.exists("./aikensa/cameracalibration/homography_param_lowres_cam2.yaml"):
             with open("./aikensa/cameracalibration/homography_param_lowres_cam1.yaml") as file:
@@ -282,6 +301,10 @@ class CameraThread(QThread):
 
         self.cam_config.ctrplrLHnumofPart = self.get_last_entry_total_numofPart(self.widget_dir_map.get(3))
         self.cam_config.ctrplrRHnumofPart = self.get_last_entry_total_numofPart(self.widget_dir_map.get(4))
+
+        for key, value in self.widget_dir_map.items():
+            self.cam_config.current_numofPart[key] = self.get_last_entry_currentnumofPart_new(value)
+            self.cam_config.today_numofPart[key] = self.get_last_entry_total_numofPart_new(value)
 
         while self.running is True:
             current_time = time.time()
@@ -588,6 +611,9 @@ class CameraThread(QThread):
                 if frame2 is None:
                     frame2 = np.zeros((2048, 3072, 3), dtype=np.uint8) 
                 homography_blank = homography_blank_canvas.copy()
+                
+                # cv2.imwrite("frame1.png", frame1)
+                # cv2.imwrite("frame2.png", frame2)
 
                 if ret1 and ret2:
                     frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2RGB)
@@ -721,8 +747,6 @@ class CameraThread(QThread):
                     if self.handinFrameTimer:
                         if time.time() - self.handinFrameTimer > self.clipHandWaitTime:
                             self.handinFrameTimer = None
-
-
 
                 if self.cam_config.kensaReset == True:
                     self.kensa_order = []
@@ -1035,6 +1059,487 @@ class CameraThread(QThread):
                     self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
                     self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
 
+            if self.cam_config.widget == 5 or self.cam_config.widget == 6:
+
+                if frame1 is None:
+                    frame1 = np.zeros((2048, 3072, 3), dtype=np.uint8)
+                if frame2 is None:
+                    frame2 = np.zeros((2048, 3072, 3), dtype=np.uint8) 
+                homography_blank = homography_blank_canvas.copy()
+                
+                # cv2.imwrite("frame1.png", frame1)
+                # cv2.imwrite("frame2.png", frame2)
+
+                if ret1 and ret2:
+                    frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2RGB)
+                    frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
+
+                if self.cam_config.HDRes != self.previous_HDRes:
+                    if not self.cam_config.HDRes:
+                        self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, self.scale_factor)
+                        self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, self.scale_factor)
+                        self.flexibleH1 = self.H1_lowres
+                        self.flexibleH2 = self.H2_lowres
+                    else:
+                        self.cameraMatrix1 = self.adjust_camera_matrix(self.cameraMatrix1, 1/self.scale_factor)
+                        self.cameraMatrix2 = self.adjust_camera_matrix(self.cameraMatrix2, 1/self.scale_factor)
+                        self.flexibleH1 = self.H1
+                        self.flexibleH2 = self.H2
+
+                    self.previous_HDRes = self.cam_config.HDRes  
+
+
+                if self.cam_config.HDRes == False:
+                    frame1 = self.resizeImage(frame1, int(3072//self.scale_factor), int(2048//self.scale_factor))
+                    frame2 = self.resizeImage(frame2, int(3072//self.scale_factor), int(2048//self.scale_factor))
+                    homography_blank = self.resizeImage(homography_blank, 
+                                                        int(homography_blank.shape[1]//self.scale_factor), 
+                                                        int(homography_blank.shape[0]//self.scale_factor))
+                
+                frame1 = self.undistortFrame(frame1, self.cameraMatrix1, self.distortionCoeff1)
+                frame2 = self.undistortFrame(frame2, self.cameraMatrix1, self.distortionCoeff1)
+
+                # combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames(frame1, frame2, self.flexibleH)
+                combinedFrame_raw, combinedImage, croppedFrame1, croppedFrame2 = self.combineFrames_template(frame1, frame2, homography_blank, self.flexibleH1, self.flexibleH2)
+
+                if self.cam_config.HDRes == False:
+                    clipFrame1 = self.frameCrop(frame1, x=int(590/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=int(1900/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=int(600/self.scale_factor), y=int(0/self.scale_factor), w=int(600/self.scale_factor), h=int(500/self.scale_factor), wout = 128, hout = 128)
+
+                if self.cam_config.HDRes == True:
+                    clipFrame1 = self.frameCrop(frame1, x=590, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame2 = self.frameCrop(frame1, x=1900, y=0, w=600, h=600, wout = 128, hout = 128)
+                    clipFrame3 = self.frameCrop(frame2, x=600, y=0, w=600, h=600, wout = 128, hout = 128)
+                    
+
+                if self.handClassificationModel is not None and self.cam_config.HDRes == False:
+                    frame1_handClassify = self.handClassificationModel(cv2.cvtColor(clipFrame1, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                    frame2_handClassify = self.handClassificationModel(cv2.cvtColor(clipFrame2, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                    frame3_handClassify = self.handClassificationModel(cv2.cvtColor(clipFrame3, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                    
+                    self.result_handframe1 = list(frame1_handClassify)[0].probs.data.argmax().item()
+                    self.result_handframe2 = list(frame2_handClassify)[0].probs.data.argmax().item()
+                    self.result_handframe3 = list(frame3_handClassify)[0].probs.data.argmax().item()
+                    # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
+                    # print(f"HandFrame1,2,and 3: {self.result_handframe1}, {self.result_handframe2}, {self.result_handframe3}")
+                
+                if self.musicPlay == True:
+
+                    if self.result_handframe1 == 0:
+                        self.handinFrame1 = True
+                        if self.handinFrame1Timer is None:
+                            self.handinFrame1Timer = time.time()
+                            play_do_sound()
+                    elif self.handinFrame1 and time.time() - self.handinFrame1Timer > self.clipHandWaitTime:
+                        self.handinFrame1 = False
+                        self.handinFrame1Timer = None
+
+                    if self.result_handframe2 == 0:
+                        self.handinFrame2 = True
+                        if self.handinFrame2Timer is None:
+                            self.handinFrame2Timer = time.time()
+                            play_re_sound()
+                    elif self.handinFrame2 and time.time() - self.handinFrame2Timer > self.clipHandWaitTime:
+                        self.handinFrame2 = False
+                        self.handinFrame2Timer = None
+
+                    if self.result_handframe3 == 0:
+                        self.handinFrame3 = True
+                        if self.handinFrame3Timer is None:
+                            self.handinFrame3Timer = time.time()
+                            play_mi_sound()
+                    elif self.handinFrame3 and time.time() - self.handinFrame3Timer > self.clipHandWaitTime:
+                        self.handinFrame3 = False
+                        self.handinFrame3Timer = None
+
+                if self.musicPlay == False:
+
+                    #Logic for work order
+                    if self.handinFrameTimer is None:
+
+                        if self.kensa_cycle is False and self.result_handframe1 == 0:
+                            self.handinFrameTimer = time.time()
+                            play_picking_sound()
+                            self.kensa_cycle = True
+                            self.cam_config.ctrplrWorkOrderNewSpec = [1, 0, 0, 0, 0, 0]
+
+                        elif self.kensa_cycle is True and self.result_handframe1 == 0 and self.cam_config.ctrplrWorkOrderNewSpec == [1, 0, 0, 0, 0, 0]:
+                            self.handinFrameTimer = time.time()
+                            play_picking_sound()
+                            self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 0, 0, 0, 0]
+
+                        elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrderNewSpec == [1, 1, 0, 0, 0, 0]:
+                            self.handinFrameTimer = time.time()
+                            play_picking_sound()
+                            self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 0, 0, 0]
+
+                        elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrderNewSpec == [1, 1, 1, 0, 0, 0]:
+                            self.handinFrameTimer = time.time()
+                            play_picking_sound()
+                            self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 0, 0]                    
+
+                        elif self.kensa_cycle is True and self.result_handframe2 == 0 and self.cam_config.ctrplrWorkOrderNewSpec == [1, 1, 1, 1, 0, 0]:
+                            self.handinFrameTimer = time.time()
+                            play_picking_sound()
+                            self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 0] 
+
+                        elif self.kensa_cycle is True and self.result_handframe3 == 0 and self.cam_config.ctrplrWorkOrderNewSpec == [1, 1, 1, 1, 1, 0]:
+                            self.handinFrameTimer = time.time()
+                            play_picking_sound()
+                            self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1] 
+
+                        elif self.result_handframe1 == 1 and self.result_handframe2 == 1 and self.result_handframe3 == 1:
+                            None
+
+                        elif self.result_handframe1 is None and self.result_handframe2 is None and self.result_handframe3 is None:
+                            None
+
+                        else:
+                            play_alarm_sound()
+                            self.handinFrameTimer = time.time()
+                    else:
+                        self.result_handframe1 = 1
+                        self.result_handframe2 = 1
+                        self.result_handframe3 = 1
+                    
+                    if self.handinFrameTimer:
+                        if time.time() - self.handinFrameTimer > self.clipHandWaitTime:
+                            self.handinFrameTimer = None
+
+               
+                # print(self.cam_config.ctrplrWorkOrderNewSpec)
+
+                if self.cam_config.kensaReset == True:
+                    self.kensa_order = []
+                    self.kensa_cycle = False
+                    self.cam_config.ctrplrWorkOrderNewSpec = [0, 0, 0, 0, 0, 0]
+                    self.cam_config.kensaReset = False
+
+                if self.cam_config.widget == 5:
+                    ok_count_current, ng_count_current = self.cam_config.ctrplrLHcurrentnumofPart
+                    ok_count_total, ng_count_total = self.cam_config.ctrplrLHnumofPart
+
+                    if self.cam_config.furyou_plus or self.cam_config.furyou_minus or self.cam_config.kansei_plus or self.cam_config.kansei_minus or self.cam_config.furyou_plus_10 or self.cam_config.furyou_minus_10 or self.cam_config.kansei_plus_10 or self.cam_config.kansei_minus_10:
+                        self.cam_config.current_numofPart[self.cam_config.widget], self.cam_config.today_numofPart[self.cam_config.widget] = self.manual_adjustment_new(
+                            self.cam_config.current_numofPart[self.cam_config.widget], self.cam_config.today_numofPart[self.cam_config.widget],
+                            self.cam_config.furyou_plus, 
+                            self.cam_config.furyou_minus, 
+                            self.cam_config.furyou_plus_10, 
+                            self.cam_config.furyou_minus_10, 
+                            self.cam_config.kansei_plus, 
+                            self.cam_config.kansei_minus,
+                            self.cam_config.kansei_plus_10,
+                            self.cam_config.kansei_minus_10)
+                        print("Manual Adjustment Done")
+                    
+                    if self.cam_config.resetCounter == True:
+                        self.cam_config.current_numofPart[self.cam_config.widget] = [0, 0]
+                        self.cam_config.counterReset = False
+                        self.save_result_database(partname = self.widget_dir_map[self.cam_config.widget],
+                                numofPart = [0, 0], 
+                                currentnumofPart = self.cam_config.today_numofPart[self.cam_config.widget],
+                                deltaTime = 0.0,
+                                kensainName = self.cam_config.kensainNumber, 
+                                detected_pitch_str = "COUNTERRESET", 
+                                delta_pitch_str = "COUNTERRESET", 
+                                total_length=0)
+
+                if self.cam_config.widget == 6:
+                    ok_count_current, ng_count_current = self.cam_config.ctrplrRHcurrentnumofPart
+                    ok_count_total, ng_count_total = self.cam_config.ctrplrRHnumofPart
+
+                    if self.cam_config.furyou_plus or self.cam_config.furyou_minus or self.cam_config.kansei_plus or self.cam_config.kansei_minus or self.cam_config.furyou_plus_10 or self.cam_config.furyou_minus_10 or self.cam_config.kansei_plus_10 or self.cam_config.kansei_minus_10:
+                        self.cam_config.current_numofPart[self.cam_config.widget], self.cam_config.today_numofPart[self.cam_config.widget] = self.manual_adjustment_new(
+                            self.cam_config.current_numofPart[self.cam_config.widget], self.cam_config.today_numofPart[self.cam_config.widget],
+                            self.cam_config.furyou_plus, 
+                            self.cam_config.furyou_minus, 
+                            self.cam_config.furyou_plus_10, 
+                            self.cam_config.furyou_minus_10, 
+                            self.cam_config.kansei_plus, 
+                            self.cam_config.kansei_minus,
+                            self.cam_config.kansei_plus_10,
+                            self.cam_config.kansei_minus_10)
+                        print("Manual Adjustment Done")
+                    
+                    if self.cam_config.resetCounter == True:
+                        self.cam_config.current_numofPart[self.cam_config.widget] = [0, 0]
+                        self.cam_config.counterReset = False
+                        self.save_result_database(partname = self.widget_dir_map[self.cam_config.widget],
+                                numofPart = [0, 0], 
+                                currentnumofPart = self.cam_config.today_numofPart[self.cam_config.widget],
+                                deltaTime = 0.0,
+                                kensainName = self.cam_config.kensainNumber, 
+                                detected_pitch_str = "COUNTERRESET", 
+                                delta_pitch_str = "COUNTERRESET", 
+                                total_length=0)
+                    ##To use debug image
+
+                # combinedFrame_raw = cv2.imread("./aikensa/debug_image/OK.png")
+                # # combinedFrame_raw = cv2.imread("./aikensa/debug_image/NG.png")
+                # #RGB to BGR
+                # combinedFrame_raw = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_RGB2BGR)
+                # croppedFrame1 = self.frameCrop(combinedFrame_raw, x=450, y=260, w=320, h=160, wout = 320, hout = 160)
+                # croppedFrame2 = self.frameCrop(combinedFrame_raw, x=3800, y=260, w=320, h=160, wout = 320, hout = 160)
+
+                
+            
+                    ##To manually set the work order
+                # self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1]
+
+                if self.cam_config.triggerKensa == True or self.oneLoop == True:
+                    current_time = time.time()
+
+                    if current_time - self.last_inspection_time < self.inspection_delay: #extra 3 sec after inspection to prevent multiple inspection
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        continue
+
+                    if self.prev_timestamp == None:
+                        self.prev_timestamp = datetime.now()
+
+                    timestamp = datetime.now() #datetime.now().strftime('%Y%m%d_%H%M%S')
+
+                    deltaTime = timestamp - self.prev_timestamp
+                    self.prev_timestamp = timestamp
+
+                    if self.cam_config.ctrplrWorkOrderNewSpec != [1, 1, 1, 1, 1, 1]:
+                        play_alarm_sound()
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        continue
+
+                    if self.cam_config.kensainName == None:
+                        play_alarm_sound()
+                        self.cam_config.triggerKensa = False
+                        self.oneLoop = False
+                        text = "社員番号 入れてください Vui lòng nhập số nhân viên. "
+                        font_path = self.kanjiFontPath
+                        font_size = 40
+                        combinedImage = self.add_text_to_image(combinedImage, text, font_path, font_size)
+                        self.mergeFrame.emit(self.convertQImage(combinedImage))
+                        # self.cam_config.ctrplrWorkOrder == [0, 0, 0, 0, 0]
+                        #time sleep
+                        time.sleep(2)
+                        continue
+
+
+                    # if self.cam_config.ctrplrWorkOrder == [0,0,0,0,0]:
+                    if self.cam_config.ctrplrWorkOrderNewSpec == [1, 1, 1, 1, 1, 1]:
+                        self.cam_config.HDRes = True
+
+                        #Append a word "kensaChuu" to the combined image and emit it
+                        combinedImage_wait = combinedImage.copy()
+                        text = '検査実施中'
+                        font_path = self.kanjiFontPath
+                        font_size = 80
+
+                        combinedImage_wait = self.add_text_to_image(combinedImage_wait, text, font_path, font_size)
+                        self.mergeFrame.emit(self.convertQImage(combinedImage_wait))
+
+                        combinedFrame_raw_copy = cv2.cvtColor(combinedFrame_raw, cv2.COLOR_BGR2RGB)
+
+
+                        if self.oneLoop == True:
+                            #Detect Clip
+                            self.clip_detection = get_sliced_prediction(combinedFrame_raw, 
+                                                                        self.ctrplr_clipDetectionModel, 
+                                                                        slice_height=968, slice_width=968, 
+                                                                        overlap_height_ratio=0.3, overlap_width_ratio=0.2,
+                                                                        postprocess_match_metric = "IOS",
+                                                                        postprocess_match_threshold = 0.2,
+                                                                        postprocess_class_agnostic = True,
+                                                                        postprocess_type = "GREEDYNMM",
+                                                                        verbose = 0,
+                                                                        perform_standard_pred = False)
+                            
+                            # self.clip_detection.export_visuals(export_dir="./demo_data/")
+                            #Detect Katabu Marking 
+                            if self.cam_config.widget == 5:
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame2, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheckNEW(combinedFrame_raw, croppedFrame2,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="LH")
+                       
+                                if status == "OK":
+                                    self.cam_config.current_numofPart[self.cam_config.widget][0] += 1
+                                    self.cam_config.today_numofPart[self.cam_config.widget][0] += 1
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    self.cam_config.current_numofPart[self.cam_config.widget][1] += 1
+                                    self.cam_config.today_numofPart[self.cam_config.widget][1] += 1
+                                    self.inspection_result = False
+
+                                # self.cam_config.ctrplrLHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                # self.cam_config.ctrplrLHnumofPart = (ok_count_total, ng_count_total)
+
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
+                                self.save_result_csv("82833W090P", dir_part, 
+                                                    self.cam_config.ctrplrLHnumofPart, self.cam_config.ctrplrLHcurrentnumofPart, 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
+
+                            if self.cam_config.widget == 6:
+                                self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
+                                                                                            stream=True, 
+                                                                                            verbose=False,
+                                                                                            conf=0.1, iou=0.5)
+                                self.hanire_detections = None
+                                imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheckNEW(combinedFrame_raw, croppedFrame1,
+                                                                                                                                        self.clip_detection.object_prediction_list, 
+                                                                                                                                        self.marking_detection, 
+                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        partid="RH")
+
+                                if status == "OK":
+                                    # ok_count_current += 1
+                                    # ok_count_total += 1
+                                    self.cam_config.current_numofPart[self.cam_config.widget][0] += 1
+                                    self.cam_config.today_numofPart[self.cam_config.widget][0] += 1
+                                    self.inspection_result = True
+                                elif status == "NG":
+                                    # ng_count_current += 1
+                                    # ng_count_total += 1
+                                    self.cam_config.current_numofPart[self.cam_config.widget][1] += 1
+                                    self.cam_config.today_numofPart[self.cam_config.widget][1] += 1
+                                    self.inspection_result = False
+                                    
+                                # self.cam_config.ctrplrRHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                # self.cam_config.ctrplrRHnumofPart = (ok_count_total, ng_count_total)
+
+                                dir_part = self.widget_dir_map.get(self.cam_config.widget)
+                                self.save_result_csv("82832W080P", dir_part, 
+                                                    self.cam_config.ctrplrRHnumofPart, self.cam_config.ctrplrRHcurrentnumofPart, 
+                                                    timestamp, deltaTime, 
+                                                    self.cam_config.kensainName, 
+                                                    pitch_results, delta_pitch, 
+                                                    total_length=0)
+
+                            save_image_nama = combinedFrame_raw_copy
+                            save_image_kekka = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+
+                            self.save_image(dir_part, save_image_nama, save_image_kekka, timestamp, self.cam_config.kensainName, self.inspection_result, rekensa_id = 0)
+                            
+                            # os.makedirs(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                            # os.makedirs(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}", exist_ok=True)
+                            
+                            # cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/nama/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", combinedFrame_raw_copy)
+                            # cv2.imwrite(f"./aikensa/inspection_results/{dir_part}/kekka/{timestamp.strftime('%Y%m%d')}/{timestamp.strftime('%Y%m%d%H%M%S')}.png", imgResult_copy)
+
+
+                            if ok_count_current % 20 == 0 and ok_count_current != 0 and all(result == 1 for result in detected_pitch):
+                                if ok_count_current % 200 == 0:
+                                    imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    img_pil = Image.fromarray(imgresults)
+                                    font = ImageFont.truetype(self.kanjiFontPath, 120)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                                    draw.text((centerpos[0]-650, centerpos[1]+150), u"箱に２００になっております\nCó 200 cái trong một hộp.", 
+                                            font=font, fill=(5, 80, 160, 0))
+                                    imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+                                    #reset ok and ng value evert 200 iteration
+                                    ok_count_current = 0
+                                    # ng_count_current = 0
+                                    if self.cam_config.widget == 3:
+                                        self.cam_config.ctrplrLHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                    if self.cam_config.widget == 4:
+                                        self.cam_config.ctrplrRHcurrentnumofPart = (ok_count_current, ng_count_current)
+                                    play_konpou_sound()
+                                else:
+                                    imgresults = cv2.cvtColor(imgResult, cv2.COLOR_BGR2RGB)
+                                    img_pil = Image.fromarray(imgresults)
+                                    font = ImageFont.truetype(self.kanjiFontPath, 120)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                                    draw.text((centerpos[0]-650, centerpos[1]+150), u"束ねてください。\n Hãy buộc nó lại", 
+                                            font=font, fill=(5, 30, 50, 0))
+                                    imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                                    play_keisoku_sound()
+                                    print ("Keisoku sound played")
+
+                            combinedImage = self.resizeImage(imgResult, 1791, 428)
+
+                            self.mergeFrame.emit(self.convertQImage(combinedImage))
+                            if self.cam_config.widget == 3:
+                                self.kata2Frame.emit(self.convertQImage(katabumarkingResult))
+                                self.ctrplrLH_currentnumofPart_updated.emit(self.cam_config.ctrplrLHcurrentnumofPart)
+                                self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
+                                self.ctrplrLH_pitch_updated.emit(pitch_results)
+
+                            if self.cam_config.widget == 4:
+                                self.kata1Frame.emit(self.convertQImage(katabumarkingResult))
+                                self.ctrplrRH_currentnumofPart_updated.emit(self.cam_config.ctrplrRHcurrentnumofPart)
+                                self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
+                                self.ctrplrRH_pitch_updated.emit(pitch_results)
+
+                            self.ctrplrworkorderNewSpecSignal.emit(self.cam_config.ctrplrWorkOrderNewSpec)
+
+
+                            #sleep for self.inspection_delay
+                            time.sleep(self.inspection_delay)
+
+                            self.last_inspection_time = time.time()
+
+                            self.clip_detection = None
+                            self.oneLoop = False
+                            self.cam_config.HDRes = False
+                            self.cam_config.ctrplrWorkOrderNewSpec = [0, 0, 0, 0, 0, 0]
+                            self.kensa_order = [] #reinitialize the kensa order
+                            self.kensa_cycle = False #reinitialize the kensa cycle
+                            self.clip1Frame.emit(self.convertQImage(clipFrame1))
+                            self.clip2Frame.emit(self.convertQImage(clipFrame2))
+                            self.clip3Frame.emit(self.convertQImage(clipFrame3))
+                            continue
+
+                        self.oneLoop = True
+                        self.cam_config.triggerKensa = False
+
+                self.mergeFrame.emit(self.convertQImage(combinedImage))
+
+                if self.cam_config.widget in [3, 5]:
+                    self.kata2Frame.emit(self.convertQImage(croppedFrame2))
+                    #emit blank image for kata1Frame
+                    blankFrame = np.zeros((160, 320, 3), dtype=np.uint8)
+                    self.kata1Frame.emit(self.convertQImage(blankFrame))
+                if self.cam_config.widget in [4, 6]:
+                    self.kata1Frame.emit(self.convertQImage(croppedFrame1))
+                    #emit blank image for kata2Frame
+                    blankFrame = np.zeros((160, 320, 3), dtype=np.uint8)
+                    self.kata2Frame.emit(self.convertQImage(blankFrame))
+
+
+                self.clip1Frame.emit(self.convertQImage(clipFrame1))
+                self.clip2Frame.emit(self.convertQImage(clipFrame2))
+                self.clip3Frame.emit(self.convertQImage(clipFrame3)) 
+
+                self.handFrame1.emit(not self.handinFrame1)
+                self.handFrame2.emit(not self.handinFrame2)
+                self.handFrame3.emit(not self.handinFrame3)
+                
+                self.ctrplrworkorderSignal.emit(self.cam_config.ctrplrWorkOrder)
+                self.ctrplrworkorderNewSpecSignal.emit(self.cam_config.ctrplrWorkOrderNewSpec)
+
+                if self.cam_config.widget == 3:
+                    self.ctrplrLH_currentnumofPart_updated.emit(self.cam_config.ctrplrLHcurrentnumofPart)
+                    self.ctrplrLH_numofPart_updated.emit(self.cam_config.ctrplrLHnumofPart)
+                    self.ctrplrLH_pitch_updated.emit(self.cam_config.ctrplrLHpitch)
+                if self.cam_config.widget == 4:
+                    self.ctrplrRH_currentnumofPart_updated.emit(self.cam_config.ctrplrRHcurrentnumofPart)
+                    self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
+                    self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
+
+                self.today_numofPart_signal.emit(self.cam_config.today_numofPart)
+                self.current_numofPart_signal.emit(self.cam_config.current_numofPart)
+
             if self.cam_config.widget in [21, 22, 23]:
 
                 if frame1 is None:
@@ -1117,8 +1622,8 @@ class CameraThread(QThread):
                             #Detect Clip
                             self.clip_detection = get_sliced_prediction(combinedFrame_raw, 
                                                                         self.ctrplr_clipDetectionModel, 
-                                                                        slice_height=968, slice_width=968, 
-                                                                        overlap_height_ratio=0.3, overlap_width_ratio=0.2,
+                                                                        slice_height=1280, slice_width=1280, 
+                                                                        overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                                                         postprocess_match_metric = "IOS",
                                                                         postprocess_match_threshold = 0.2,
                                                                         postprocess_class_agnostic = True,
@@ -1192,7 +1697,6 @@ class CameraThread(QThread):
                                                     self.cam_config.kensainName, 
                                                     pitch_results, delta_pitch, 
                                                     total_length=0)
-
 
                             if self.cam_config.widget == 23:
                                 self.marking_detection  = self.ctrplr_markingDetectionModel(cv2.cvtColor(croppedFrame1, cv2.COLOR_BGR2RGB), 
@@ -1307,6 +1811,41 @@ class CameraThread(QThread):
             return numofPart
         else:
             return (0, 0)  # Default values if no entry is found
+        
+    def get_last_entry_currentnumofPart_new(self, part_name):
+        self.cursor.execute('''
+        SELECT currentnumofPart 
+        FROM inspection_results 
+        WHERE partName = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name,))
+        
+        row = self.cursor.fetchone()
+        if row:
+            currentnumofPart = eval(row[0])
+            return currentnumofPart
+        else:
+            return [0, 0]
+            
+    def get_last_entry_total_numofPart_new(self, part_name):
+        # Get today's date in yyyymmdd format
+        today_date = datetime.now().strftime("%Y%m%d")
+
+        self.cursor.execute('''
+        SELECT numofPart 
+        FROM inspection_results 
+        WHERE partName = ? AND timestampDate = ? 
+        ORDER BY id DESC 
+        LIMIT 1
+        ''', (part_name, today_date))
+        
+        row = self.cursor.fetchone()
+        if row:
+            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            return numofPart
+        else:
+            return [0, 0]  # Default values if no entry is found
 
 
     def save_image(self, dir_part, save_image_nama, save_image_kekka, timestamp, kensainName, inspection_result, rekensa_id):
@@ -1427,6 +1966,34 @@ class CameraThread(QThread):
             # detected_pitch TEXT,
             # delta_pitch TEXT,
             # total_length REAL
+
+    def save_result_database_new(self, partname, numofPart, 
+                             currentnumofPart, deltaTime, 
+                             kensainName, detected_pitch_str, 
+                             delta_pitch_str, total_length):
+        # Ensure all inputs are strings or compatible types
+
+        timestamp = datetime.now()
+        timestamp_date = timestamp.strftime("%Y%m%d")
+        timestamp_hour = timestamp.strftime("%H:%M:%S")
+
+        partname = str(partname)
+        numofPart = str(numofPart)
+        currentnumofPart = str(currentnumofPart)
+        timestamp_hour = str(timestamp_hour)
+        timestamp_date = str(timestamp_date)
+        deltaTime = float(deltaTime)  # Ensure this is a float
+        kensainName = str(kensainName)
+        detected_pitch_str = str(detected_pitch_str)
+        delta_pitch_str = str(delta_pitch_str)
+        total_length = float(total_length)  # Ensure this is a float
+
+        self.cursor.execute('''
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        self.conn.commit()
+
 
     def adjust_camera_matrix(self, camera_matrix, scale_factor):
         camera_matrix[0][0] /= scale_factor
@@ -1624,6 +2191,72 @@ class CameraThread(QThread):
             self.cam_config.kansei_minus_10 = False
 
         return (ok_count_current, ng_count_current), (ok_count_total, ng_count_total)
+    
+    def setCounterFalse(self):
+        self.cam_config.furyou_plus = False
+        self.cam_config.furyou_minus = False
+        self.cam_config.kansei_plus = False
+        self.cam_config.kansei_minus = False
+        self.cam_config.furyou_plus_10 = False
+        self.cam_config.furyou_minus_10 = False
+        self.cam_config.kansei_plus_10 = False
+        self.cam_config.kansei_minus_10 = False
+
+    def manual_adjustment_new(self, currentPart, Totalpart,
+                          furyou_plus, furyou_minus, 
+                          furyou_plus_10, furyou_minus_10,
+                          kansei_plus, kansei_minus,
+                          kansei_plus_10, kansei_minus_10):
+        
+        ok_count_current = currentPart[0]
+        ng_count_current = currentPart[1]
+        ok_count_total = Totalpart[0]
+        ng_count_total = Totalpart[1]
+        
+        if furyou_plus:
+            ng_count_current += 1
+            ng_count_total += 1
+
+        if furyou_plus_10:
+            ng_count_current += 10
+            ng_count_total += 10
+
+        if furyou_minus and ng_count_current > 0 and ng_count_total > 0:
+            ng_count_current -= 1
+            ng_count_total -= 1
+        
+        if furyou_minus_10 and ng_count_current > 9 and ng_count_total > 9:
+            ng_count_current -= 10
+            ng_count_total -= 10
+
+        if kansei_plus:
+            ok_count_current += 1
+            ok_count_total += 1
+
+        if kansei_plus_10:
+            ok_count_current += 10
+            ok_count_total += 10
+
+        if kansei_minus and ok_count_current > 0 and ok_count_total > 0:
+            ok_count_current -= 1
+            ok_count_total -= 1
+
+        if kansei_minus_10 and ok_count_current > 9 and ok_count_total > 9:
+            ok_count_current -= 10
+            ok_count_total -= 10
+
+        self.setCounterFalse()
+
+        self.save_result_database_new(partname = self.widget_dir_map[self.cam_config.widget],
+                numofPart = [ok_count_total, ng_count_total], 
+                currentnumofPart = [ok_count_current, ng_count_current],
+                deltaTime = 0.0,
+                kensainName = self.cam_config.kensainNumber, 
+                detected_pitch_str = "MANUAL", 
+                delta_pitch_str = "MANUAL", 
+                total_length=0)
+
+        return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
 
     def initialize_model(self):
         #Change based on the widget
@@ -1632,11 +2265,11 @@ class CameraThread(QThread):
         ctrplr_hanireDetectionModel = None
         ctrplr_markingDetectionModel = None
 
-        if self.cam_config.widget in [3, 4, 21, 22, 23]:
+        if self.cam_config.widget in [3, 4, 5, 6, 21, 22, 23]:
             handClassificationModel = YOLO("./aikensa/custom_weights/handClassify.pt")
             ctrplr_clipDetectionModel = AutoDetectionModel.from_pretrained(model_type="yolov8",
                                                                            model_path="./aikensa/custom_weights/weights_5755A49X.pt",
-                                                                           confidence_threshold=0.5,
+                                                                           confidence_threshold=0.4,
                                                                            device="cuda:0",
             )
             ctrplr_markingDetectionModel = YOLO("./aikensa/custom_weights/weights_5755A49X_marking.pt")

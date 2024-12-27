@@ -80,7 +80,7 @@ background-color: rgb(114, 159, 207);</string>
     </property>
     <property name="text">
      <string>82833W050P
-W/STRIP-RR DOOR LH</string>
+W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
    <widget class="Line" name="line_2">
@@ -379,15 +379,15 @@ Edge Params</string>
     </property>
     <property name="text">
      <string>82833W040P
- W/STRIP-RR DOOR RH</string>
+ W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
    <widget class="QLabel" name="timeLabel">
     <property name="geometry">
      <rect>
-      <x>1630</x>
+      <x>1590</x>
       <y>10</y>
-      <width>271</width>
+      <width>311</width>
       <height>51</height>
      </rect>
     </property>
@@ -432,6 +432,79 @@ Edge Params</string>
 Daily Check</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="P82832W080Pbutton">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>670</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 146, 240);</string>
+    </property>
+    <property name="text">
+     <string>82832W080P
+ W/STRIP-RR DOOR, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82833W090Pbutton">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>670</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(0, 170, 255);</string>
+    </property>
+    <property name="text">
+     <string>82833W090P
+W/STRIP-RR DOOR, LH</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>790</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>日産自動車</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -439,7 +512,7 @@ Daily Check</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
