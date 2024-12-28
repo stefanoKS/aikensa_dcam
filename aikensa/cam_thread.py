@@ -1285,7 +1285,7 @@ class CameraThread(QThread):
                 
             
                     ##To manually set the work order
-                self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1]
+                # self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1]
 
 
 
