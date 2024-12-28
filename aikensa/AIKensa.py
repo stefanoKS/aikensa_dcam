@@ -590,6 +590,7 @@ class AIKensa(QMainWindow):
                 print(f"Widget key {widget_key} is out of bounds for numofPart")
 
     def _update_todayOKNG_label(self, numofPart):
+        # print(numofPart)
         for widget_key, part_name in self.widget_dir_map.items():
             # Get OK and NG values using widget_key as index
             if 0 <= widget_key < len(numofPart):

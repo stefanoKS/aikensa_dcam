@@ -232,11 +232,11 @@ class CameraThread(QThread):
 
         self.conn.commit()
 
-        cap_cam1 = initialize_camera(0)
+        cap_cam1 = initialize_camera(1)
         # cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320359-video-index0")
         # cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320361-video-index0")
         print(f"Initiliazing Camera 1.... Located on {cap_cam1}")
-        cap_cam2 = initialize_camera(1)
+        cap_cam2 = initialize_camera(0)
         # cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320361-video-index0")
         # cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_39320359-video-index0")
         print(f"Initiliazing Camera 2.... Located on {cap_cam2}")
@@ -812,7 +812,7 @@ class CameraThread(QThread):
                 
             
                     ##To manually set the work order
-                #self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
+                # self.cam_config.ctrplrWorkOrder = [1, 1, 1, 1, 1]
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -1285,7 +1285,10 @@ class CameraThread(QThread):
                 
             
                     ##To manually set the work order
-                # self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1]
+                self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1]
+
+
+
 
                 if self.cam_config.triggerKensa == True or self.oneLoop == True:
                     current_time = time.time()
@@ -1398,16 +1401,46 @@ class CameraThread(QThread):
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
                                                                                                                                         partid="RH")
+                                #check whether cam_config.current_numofPart is a tupple or a list
+
 
                                 if status == "OK":
                                     # ok_count_current += 1
                                     # ok_count_total += 1
-                                    self.cam_config.current_numofPart[self.cam_config.widget][0] += 1
-                                    self.cam_config.today_numofPart[self.cam_config.widget][0] += 1
+
+
+                                    # print(type(self.cam_config.current_numofPart[self.cam_config.widget]))
+
+                                    # #force into a list
+                                    # self.cam_config.current_numofPart = list(self.cam_config.current_numofPart)
+                                    # self.cam_config.current_numofPart[self.cam_config.widget] = list(self.cam_config.current_numofPart[self.cam_config.widget])
+
+                                    temp_current_OK = self.cam_config.current_numofPart[self.cam_config.widget][0]
+                                    temp_current_OK += 1
+                                    temp_current_NG = self.cam_config.current_numofPart[self.cam_config.widget][1]
+
+                                    temp_today_OK = self.cam_config.today_numofPart[self.cam_config.widget][0] 
+                                    temp_today_OK += 1
+                                    temp_today_NG = self.cam_config.today_numofPart[self.cam_config.widget][1]
+
+                                    self.cam_config.current_numofPart[self.cam_config.widget] = [temp_current_OK, temp_current_NG]
+                                    self.cam_config.today_numofPart[self.cam_config.widget] = [temp_today_OK, temp_today_NG]
+
+
+                                    # self.cam_config.current_numofPart[self.cam_config.widget][0] += 1
+                                    # self.cam_config.today_numofPart[self.cam_config.widget][0] += 1
+
                                     self.inspection_result = True
                                 elif status == "NG":
                                     # ng_count_current += 1
                                     # ng_count_total += 1
+
+                                    # print(type(self.cam_config.current_numofPart[self.cam_config.widget]))
+
+                                    # #force into a list
+                                    # self.cam_config.current_numofPart = list(self.cam_config.current_numofPart)
+                                    # self.cam_config.current_numofPart[self.cam_config.widget] = list(self.cam_config.current_numofPart[self.cam_config.widget])
+
                                     self.cam_config.current_numofPart[self.cam_config.widget][1] += 1
                                     self.cam_config.today_numofPart[self.cam_config.widget][1] += 1
                                     self.inspection_result = False
@@ -1537,8 +1570,8 @@ class CameraThread(QThread):
                     self.ctrplrRH_numofPart_updated.emit(self.cam_config.ctrplrRHnumofPart)
                     self.ctrplrRH_pitch_updated.emit(self.cam_config.ctrplrRHpitch)
 
-                self.today_numofPart_signal.emit(self.cam_config.today_numofPart)
-                self.current_numofPart_signal.emit(self.cam_config.current_numofPart)
+                self.today_numofPart_signal.emit(list(self.cam_config.today_numofPart))
+                self.current_numofPart_signal.emit(list(self.cam_config.current_numofPart))
 
             if self.cam_config.widget in [21, 22, 23]:
 
@@ -1789,7 +1822,7 @@ class CameraThread(QThread):
             currentnumofPart = eval(row[0])  # Convert the string tuple to an actual tuple
             return currentnumofPart
         else:
-            return (0, 0)  # Default values if no entry is found
+            return [0, 0]  # Default values if no entry is found
             
     def get_last_entry_total_numofPart(self, part_name):
         # Get today's date in yyyymmdd format
@@ -1810,7 +1843,7 @@ class CameraThread(QThread):
             numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
             return numofPart
         else:
-            return (0, 0)  # Default values if no entry is found
+            return [0, 0]  # Default values if no entry is found
         
     def get_last_entry_currentnumofPart_new(self, part_name):
         self.cursor.execute('''

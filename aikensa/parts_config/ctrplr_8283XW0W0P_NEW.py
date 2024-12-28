@@ -209,11 +209,11 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
     if partid == "LH":
         pitchresult = check_tolerance(checkedPitchResult, pitchSpecLH, pitchToleranceLH)
 
-        if len(checkedPitchResult) == 7:
+        if len(checkedPitchResult) == 10:
             deltaPitch = [checkedPitchResult[i] - pitchSpecLH[i] for i in range(len(pitchSpecLH))]
         else:
-            deltaPitch = [0, 0, 0, 0, 0, 0, 0]
-            checkedPitchResult = [0, 0, 0, 0, 0, 0, 0]
+            deltaPitch = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            checkedPitchResult = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
         pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
@@ -235,11 +235,11 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
     if partid == "RH":
         pitchresult = check_tolerance(checkedPitchResult, pitchSpecRH, pitchToleranceRH)
 
-        if len(checkedPitchResult) == 7:
+        if len(checkedPitchResult) == 10:
             deltaPitch = [checkedPitchResult[i] - pitchSpecRH[i] for i in range(len(pitchSpecRH))]
         else:
-            deltaPitch = [0, 0, 0, 0, 0, 0, 0]
-            checkedPitchResult = [0, 0, 0, 0, 0, 0, 0]
+            deltaPitch = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            checkedPitchResult = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         allpitchresult = checkedPitchResult + katabumarking_lengths #weird naming, this is a list of all the clip pitch and the katabu marking pitch
         pitchresult = pitchresult + katabupitchresult #also weird naming, this is a list of 0 and 1 value for whether the tolerance is fullfilled
