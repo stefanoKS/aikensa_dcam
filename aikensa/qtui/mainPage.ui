@@ -340,15 +340,15 @@
      <string notr="true">background-color: rgb(46, 194, 126);</string>
     </property>
     <property name="text">
-     <string extracomment="Generate intrinsic camera parameter">5902A509/5902A510用
-日常点検</string>
+     <string extracomment="Generate intrinsic camera parameter">日常点検
+Daily Check</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>750</y>
+      <x>180</x>
+      <y>780</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -440,206 +440,204 @@ Camera②Calib.</string>
 Camera Merge</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="dailytenkenbutton_P658207LE0A">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>340</y>
-      <width>231</width>
-      <height>91</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 194, 126);</string>
-    </property>
-    <property name="text">
-     <string extracomment="Generate intrinsic camera parameter">65820 7LE0A用
-日常点検</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="P808387YA0Abutton">
+   <widget class="QPushButton" name="P82833W050Pbutton">
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>610</y>
-      <width>201</width>
-      <height>61</height>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>10</pointsize>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(124, 227, 255);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82833W050P
+W/STRIP-RR DOOR, LH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82833W040Pbutton">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>660</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(15, 190, 224);</string>
     </property>
     <property name="text">
-     <string>J42U
-80838 7YA0A
- SEAL-FR DOOR PARTING, RH</string>
+     <string>5A45
+82833W090P
+W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P828387YA0Abutton">
+   <widget class="QPushButton" name="P82832W090Pbutton">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>680</y>
-      <width>201</width>
-      <height>61</height>
+      <x>310</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>10</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(15, 190, 224);</string>
+     <string notr="true">background-color: rgb(165, 177, 255);</string>
     </property>
     <property name="text">
-     <string>J42U
-82838 7YA0A
- SEAL-RR DOOR PARTING, RH</string>
+     <string>5A45
+82832W040P
+ W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P658107YA0Abutton">
+   <widget class="QPushButton" name="P82832W080Pbutton">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>540</y>
-      <width>201</width>
-      <height>61</height>
+      <x>310</x>
+      <y>660</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(111, 106, 252);</string>
-    </property>
-    <property name="text">
-     <string>J42U
-65810 7YA0A
- SEAL ASSY RAD CORE</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="P731957YA0Abutton">
-    <property name="geometry">
-     <rect>
-      <x>700</x>
-      <y>610</y>
-      <width>201</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(192, 97, 203);</string>
-    </property>
-    <property name="text">
-     <string>J42U
-73195 7YA0A
- SEAL-ROOF</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="P828387YA6Abutton">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>610</y>
-      <width>201</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>10</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(53, 132, 228);</string>
     </property>
     <property name="text">
-     <string>J42U
-82838 7YA6A
- SEAL-RR DOOR PARTING, RH
-(RR STEP)</string>
+     <string>5A45
+82832W080P
+ W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P828387YA1Abutton">
+   <widget class="QPushButton" name="P82833W040Pbutton_2">
     <property name="geometry">
      <rect>
-      <x>490</x>
-      <y>610</y>
-      <width>201</width>
-      <height>61</height>
+      <x>680</x>
+      <y>660</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>10</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(98, 160, 234);</string>
+     <string notr="true">background-color: rgb(230, 212, 79);</string>
     </property>
     <property name="text">
-     <string>J42U
-82838 7YA1A
- SEAL-RR DOOR PARTING, RH
-(LOCK)</string>
+     <string>5A45
+82833W090P
+W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P828397YA6Abutton">
+   <widget class="QPushButton" name="P82832W090Pbutton_2">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>680</y>
-      <width>201</width>
-      <height>61</height>
+      <x>920</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>10</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(53, 132, 228);</string>
+     <string notr="true">background-color: rgb(255, 168, 80);</string>
     </property>
     <property name="text">
-     <string>J42U
-82839 7YA6A
- SEAL-RR DOOR PARTING, LH
-(RR STEP)</string>
+     <string>5A45
+82832W040P
+ W/STRIP-RR DOOR, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82833W050Pbutton_2">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 248, 44);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82833W050P
+W/STRIP-RR DOOR, LH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82832W080Pbutton_2">
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>660</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(213, 118, 74);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82832W080P
+ W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>1100</x>
-      <y>740</y>
-      <width>211</width>
+      <x>750</x>
+      <y>780</y>
+      <width>311</width>
       <height>31</height>
      </rect>
     </property>
@@ -655,61 +653,219 @@ Camera Merge</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>スズキ株式会社</string>
+     <string>日産自動車 - 権限必要</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="P8462284S00button">
+   <widget class="QPushButton" name="P82833W050Pbutton_3">
     <property name="geometry">
      <rect>
-      <x>1080</x>
-      <y>610</y>
-      <width>261</width>
-      <height>61</height>
+      <x>1240</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>11</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(170, 87, 88);</string>
+     <string notr="true">background-color: rgb(255, 97, 221);</string>
     </property>
     <property name="text">
-     <string>YT3S
-84622 84S00A
-WEATHERSTRIP, REAR DOOR DUST</string>
+     <string>5A45
+82833W050P
+W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P828397YA1Abutton">
+   <widget class="QPushButton" name="P82833W040Pbutton_3">
     <property name="geometry">
      <rect>
-      <x>490</x>
-      <y>680</y>
-      <width>201</width>
-      <height>61</height>
+      <x>1240</x>
+      <y>660</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>10</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(98, 160, 234);</string>
+     <string notr="true">background-color: rgb(197, 114, 193);</string>
     </property>
     <property name="text">
-     <string>J42U
-82839 7YA1A
- SEAL-RR DOOR PARTING, LH
-(LOCK)</string>
+     <string>5A45
+82833W090P
+W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="P82832W080Pbutton_3">
+    <property name="geometry">
+     <rect>
+      <x>1480</x>
+      <y>660</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(199, 107, 108);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82832W080P
+ W/STRIP-RR DOOR, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82832W090Pbutton_3">
+    <property name="geometry">
+     <rect>
+      <x>1480</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 79, 82);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82832W040P
+ W/STRIP-RR DOOR, RH</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>1270</x>
+      <y>780</y>
+      <width>391</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>日産自動車 - クリップ挿入機</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>560</y>
+      <width>481</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(181, 181, 181);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>560</y>
+      <width>481</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(181, 181, 181);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>1230</x>
+      <y>560</y>
+      <width>481</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(181, 181, 181);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <zorder>label_10</zorder>
+   <zorder>label_6</zorder>
+   <zorder>label</zorder>
+   <zorder>line_1</zorder>
+   <zorder>line_2</zorder>
+   <zorder>label_1</zorder>
+   <zorder>label_2</zorder>
+   <zorder>quitbutton</zorder>
+   <zorder>line_3</zorder>
+   <zorder>line_4</zorder>
+   <zorder>line_5</zorder>
+   <zorder>line_6</zorder>
+   <zorder>label_3</zorder>
+   <zorder>label_4</zorder>
+   <zorder>label_5</zorder>
+   <zorder>status_sio</zorder>
+   <zorder>timeLabel</zorder>
+   <zorder>dailytenkenbutton_P5902A509</zorder>
+   <zorder>label_7</zorder>
+   <zorder>camcalibrationbutton1</zorder>
+   <zorder>camcalibrationbutton2</zorder>
+   <zorder>cameraMerge</zorder>
+   <zorder>P82833W050Pbutton</zorder>
+   <zorder>P82833W040Pbutton</zorder>
+   <zorder>P82832W090Pbutton</zorder>
+   <zorder>P82832W080Pbutton</zorder>
+   <zorder>P82833W040Pbutton_2</zorder>
+   <zorder>P82832W090Pbutton_2</zorder>
+   <zorder>P82833W050Pbutton_2</zorder>
+   <zorder>P82832W080Pbutton_2</zorder>
+   <zorder>label_8</zorder>
+   <zorder>P82833W050Pbutton_3</zorder>
+   <zorder>P82833W040Pbutton_3</zorder>
+   <zorder>P82832W080Pbutton_3</zorder>
+   <zorder>P82832W090Pbutton_3</zorder>
+   <zorder>label_9</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

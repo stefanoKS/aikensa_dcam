@@ -25,32 +25,30 @@ from aikensa.time_thread import TimeMonitorThread
 
 # List of UI files to be loaded
 UI_FILES = [
-    'aikensa/qtui/mainPage.ui', # index 0
-    'aikensa/qtui/calibration_cam1.ui', # index 1
-    'aikensa/qtui/calibration_cam2.ui', # index 2         
-    'aikensa/qtui/camera_merge.ui',            # index 3
-    "aikensa/qtui/empty.ui", #empty 4
-    "aikensa/qtui/P658107YA0A.ui",        # index 5
-    "aikensa/qtui/P808387YA0A.ui",        # index 6
-    "aikensa/qtui/P828387YA0A.ui", #empty 7
-    "aikensa/qtui/P828387YA6A.ui", #empty 8
-    "aikensa/qtui/P828397YA6A.ui", #empty 9
-    "aikensa/qtui/P828387YA1A.ui", #empty 10
-    "aikensa/qtui/P828397YA1A.ui", #empty 11
-    "aikensa/qtui/P731957YA0A.ui", #empty 12
-    "aikensa/qtui/P8462284S00.ui", #empty 13
-    "aikensa/qtui/empty.ui", #empty 14
-    "aikensa/qtui/empty.ui", #empty 15
-    "aikensa/qtui/empty.ui", #empty 16
+    'aikensa/qtui/mainPage.ui',         #index 0
+    'aikensa/qtui/calibration_cam1.ui', #index 1
+    'aikensa/qtui/calibration_cam2.ui', #index 2         
+    'aikensa/qtui/camera_merge.ui',     #index 3
+    "aikensa/qtui/empty.ui",            #empty 4
+    "aikensa/qtui/P82833W050P.ui",      #index 5
+    "aikensa/qtui/P82832W040P.ui",      #index 6
+    "aikensa/qtui/P82833W090P.ui",      #index 7
+    "aikensa/qtui/P82832W080P.ui",      #index 8
+    "aikensa/qtui/P82833W050PKENGEN.ui",      #index 9
+    "aikensa/qtui/P82832W040PKENGEN.ui",      #index 10
+    "aikensa/qtui/P82833W090PKENGEN.ui",      #index 11
+    "aikensa/qtui/P82832W080PKENGEN.ui",      #index 12
+    "aikensa/qtui/P82833W050PCLIPSOUNYUUKI.ui",      #index 13
+    "aikensa/qtui/P82832W040PCLIPSOUNYUUKI.ui",      #index 14
+    "aikensa/qtui/P82833W090PCLIPSOUNYUUKI.ui",      #index 15
+    "aikensa/qtui/P82832W080PCLIPSOUNYUUKI.ui",      #index 16
     "aikensa/qtui/empty.ui", #empty 17
     "aikensa/qtui/empty.ui", #empty 18
     "aikensa/qtui/empty.ui", #empty 19
     "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/P5902A509_dailyTenken_01.ui",  # index 21
-    "aikensa/qtui/P5902A509_dailyTenken_02.ui",  # index 22
-    "aikensa/qtui/P5902A509_dailyTenken_03.ui",  # index 23
-    "aikensa/qtui/P658207LE0A_dailyTenken_01.ui",  # index 24
-    "aikensa/qtui/P658207LE0A_dailyTenken_02.ui",  # index 25
+    "aikensa/qtui/dailyTenken2go3go_01.ui",  # index 21
+    "aikensa/qtui/dailyTenken2go3go_02.ui",  # index 22
+    "aikensa/qtui/dailyTenken2go3go_03.ui",  # index 23
 ]
 
 
@@ -83,15 +81,18 @@ class AIKensa(QMainWindow):
         self.initial_colors = {}#store initial colors of the labels
 
         self.widget_dir_map = {
-            5: "658107YA0A",
-            6: "808387YA0A",
-            7: "828387YA0A",
-            8: "828387YA6A",
-            9: "828397YA6A",
-            10: "828387YA1A",
-            11: "828397YA1A",
-            12: "731957YA0A",
-            13: "8462284S00"
+            5: "82833W050P",
+            6: "82832W040P",
+            7: "82833W090P",
+            8: "82832W080P",
+            9: "82833W050PKENGEN",
+            10: "82832W040PKENGEN",
+            11: "82833W090PKENGEN",
+            12: "82832W080PKENGEN",
+            13: "82833W050PCLIPSOUNYUUKI",
+            14: "82832W040PCLIPSOUNYUUKI",
+            15: "82833W090PCLIPSOUNYUUKI",
+            16: "82832W080PCLIPSOUNYUUKI",
         }
 
         self.prevTriggerStates = 0
@@ -149,20 +150,21 @@ class AIKensa(QMainWindow):
         self.inspection_thread.gaikanCam.connect(self._setFrameGaikan)
 
         self.inspection_thread.ethernetStatus.connect(self._setEthernetStatus)
-        
-        # self.inspection_thread.P5902A509_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P5902A509)
-        # self.inspection_thread.P658207LE0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P658207LE0A)
 
-        self.inspection_thread.P658107YA0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P658107YA0A)
-        self.inspection_thread.P808387YA0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P808387YA0A)
-        self.inspection_thread.P828387YA0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P828387YA0A)
-        self.inspection_thread.P828387YA6A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P828387YA6A)
-        self.inspection_thread.P828397YA6A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P828397YA6A)
-        self.inspection_thread.P828387YA1A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P828387YA1A)
-        self.inspection_thread.P828397YA1A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P828397YA1A)
-        self.inspection_thread.P731957YA0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P731957YA0A)
-        self.inspection_thread.P8462284S00_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P8462284S00)
+        self.inspection_thread.P82833W050P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W050P)
+        self.inspection_thread.P82832W040P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W040P)
+        self.inspection_thread.P82833W090P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W090P)
+        self.inspection_thread.P82832W080P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W080P)
 
+        self.inspection_thread.P82833W050PKENGEN_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W050PKENGEN)
+        self.inspection_thread.P82832W040PKENGEN_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W040PKENGEN)
+        self.inspection_thread.P82833W090PKENGEN_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W090PKENGEN)
+        self.inspection_thread.P82832W080PKENGEN_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W080PKENGEN)  
+
+        self.inspection_thread.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W050PCLIPSOUNYUUKI)
+        self.inspection_thread.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W040PCLIPSOUNYUUKI)
+        self.inspection_thread.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W090PCLIPSOUNYUUKI)
+        self.inspection_thread.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W080PCLIPSOUNYUUKI)
 
         self.inspection_thread.current_numofPart_signal.connect(self._update_OKNG_label)
         self.inspection_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
@@ -177,34 +179,38 @@ class AIKensa(QMainWindow):
 
         main_widget = self.stackedWidget.widget(0)
 
-        dailytenken01_P5902A509_widget = self.stackedWidget.widget(21)
-        dailytenken02_P5902A509_widget = self.stackedWidget.widget(22)
-        dailytenken03_P5902A509_widget = self.stackedWidget.widget(23)
-        dailytenken01_P658207LE0A_widget = self.stackedWidget.widget(24)
-        dailytenken02_P658207LE0A_widget = self.stackedWidget.widget(25)
+        dailyTenken2go3go_01_widget = self.stackedWidget.widget(21)
+        dailyTenken2go3go_02_widget = self.stackedWidget.widget(22)
+        dailyTenken2go3go_03_widget = self.stackedWidget.widget(23)
 
         cameraCalibration1_widget = self.stackedWidget.widget(1)
         cameraCalibration2_widget = self.stackedWidget.widget(2)
         mergeCamera_widget = self.stackedWidget.widget(3)
 
-        partInspection_P5902A509 = self.stackedWidget.widget(5)
-        partInspection_P5902A510 = self.stackedWidget.widget(6)
-        partInspection_P658207LE0A = self.stackedWidget.widget(7)
-        partInspection_P5819A107 = self.stackedWidget.widget(8)
+        partInspection_P82833W050P = self.stackedWidget.widget(5)
+        partInspection_P82832W040P = self.stackedWidget.widget(6)
+        partInspection_P82833W090P = self.stackedWidget.widget(7)
+        partInspection_P82832W080P = self.stackedWidget.widget(8)
+
+        partInspection_P82833W050PKENGEN = self.stackedWidget.widget(9)
+        partInspection_P82832W040PKENGEN = self.stackedWidget.widget(10)
+        partInspection_P82833W090PKENGEN = self.stackedWidget.widget(11)
+        partInspection_P82832W080PKENGEN = self.stackedWidget.widget(12)
+
+        partInspection_P82833W050PCLIPSOUNYUUKI = self.stackedWidget.widget(13)
+        partInspection_P82832W040PCLIPSOUNYUUKI = self.stackedWidget.widget(14)
+        partInspection_P82833W090PCLIPSOUNYUUKI = self.stackedWidget.widget(15)
+        partInspection_P82832W080PCLIPSOUNYUUKI = self.stackedWidget.widget(16)
 
         cameraCalibration1_button = main_widget.findChild(QPushButton, "camcalibrationbutton1")
         cameraCalibration2_button = main_widget.findChild(QPushButton, "camcalibrationbutton2")
         mergeCamera_button = main_widget.findChild(QPushButton, "cameraMerge")
 
+        dailytenken01_button = main_widget.findChild(QPushButton, "dailytenkenbutton_P5902A509")
+        dailytenken02_button = dailyTenken2go3go_01_widget.findChild(QPushButton, "nextButton")
+        dailytenken03_button = dailyTenken2go3go_02_widget.findChild(QPushButton, "nextButton")
+        dailytenken_kanryou_button = dailyTenken2go3go_03_widget.findChild(QPushButton, "finishButton")
 
-        dailytenken01_P5902A509_button = main_widget.findChild(QPushButton, "dailytenkenbutton_P5902A509")
-        dailytenken02_P5902A509_button = dailytenken01_P5902A509_widget.findChild(QPushButton, "nextButton")
-        dailytenken03_P5902A509_button = dailytenken02_P5902A509_widget.findChild(QPushButton, "nextButton")
-        dailytenken_kanryou_P5902A509_button = dailytenken03_P5902A509_widget.findChild(QPushButton, "finishButton")
-
-        dailytenken01_P658207LE0A_button= main_widget.findChild(QPushButton, "dailytenkenbutton_P658207LE0A")
-        dailytenken02_P658207LE0A_button = dailytenken01_P658207LE0A_widget.findChild(QPushButton, "nextButton")
-        dailytenken_kanryou_P658207LE0A_button = dailytenken02_P658207LE0A_widget.findChild(QPushButton, "finishButton")
 
         if cameraCalibration1_button:
             cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
