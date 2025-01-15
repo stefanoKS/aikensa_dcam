@@ -1,18 +1,32 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 import socket
 import time
+from dataclasses import dataclass, field
+
+@dataclass
+class ServerConfig:
+    eth_flag_0_4: list = field(default_factory=lambda: [0]*5)
+    eth_flag_5_9: list = field(default_factory=lambda: [0]*5)
+    eth_flag_10_14: list = field(default_factory=lambda: [0]*5)
+
 
 class ServerMonitorThread(QThread):
     server_status_signal = pyqtSignal(bool)  # True if server is up, False if down
     input_states_signal = pyqtSignal(list)  # Signal to emit the input states
 
-    def __init__(self, server_ip, server_port, check_interval=1):
-        super().__init__()
+    def __init__(self, server_ip, server_port, check_interval=1, server_config: ServerConfig = None):
+        super(ServerMonitorThread, self).__init__()
         self.server_ip = server_ip
         self.server_port = server_port
         self.check_interval = check_interval
         self.running = True
         self.sock = None
+        self.ethernet_flag = []
+
+        if server_config is None:
+            self.server_config = ServerConfig()
+        else:
+            self.server_config = server_config
 
 
     def reconnect(self):
@@ -47,6 +61,22 @@ class ServerMonitorThread(QThread):
         command = f"@W04{hex_string}000000000000\r\n"
         
         return command
+
+    def binary_flags_to_hex_command(self, ethernet_flag):
+        hex_digits = []
+        for i in range(0, len(ethernet_flag), 4):
+
+            binary_slice = ethernet_flag[i:i+4]
+            binary_slice.reverse()
+
+            hex_digit = hex(int(''.join(str(bit) for bit in binary_slice), 2))[2:].upper()
+            hex_digits.append(hex_digit)
+
+        hex_string = ''.join(hex_digits)
+        command = f"@W04{hex_string}000000000000\r\n"
+        
+        return command
+        
 
     def hex_to_binary(self, hex_value):
         return bin(int(hex_value, 16))[2:].zfill(4)
@@ -108,11 +138,17 @@ class ServerMonitorThread(QThread):
 
                 input_states, output_states = self.parse_io_states(response)
                 self.input_states_signal.emit(input_states)
+
+                # print("Input states:", input_states)
+                # print("Output states:", output_states)
                 
                 # Example to write based on input states (customize as needed)
                 # Here you could decide when to write based on input states or other logic
 
-                EtherCommand = self.binary_states_to_hex_command(input_states)
+                self.ethernet_flag = self.server_config.eth_flag_0_4 + self.server_config.eth_flag_5_9 + self.server_config.eth_flag_10_14
+                # print("Ethernet Flag:", self.ethernet_flag)
+
+                EtherCommand = self.binary_flags_to_hex_command(self.ethernet_flag)
                 # print ("send ether Command:", EtherCommand)
                 ether_response = self.send_command(EtherCommand)
                 # print ("Received Ether Response:", ether_response)
