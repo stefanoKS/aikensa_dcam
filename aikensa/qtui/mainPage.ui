@@ -321,7 +321,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="dailytenkenbutton_P5902A509">
+   <widget class="QPushButton" name="dailytenkenbutton">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -464,7 +464,7 @@ Camera Merge</string>
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82833W040Pbutton">
+   <widget class="QPushButton" name="P82833W090Pbutton">
     <property name="geometry">
      <rect>
       <x>70</x>
@@ -488,7 +488,7 @@ W/STRIP-RR DOOR, LH</string>
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82832W090Pbutton">
+   <widget class="QPushButton" name="P82832W040Pbutton">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -536,7 +536,7 @@ W/STRIP-RR DOOR, LH</string>
  W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82833W040Pbutton_2">
+   <widget class="QPushButton" name="P82833W090PKENGENbutton">
     <property name="geometry">
      <rect>
       <x>680</x>
@@ -560,7 +560,7 @@ W/STRIP-RR DOOR, LH</string>
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82832W090Pbutton_2">
+   <widget class="QPushButton" name="P82832W040PKENGENbutton">
     <property name="geometry">
      <rect>
       <x>920</x>
@@ -584,7 +584,7 @@ W/STRIP-RR DOOR, LH</string>
  W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82833W050Pbutton_2">
+   <widget class="QPushButton" name="P82833W050PKENGENbutton">
     <property name="geometry">
      <rect>
       <x>680</x>
@@ -608,7 +608,7 @@ W/STRIP-RR DOOR, LH</string>
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82832W080Pbutton_2">
+   <widget class="QPushButton" name="P82832W080PKENGENbutton">
     <property name="geometry">
      <rect>
       <x>920</x>
@@ -659,7 +659,7 @@ W/STRIP-RR DOOR, LH</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82833W050Pbutton_3">
+   <widget class="QPushButton" name="P82833W050PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
       <x>1240</x>
@@ -683,7 +683,7 @@ W/STRIP-RR DOOR, LH</string>
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82833W040Pbutton_3">
+   <widget class="QPushButton" name="P82833W090PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
       <x>1240</x>
@@ -707,7 +707,7 @@ W/STRIP-RR DOOR, LH</string>
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82832W080Pbutton_3">
+   <widget class="QPushButton" name="P82832W080PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
       <x>1480</x>
@@ -731,7 +731,7 @@ W/STRIP-RR DOOR, LH</string>
  W/STRIP-RR DOOR, RH</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82832W090Pbutton_3">
+   <widget class="QPushButton" name="P82832W040PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
       <x>1480</x>
@@ -847,24 +847,24 @@ W/STRIP-RR DOOR, LH</string>
    <zorder>label_5</zorder>
    <zorder>status_sio</zorder>
    <zorder>timeLabel</zorder>
-   <zorder>dailytenkenbutton_P5902A509</zorder>
+   <zorder>dailytenkenbutton</zorder>
    <zorder>label_7</zorder>
    <zorder>camcalibrationbutton1</zorder>
    <zorder>camcalibrationbutton2</zorder>
    <zorder>cameraMerge</zorder>
    <zorder>P82833W050Pbutton</zorder>
-   <zorder>P82833W040Pbutton</zorder>
-   <zorder>P82832W090Pbutton</zorder>
+   <zorder>P82833W090Pbutton</zorder>
+   <zorder>P82832W040Pbutton</zorder>
    <zorder>P82832W080Pbutton</zorder>
-   <zorder>P82833W040Pbutton_2</zorder>
-   <zorder>P82832W090Pbutton_2</zorder>
-   <zorder>P82833W050Pbutton_2</zorder>
-   <zorder>P82832W080Pbutton_2</zorder>
+   <zorder>P82833W090PKENGENbutton</zorder>
+   <zorder>P82832W040PKENGENbutton</zorder>
+   <zorder>P82833W050PKENGENbutton</zorder>
+   <zorder>P82832W080PKENGENbutton</zorder>
    <zorder>label_8</zorder>
-   <zorder>P82833W050Pbutton_3</zorder>
-   <zorder>P82833W040Pbutton_3</zorder>
-   <zorder>P82832W080Pbutton_3</zorder>
-   <zorder>P82832W090Pbutton_3</zorder>
+   <zorder>P82833W050PCLIPSOUNYUUKIbutton</zorder>
+   <zorder>P82833W090PCLIPSOUNYUUKIbutton</zorder>
+   <zorder>P82832W080PCLIPSOUNYUUKIbutton</zorder>
+   <zorder>P82832W040PCLIPSOUNYUUKIbutton</zorder>
    <zorder>label_9</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -873,7 +873,7 @@ W/STRIP-RR DOOR, LH</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
