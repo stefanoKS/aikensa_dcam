@@ -196,8 +196,8 @@ class CalibrationThread(QThread):
             self.cap_cam2.release()
             print(f"Camera 2 released.")
         
-        self.cap_cam1 = initialize_camera(0)
-        self.cap_cam2 = initialize_camera(2)
+        self.cap_cam1 = initialize_camera(2)
+        self.cap_cam2 = initialize_camera(0)
 
         if not self.cap_cam1.isOpened():
             print(f"Failed to open camera with ID 1")
@@ -337,9 +337,9 @@ class CalibrationThread(QThread):
                     self.current_cameraID = self.calib_config.cameraID
                     # self.initialize_single_camera(self.current_cameraID)
                     if self.calib_config.widget == 1:
-                        self.initialize_single_camera(0)
+                        self.initialize_single_camera(2)
                     if self.calib_config.widget == 2:
-                        self.initialize_single_camera(1)
+                        self.initialize_single_camera(0)
                   
                 if self.cap_cam is not None:
                     try:
