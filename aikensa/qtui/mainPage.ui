@@ -365,7 +365,7 @@ Daily Check</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>日産自動車</string>
+     <string>三菱自動車</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -653,7 +653,7 @@ W/STRIP-RR DOOR, LH</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>日産自動車 - 権限必要</string>
+     <string>三菱自動車 - 権限必要</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -776,7 +776,7 @@ W/STRIP-RR DOOR, LH</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>日産自動車 - クリップ挿入機</string>
+     <string>三菱自動車 - クリップ挿入機</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -873,7 +873,7 @@ W/STRIP-RR DOOR, LH</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

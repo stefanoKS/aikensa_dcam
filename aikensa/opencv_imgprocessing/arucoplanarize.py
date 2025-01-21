@@ -173,16 +173,16 @@ def planarize_image_wide(image, target_width, target_height, top_offset, bottom_
             marker_id = i[0]
             if marker_id == 0:
                 # Top left corner of marker 0
-                top_left_corner = corner[0][3]
+                top_left_corner = corner[0][0]
             elif marker_id == 1:
                 # Top right corner of marker 1
-                top_right_corner = corner[0][2]
+                top_right_corner = corner[0][1]
             elif marker_id == 2:
                 # Bottom left corner of marker 2
-                bottom_left_corner = corner[0][0]
+                bottom_left_corner = corner[0][3]
             elif marker_id == 3:
                 # Bottom right corner of marker 3
-                bottom_right_corner = corner[0][1]
+                bottom_right_corner = corner[0][2]
 
         if top_left_corner is not None and top_right_corner is not None \
         and bottom_left_corner is not None and bottom_right_corner is not None:

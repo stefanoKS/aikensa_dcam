@@ -2,6 +2,7 @@ import stat
 import numpy as np
 import cv2
 import math
+from torch import normal
 import yaml
 import os
 import pygame
@@ -15,48 +16,66 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
+pitchSpec_050P = [85, 87, 98, 98, 78, 113, 103]
+pitchSpec_040P = [103, 113, 78, 98, 98, 87, 85]
+pitchSpec_090P = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28]
+pitchSpec_080P = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85]
 
-pitchSpecRH = [14, 130, 132, 132, 59, 61, 97, 83, 20, 708]
-pitchSpecLH = [83, 97, 61, 59, 132, 132, 130, 14, 20, 708] #20 is katabu
-pitchSpecKatabu = [20]
+pitchSpec_050PKENGEN = [85, 87, 98, 98, 78, 113, 103]
+pitchSpec_040PKENGEN = [103, 113, 78, 98, 98, 87, 85]
+pitchSpec_090PKENGEN = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28]
+pitchSpec_080PKENGEN = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85, 14]
 
-idSpec = [0, 0, 0, 0, 0]
+pitchSpec_050PCLIPSOUNYUUKI = [87, 98, 98, 78, 113, 103]
+pitchSpec_040PCLIPSOUNYUUKI = [103, 113, 78, 98, 98, 87]
+pitchSpec_090PCLIPSOUNYUUKI = [87, 98, 98, 78, 61, 52, 38, 37, 28]
+pitchSpec_080PCLIPSOUNYUUKI = [28, 37, 38, 52, 61, 78, 98, 98, 87]
 
-tolerance_pitchRH = [1.7] * 10
-tolerance_pitchRH[0] = 3.0
-tolerance_pitchRH[-1] = 10.0
-tolerance_pitchRH[-2] = 2.0
+pitchTolerance_050P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_040P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0]
+pitchTolerance_090P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_080P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0, 1.7]
 
-tolerance_pitchLH = [1.7] * 10
-tolerance_pitchLH[-3] = 3.0
-tolerance_pitchLH[-2] = 2.0
-tolerance_pitchLH[-1] = 10.0
+pitchTolerance_050PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_040PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_090PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_080PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
 
-tolerance_pitchKatabu = [2.0]
+clipSpec_050P = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
+clipSpec_040P = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2]
+clipSpec_090P = [2, 1, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 1]
+clipSpec_080P = [0, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 2]
+
+clipSpec_050PCLIPSOUNYUUKI = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
+clipSpec_040PCLIPSOUNYUUKI = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2]
+clipSpec_090PCLIPSOUNYUUKI = [2, 1, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 1]
+clipSpec_080PCLIPSOUNYUUKI = [0, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 2]
+
+pitchSpec_Katabu = [14]
+pitchTolerance_Katabu = [1.7]
 
 color = (0, 255, 0)
 text_offset = 40
 endoffset_y = 0
 bbox_offset = 10
 
-segmentation_width = 1640
+# segmentation_width = 1640
 
-pixelMultiplier = 0.16413
-pixelMultiplier_katabumarking = 0.16413
+pixelMultiplier = 0.1607
+pixelMultiplier_katabumarking = 0.1607
 
-def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katabumarking_detection, side):
 
-    if side == "LH":
-        pitchSpec = pitchSpecLH
-        tolerance_pitch = tolerance_pitchLH
-    elif side == "RH":
-        pitchSpec = pitchSpecRH
-        tolerance_pitch = tolerance_pitchRH
+def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detection, partname):
+        
+    print(f"Partname: {partname}")
+
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
+
     katabumarking_lengths = []
 
     detectedid = []
+    idSpec = []
 
     measuredPitch = []
     resultPitch = []
@@ -86,9 +105,74 @@ def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katab
     status = "OK"
     print_status = ""
 
-    # cannydetection_image = image.copy() #Make sure to copy the image to avoid modifying the original image
-
     combined_infer_mask = None
+
+    if partname == "P82833W050P":
+        pitchSpec = pitchSpec_050P
+        tolerance_pitch = pitchTolerance_050P
+        idSpec = clipSpec_050P
+
+    elif partname == "P82832W040P":
+        pitchSpec = pitchSpec_040P
+        tolerance_pitch = pitchTolerance_040P
+        idSpec = clipSpec_040P
+
+    elif partname == "P82833W090P":
+        pitchSpec = pitchSpec_090P
+        tolerance_pitch = pitchTolerance_090P
+        idSpec = clipSpec_090P
+
+    elif partname == "P82832W080P":
+        pitchSpec = pitchSpec_080P
+        tolerance_pitch = pitchTolerance_080P
+        idSpec = clipSpec_080P
+
+
+
+    elif partname == "P82833W050PKENGEN":
+        pitchSpec = pitchSpec_050PKENGEN
+        tolerance_pitch = pitchTolerance_050P
+        idSpec = clipSpec_050P
+
+    elif partname == "P82832W040PKENGEN":
+        pitchSpec = pitchSpec_040PKENGEN
+        tolerance_pitch = pitchTolerance_040P
+        idSpec = clipSpec_040P
+
+    elif partname == "P82833W090PKENGEN":
+        pitchSpec = pitchSpec_090PKENGEN
+        tolerance_pitch = pitchTolerance_090P
+        idSpec = clipSpec_090P
+    
+    elif partname == "P82832W080PKENGEN":
+        pitchSpec = pitchSpec_080PKENGEN
+        tolerance_pitch = pitchTolerance_080P
+        idSpec = clipSpec_080P
+
+
+
+    elif partname == "P82833W050PCLIPSOUNYUUKI":
+        pitchSpec = pitchSpec_050PCLIPSOUNYUUKI
+        tolerance_pitch = pitchTolerance_050PCLIPSOUNYUUKI
+        idSpec = clipSpec_050P
+
+    elif partname == "P82832W040PCLIPSOUNYUUKI":
+        pitchSpec = pitchSpec_040PCLIPSOUNYUUKI
+        tolerance_pitch = pitchTolerance_040PCLIPSOUNYUUKI
+        idSpec = clipSpec_040P
+
+    elif partname == "P82833W090PCLIPSOUNYUUKI":
+        pitchSpec = pitchSpec_090PCLIPSOUNYUUKI
+        tolerance_pitch = pitchTolerance_090PCLIPSOUNYUUKI
+        idSpec = clipSpec_090P
+
+    elif partname == "P82832W080PCLIPSOUNYUUKI":
+        pitchSpec = pitchSpec_080PCLIPSOUNYUUKI
+        tolerance_pitch = pitchTolerance_080PCLIPSOUNYUUKI
+        idSpec = clipSpec_080P
+
+
+
 
     #KATABU MARKING DETECTION
     #class 0 is for clip, class 1 is for katabu marking
@@ -97,8 +181,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katab
             x_marking, y_marking = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
             w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
             class_id_marking = int(box.cls.cpu())
-
-            # print(class_id_marking)
 
             if class_id_marking == 0:
                 color = (0, 255, 0)
@@ -112,7 +194,10 @@ def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katab
                                        bbox_offset=3, thickness=2)
 
             if class_id_marking == 1:
-                center_katabummarking = (int(x_marking), int(y_marking))
+                if partname in ["P82833W050P", "P82833W090P", "P82833W050PKENGEN", "P82833W090PKENGEN"]:
+                    center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
+                elif partname in ["P82832W040P", "P82832W080P", "P82832W040PKENGEN", "P82832W080PKEGEN"]:
+                    center_katabummarking = (int(x_marking + w_marking/2), int(y_marking))
             
             if prev_center_katabumarking is not None:
                 length = calclength(prev_center_katabumarking, center_katabummarking)*pixelMultiplier_katabumarking
@@ -126,7 +211,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katab
             detectedposX_katabumarking.append(center_katabummarking[0])
             detectedposY_katabumarking.append(center_katabummarking[1])
   
-        katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpecKatabu, tolerance_pitchKatabu)
+        katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpec_Katabu, pitchTolerance_Katabu)
 
         xy_pairs_katabumarking = list(zip(detectedposX_katabumarking, detectedposY_katabumarking))
         draw_pitch_line(img_katabumarking, xy_pairs_katabumarking, katabupitchresult, thickness=2)
@@ -134,114 +219,67 @@ def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katab
         #pick only the first element if array consists of more than 1 element -> detection POKAYOKE (if detection is not that great)
         if len(katabumarking_lengths) > 1:
             katabumarking_lengths = katabumarking_lengths[:1]
-
         #since there is only one katabu marking, we can just use the first element -> detection POKAYOKE (if detection is not that great)
-        print (f"Katabu Marking Length: {katabumarking_lengths}")
     
-    for m in Segmentation:
-        if m.masks is not None:
-            orig_shape = (image.shape[0], segmentation_width)
-            segmentation_xyn = m.masks.xyn
-            mask = create_masks(segmentation_xyn, orig_shape)
-            if combined_infer_mask is None:
-                combined_infer_mask = np.zeros_like(mask)
-            combined_infer_mask = cv2.bitwise_or(combined_infer_mask, mask)
-            # cv2.imwrite("leftmask.jpg", combined_mask)
-
-        if m.masks is None:
-            print_status = print_status + " 製品は見つかりません"
-            status = "NG"
-            resultPitch = [0] * (len(pitchSpec)+1)
-            measuredPitch = [0] * (len(pitchSpec)+1)
-
-            image = draw_status_text_PIL(image, status, print_status, size="normal")
-
-            return image, measuredPitch, resultPitch, deltaPitch, status
-
         
-    combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
-
-    if combined_mask is not None:
-        if side == "RH":
-            combined_mask[:, :segmentation_width] = combined_infer_mask 
-        if side == "LH":    
-            combined_mask[:, -segmentation_width:] = combined_infer_mask 
-
     for i, detection in enumerate(sorted_detections):
         detectedid.append(detection.category.id)
-        if side == "RH":
-            if detection.category.id == 0:
-                bbox = detection.bbox
-                x, y = get_center(bbox)
-                w = bbox.maxx - bbox.minx
-                h = bbox.maxy - bbox.miny
+        bbox = detection.bbox
+        x, y = get_center(bbox)
+        w = bbox.maxx - bbox.minx
+        h = bbox.maxy - bbox.miny
 
-                detectedposX.append(x)
-                detectedposY.append(y)
-                detectedWidth.append(w)
+        detectedposX.append(x)
+        detectedposY.append(y)
+        detectedWidth.append(w)
 
-                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+        center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
 
-                if prev_center is not None:
-                    length = calclength(prev_center, center)*pixelMultiplier
-                    measuredPitch.append(length)
-                prev_center = center
+        if prev_center is not None:
+            length = calclength(prev_center, center)*pixelMultiplier
+            measuredPitch.append(length)
+        prev_center = center
 
-        if side == "LH":
-            if detection.category.id == 1:
-                bbox = detection.bbox
-                x, y = get_center(bbox)
-                w = bbox.maxx - bbox.minx
-                h = bbox.maxy - bbox.miny
+    #POP The first and last element for the KENGEN and normal
+    if partname in ["P82833W050P", "P82832W040P", "P82833W090P", "P82832W080P", "P82833W050PKENGEN", "P82832W040PKENGEN", "P82833W090PKENGEN", "P82832W080PKENGEN"]:
+        #Pop the first and last element
+        detectedposX.pop(0)
+        detectedposX.pop(-1)
+        detectedposY.pop(0)
+        detectedposY.pop(-1)
+        detectedWidth.pop(0)
+        detectedWidth.pop(-1)
+        measuredPitch.pop(0)
+        measuredPitch.pop(-1)
 
-                detectedposX.append(x)
-                detectedposY.append(y)
-                detectedWidth.append(w)
+        print("Element Popped")
 
-                center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+        
+    if detectedid != idSpec:
+        status = "NG"
+        print_status = "NG クリップ入れ間違い"
+        print(f"Status:{print_status}")
+        measuredPitch = [0] * len(pitchSpec)
+        resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        draw_status_text_PIL(image, status, print_status, size = "normal")
 
-                if prev_center is not None:
-                    length = calclength(prev_center, center)*pixelMultiplier
-                    measuredPitch.append(length)
-                prev_center = center
+        return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
+    
+    # if len(measuredPitch) != len(pitchSpec):
+    #     status = "NG"
+    #     print_status = "NG クリップ数"
+    #     print(f"Status:{print_status}")
+    #     measuredPitch = [0] * len(pitchSpec)
+    #     resultPitch = [0] * len(pitchSpec)
+    #     resultid = [0] * len(idSpec)
+    #     draw_status_text_PIL(image, status, print_status, size = "normal")
 
-    #Check if detectedposX is not empty
-    if len(detectedposX) > 0:
-        leftmostCenter = (detectedposX[0], detectedposY[0])
-        leftmostWidth = detectedWidth[0]
-        rightmostCenter = (detectedposX[-1], detectedposY[-1])
-        rightmostWidth = detectedWidth[-1]
-        adjustment_offset = 5 # to make sure it goes above the clip itself
-        # left_edge = find_edge_point(cannydetection_image, leftmostCenter, direction="left", Yoffsetval = 0, Xoffsetval = leftmostWidth + adjustment_offset)
-        # right_edge = find_edge_point(cannydetection_image, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = rightmostWidth + adjustment_offset)
-
-        # Positive Yoffsetval means going down, negative means going up
-        if side == "RH":
-            left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = 0, Xoffsetval = 0)
-            leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
-            measuredPitch.insert(0, leftmostPitch)
-            detectedposX.insert(0, left_edge[0])
-            detectedposY.insert(0, left_edge[1])
-            # remove the most right of the measured pitch
-            measuredPitch.pop(-1)
-            
-        if side == "LH":
-            right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = 0)
-            rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
-            measuredPitch.append(rightmostPitch)
-            detectedposX.append(right_edge[0])
-            detectedposY.append(right_edge[1])
-            # remove the most left of the measured pitch
-            measuredPitch.pop(0)
-
-    #add total length
-    #round the value to 1 decimal
-    totalLength = sum(measuredPitch)
-
+    #     return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
+    
     if katabumarking_lengths[0] != 0:
         measuredPitch.append(round(katabumarking_lengths[0], 1))
 
-    measuredPitch.append(round(totalLength, 1))
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
     # print(f"Measured Pitch: {measuredPitch}")
 
@@ -252,28 +290,23 @@ def partcheck(image, img_katabumarking, sahi_predictionList, Segmentation, katab
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         resultid = check_id(detectedid, idSpec)
+        print(f"Result Pitch: {resultPitch}")
+        print(f"Result ID: {resultid}")
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)
 
     if any(result != 1 for result in resultPitch):
-        flag_pitch_furyou = 1
+        print_status = "ピッチ不良"
+        print(f"Status:{print_status}")
+        draw_status_text_PIL(image, status, print_status, size = "normal")
         status = "NG"
 
-    # if any(result != 1 for result in resultid):
-    #     flag_clip_furyou = 1
-    #     status = "NG"
-    #remove first element if LH remove last element if RH
-    if side == "LH":
-        detectedposX.pop(0)
-        detectedposY.pop(0)
-    if side == "RH":
-        detectedposX.pop(-1)
-        detectedposY.pop(-1)
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
     
     return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
+
 
 def draw_status_text_PIL(image, status, print_status, size = "normal"):
 

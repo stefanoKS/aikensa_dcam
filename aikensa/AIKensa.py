@@ -243,7 +243,7 @@ class AIKensa(QMainWindow):
             "P82833W050Pbutton": {"widget_index": 5, "inspection_param": 5},
             "P82832W040Pbutton": {"widget_index": 6, "inspection_param": 6},
             "P82833W090Pbutton": {"widget_index": 7, "inspection_param": 7},
-            "P82832W080PPbutton": {"widget_index": 8, "inspection_param": 8},
+            "P82832W080Pbutton": {"widget_index": 8, "inspection_param": 8},
             "P82833W050PKENGENbutton": {"widget_index": 9, "inspection_param": 9},
             "P82832W040PKENGENbutton": {"widget_index": 10, "inspection_param": 10},
             "P82833W090PKENGENbutton": {"widget_index": 11, "inspection_param": 11},
@@ -285,7 +285,7 @@ class AIKensa(QMainWindow):
 
         self.siostatus_server = [self.stackedWidget.widget(i).findChild(QLabel, "status_sio") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]]
 
-        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]
+        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
         for i in self.inspection_widget_indices:
             self.Inspect_button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButton")
@@ -303,6 +303,10 @@ class AIKensa(QMainWindow):
             self.connect_inspectionConfig_button(i, "furyou_minus_10", "furyou_minus_10", True)
             #connect reset button
             self.connect_inspectionConfig_button(i, "counterReset", "counterReset", True)
+
+            self.connect_line_edit_text_changed(widget_index=i, line_edit_name="kensain_name", inspection_param="kensainNumber")
+
+        
 
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
@@ -354,11 +358,11 @@ class AIKensa(QMainWindow):
         else:
             print(f"Button '{qtbutton}' not found.")
 
-    def connect_line_edit_text_changed(self, widget_index, line_edit_name, cam_param):
+    def connect_line_edit_text_changed(self, widget_index, line_edit_name, inspection_param):
         widget = self.stackedWidget.widget(widget_index)
         line_edit = widget.findChild(QLineEdit, line_edit_name)
         if line_edit:
-            line_edit.textChanged.connect(lambda text: self._set_cam_params(self.cam_thread, cam_param, text))
+            line_edit.textChanged.connect(lambda text: self._set_inspection_params(self.inspection_thread, inspection_param, text))
 
     def connect_inspectionConfig_button(self, widget_index, button_name, cam_param, value):
         widget = self.stackedWidget.widget(widget_index)
@@ -508,7 +512,7 @@ class AIKensa(QMainWindow):
 
 #7
     def _outputMeasurementText_P82833W090P(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
         for widget_index in [7]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -543,7 +547,7 @@ class AIKensa(QMainWindow):
 
 #8
     def _outputMeasurementText_P82832W080P(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
         for widget_index in [8]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
@@ -579,7 +583,7 @@ class AIKensa(QMainWindow):
 #9
     def _outputMeasurementText_P82833W050PKENGEN(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
-        for widget_index in [5]:
+        for widget_index in [9]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -614,7 +618,7 @@ class AIKensa(QMainWindow):
 #10
     def _outputMeasurementText_P82832W040PKENGEN(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
-        for widget_index in [6]:
+        for widget_index in [10]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -648,8 +652,8 @@ class AIKensa(QMainWindow):
 
 #11
     def _outputMeasurementText_P82833W090PKENGEN(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
-        for widget_index in [7]:
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
+        for widget_index in [11]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -683,8 +687,8 @@ class AIKensa(QMainWindow):
 
 #12
     def _outputMeasurementText_P82832W080PKENGEN(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
-        for widget_index in [8]:
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
+        for widget_index in [12]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -719,7 +723,7 @@ class AIKensa(QMainWindow):
 #13
     def _outputMeasurementText_P82833W050PCLIPSOUNYUUKI(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
-        for widget_index in [5]:
+        for widget_index in [13]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -754,7 +758,7 @@ class AIKensa(QMainWindow):
 #14
     def _outputMeasurementText_P82832W040PCLIPSOUNYUUKI(self, measurementValue, measurementResult):
         label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label"]
-        for widget_index in [6]:
+        for widget_index in [14]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -788,8 +792,8 @@ class AIKensa(QMainWindow):
 
 #15
     def _outputMeasurementText_P82833W090PCLIPSOUNYUUKI(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
-        for widget_index in [7]:
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
+        for widget_index in [15]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -823,8 +827,8 @@ class AIKensa(QMainWindow):
 
 #16
     def _outputMeasurementText_P82832W080PCLIPSOUNYUUKI(self, measurementValue, measurementResult):
-        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label"]
-        for widget_index in [8]:
+        label_names_part = ["P1label", "P2label", "P3label", "P4label", "P5label", "P6label", "P7label", "P8label", "P9label", "P10label", "P11label"]
+        for widget_index in [16]:
             # Loop through the label names (P1label, P2label, etc.)
             for label_index, label_name in enumerate(label_names_part):
                 # Find the QLabel in the specified widget
@@ -899,7 +903,7 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setPartFrame(self, image):
-        for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]:
+        for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "framePart")
             label.setPixmap(QPixmap.fromImage(image))

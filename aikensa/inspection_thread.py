@@ -155,19 +155,20 @@ class InspectionThread(QThread):
         self.katabuImageR = None
         self.katabuImageL_scaled = None
         self.katabuImageR_scaled = None
+        
+        self.katabuImage = None
 
         #Crop format: X Y W H OUTW OUTH
-        self.katabuImageL_Crop = [450, 260, 320, 160, 320, 160]
-        self.katabuImageR_Crop = [3800, 260, 320, 160, 320, 160]
+        self.katabuImageL_Crop = np.array([620, 350, 320, 160, 320, 160])
+        self.katabuImageR_Crop = np.array([3800, 350, 320, 160, 320, 160])
 
         self.clipImage1 = None
         self.clipImage2 = None
         self.clipImage3 = None
 
-        self.clipImage1_Crop = [590, 0, 600, 600, 128, 128]
-        self.clipImage2_Crop = [1900, 0, 600, 600, 128, 128]
-        self.clipImage3_Crop = [600, 0, 600, 600, 128, 128]
-
+        self.clipImage1_Crop = np.array([590, 0, 600, 600, 128, 128])
+        self.clipImage2_Crop = np.array([1900, 0, 600, 600, 128, 128])
+        self.clipImage3_Crop = np.array([600, 0, 600, 600, 128, 128])
 
         # self.combinedImage_narrow = None
         # self.combinedImage_narrow_scaled = None
@@ -186,7 +187,7 @@ class InspectionThread(QThread):
         self.scaled_height = None
 
         self.narrow_planarize = (531, 2646)
-        self.wide_planarize = (531, 6491)
+        self.wide_planarize = (1342, 5672)
 
         self.planarizeTransform_narrow = None
         self.planarizeTransform_narrow_scaled = None
@@ -221,7 +222,7 @@ class InspectionThread(QThread):
         self.InspectionResult_EndSegmentation_Right = [None]*5
 
         self.InspectionResult_ClipDetection = [None]*30
-        self.InspectioNResult_KatabuDetection = [None]*30
+        self.InspectionResult_KatabuDetection = [None]*30
         self.InspectionResult_Segmentation = [None]*30
         self.InspectionResult_Hanire = [None]*30
 
@@ -248,10 +249,19 @@ class InspectionThread(QThread):
             16: "82832W080PCLIPSOUNYUUKI",
         }
 
+        #for widget name map, append the string "P" to the initial widget dir map
+        self.widget_name_map = {key: f"P{value}" for key, value in self.widget_dir_map.items()}
+
         self.InspectionWaitTime = 1.0
         self.InspectionTimeStart = None
 
         self.ethernetTrigger = [0]*5
+
+        
+        self.cam_config_file = "aikensa/camscripts/cam_config.yaml"
+        
+        with open(self.cam_config_file, 'r') as file:
+            self.cam_map = yaml.safe_load(file)
 
 
     def release_all_camera(self):
@@ -286,17 +296,20 @@ class InspectionThread(QThread):
             self.cap_cam2.release()
             print(f"Camera 2 released.")
 
-        self.cap_cam1 = initialize_camera(0)
-        self.cap_cam2 = initialize_camera(2)
+        actual_camID = self.cam_map.get(0, -1)
+        self.cap_cam1 = initialize_camera(actual_camID)
+
+        actual_camID = self.cam_map.get(1, -1)
+        self.cap_cam2 = initialize_camera(actual_camID)
 
         if not self.cap_cam1.isOpened():
-            print(f"Failed to open camera with ID 1, problem with camera 1.")
+            print(f"Failed to open camera with ID 1")
             self.cap_cam1 = None
         else:
             print(f"Initialized Camera on ID 1")
 
         if not self.cap_cam2.isOpened():
-            print(f"Failed to open camera with ID 2, problem with camera 2.")
+            print(f"Failed to open camera with ID 2")
             self.cap_cam2 = None
         else:
             print(f"Initialized Camera on ID 2")
@@ -494,27 +507,29 @@ class InspectionThread(QThread):
                         self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
 
                         self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_wide_scaled, (int(self.wide_planarize[1]/(self.scale_factor)), int(self.wide_planarize[0]/(self.scale_factor))))
-   
                         if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12]: # emit katabu
                             if self.inspection_config.widget in [5, 7, 9, 11]:
                                 #katabu L is blank
                                 #katabu R is cropped image
                                 self.katabuImageL_scaled = self.createBlackImage(width=256, height=128)
-                                self.katabuImageR_scaled = self.frameCrop(self.combinedImage_scaled, self.katabuImageR_Crop)
-
+                                self.katabuImageR_scaled = self.frameCrop(self.combinedImage_scaled, self.katabuImageR_Crop[0]/self.scale_factor, self.katabuImageR_Crop[1]/self.scale_factor, self.katabuImageR_Crop[2]/self.scale_factor, self.katabuImageR_Crop[3]/self.scale_factor, self.katabuImageR_Crop[4], self.katabuImageR_Crop[5])
+    
                             if self.inspection_config.widget in [6, 8, 10, 12]: 
                                 #katabu L is cropped image
                                 #katabu R is blank
-                                self.katabuImageL_scaled = self.frameCrop(self.combinedImage_scaled, self.katabuImageR_Crop)
+                                self.katabuImageL_scaled = self.frameCrop(self.combinedImage_scaled, self.katabuImageL_Crop[0]/self.scale_factor, self.katabuImageL_Crop[1]/self.scale_factor, self.katabuImageL_Crop[2]/self.scale_factor, self.katabuImageL_Crop[3]/self.scale_factor, self.katabuImageL_Crop[4], self.katabuImageL_Crop[5])
                                 self.katabuImageR_scaled = self.createBlackImage(width=256, height=128)
+
+                            self.katabuImageL_scaled = self.convertQImage(self.katabuImageL_scaled)
+                            self.katabuImageR_scaled = self.convertQImage(self.katabuImageR_scaled)
 
                             self.partKatabuL.emit(self.katabuImageL_scaled)
                             self.partKatabuR.emit(self.katabuImageR_scaled)
 
                             if self.inspection_config.widget in [5, 6, 7, 8]: # also emit clip
-                                self.clipImage1 = self.frameCrop(self.mergeframe1, self.clipImage1_Crop)
-                                self.clipImage2 = self.frameCrop(self.mergeframe1, self.clipImage2_Crop)
-                                self.clipImage3 = self.frameCrop(self.mergeframe2, self.clipImage3_Crop)
+                                self.clipImage1 = self.frameCrop(self.mergeframe1, self.clipImage1_Crop[0], self.clipImage1_Crop[1], self.clipImage1_Crop[2], self.clipImage1_Crop[3], self.clipImage1_Crop[4], self.clipImage1_Crop[5])
+                                self.clipImage2 = self.frameCrop(self.mergeframe1, self.clipImage2_Crop[0], self.clipImage2_Crop[1], self.clipImage2_Crop[2], self.clipImage2_Crop[3], self.clipImage2_Crop[4], self.clipImage2_Crop[5])
+                                self.clipImage3 = self.frameCrop(self.mergeframe2, self.clipImage3_Crop[0], self.clipImage3_Crop[1], self.clipImage3_Crop[2], self.clipImage3_Crop[3], self.clipImage3_Crop[4], self.clipImage3_Crop[5])
                                 
                                 self.clipImage1 = self.convertQImage(self.clipImage1)
                                 self.clipImage2 = self.convertQImage(self.clipImage2)
@@ -524,11 +539,14 @@ class InspectionThread(QThread):
                                 self.clip2Signal.emit(self.clipImage2)
                                 self.clip3Signal.emit(self.clipImage3)
 
+
                     self.InspectionResult_PitchMeasured = [None]*30
                     self.InspectionResult_PitchResult = [None]*30
                     self.InspectionResult_DeltaPitch = [None]*30
 
                     if self.combinedImage_scaled is not None:
+                        #resize to 1791 x 428
+                        self.combinedImage_scaled = self.downSampling(self.combinedImage_scaled, width=1791, height=428)
                         self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
         
                     self.P82833W050P_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
@@ -546,7 +564,8 @@ class InspectionThread(QThread):
                     self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
-            if self.inspection_config.widget == 5:
+            #for the kengen
+            if self.inspection_config.widget in [9, 10, 11, 12]:    
 
                 if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
                     self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
@@ -587,11 +606,22 @@ class InspectionThread(QThread):
                 if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
                     self.inspection_config.doInspection = False
 
-                # print(self.inspection_config.doInspection)
-                # print(time.time() - self.InspectionTimeStart)
-
                 if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
+
+                    if self.inspection_config.kensainNumber != "10194":
+                        imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
+                        img_pil = Image.fromarray(imgresults)
+                        font = ImageFont.truetype(self.kanjiFontPath, 60)
+                        draw = ImageDraw.Draw(img_pil)
+                        centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                        draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
+                        imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                        play_alarm_sound()
+                        self.combinedImage_scaled = imgResult
+                        self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
+                        time.sleep(2)
+                        continue
 
                     if self.InspectionTimeStart is not None:
 
@@ -601,10 +631,10 @@ class InspectionThread(QThread):
 
                             self.emit = self.combinedImage_scaled
                             if self.emit is None:
-                                self.emit = np.zeros((137, 1791, 3), dtype=np.uint8)
+                                self.emit = np.zeros((428, 1791, 3), dtype=np.uint8)
 
                             self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
-                            self.part1Cam.emit(self.convertQImage(self.emit))
+                            self.partCam.emit(self.convertQImage(self.emit))
 
                             self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
                             self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -619,33 +649,56 @@ class InspectionThread(QThread):
                             self.InspectionImages_bgr[0] =self.combinedImage.copy()
                             self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
 
-                            # #do imwrite with date as name
-                            # self.save_image(self.InspectionImages[0])
+                            if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12]: # emit katabu
+                                if self.inspection_config.widget in [5, 7, 9, 11]:
+                                    #katabu L is blank
+                                    #katabu R is cropped image
+                                    self.katabuImageL = self.createBlackImage(width=256, height=128)
+                                    self.katabuImageR = self.frameCrop(self.combinedImage, self.katabuImageR_Crop[0], self.katabuImageR_Crop[1], self.katabuImageR_Crop[2], self.katabuImageR_Crop[3], self.katabuImageR_Crop[4], self.katabuImageR_Crop[5])
+                                    self.katabuImage = self.katabuImageR.copy()
+                                if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                    #katabu L is cropped image
+                                    #katabu R is blank
+                                    self.katabuImageL = self.frameCrop(self.combinedImage, self.katabuImageL_Crop[0], self.katabuImageL_Crop[1], self.katabuImageL_Crop[2], self.katabuImageL_Crop[3], self.katabuImageL_Crop[4], self.katabuImageL_Crop[5])
+                                    self.katabuImageR = self.createBlackImage(width=256, height=128)
+                                    self.katabuImage = self.katabuImageL.copy()
 
+
+
+                                self.partKatabuL.emit(self.convertQImage(self.katabuImageL))
+                                self.partKatabuR.emit(self.convertQImage(self.katabuImageR))
 
                             for i in range(len(self.InspectionImages)):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
-                                            self.P658107YA0A_CLIP_Model, 
-                                            slice_height=497, slice_width=1980, 
+                                            self.P828XXW0X0P_CLIP_Model, 
+                                            slice_height=968, slice_width=968, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
-                                            postprocess_match_threshold=0.005,
+                                            postprocess_match_threshold=0.2,
                                             postprocess_class_agnostic=True,
                                             postprocess_type="GREEDYNMM",
                                             verbose=0,
-                                            perform_standard_pred=True
+                                            perform_standard_pred=False
                                         )
+                                if self.inspection_config.widget in [5, 7, 9, 11]:
+                                    self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtcolor(self.katabuImage, cv2.COLOR_BGR2RGB),
+                                                                                                        stream=True,
+                                                                                                        verbose=False,
+                                                                                                        conf=0.1,
+                                                                                                        iou=0.5)
 
-                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1680, :]
-                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1680:, :]
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P658107YA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=960, verbose=False, retina_masks=True)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P658107YA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=960, verbose=False, retina_masks=True)
-
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i] = P658107Y0A_check(self.InspectionImages[i], 
+                                if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                    self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtColor(self.katabuImage, cv2.COLOR_BGR2RGB),
+                                                                                                        stream=True,
+                                                                                                        verbose=False,
+                                                                                                        conf=0.1,
+                                                                                                        iou=0.5)    
+                                    
+                                self.InspectionImages[i], self.InspectionImagesKatabu[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i] = P828XXW0X0P_check(self.InspectionImages[i], self.katabuImage,
                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
-                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Left[i],
-                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+                                                                                                                                                                                                                self.InspectionResult_KatabuDetection,
+                                                                                                                                                                                                                self.widget_name_map[self.inspection_config.widget])
 
 
                                 for i in range(len(self.InspectionResult_Status)):
@@ -671,7 +724,10 @@ class InspectionThread(QThread):
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
                                     total_length=0)
-                                
+
+
+
+
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
                             # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
@@ -702,17 +758,18 @@ class InspectionThread(QThread):
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=137)
-                            self.P658107YA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
 
-                            # self.InspectionImages_prev[0] = self.InspectionImages[0]
-                            # self.InspectionResult_PitchMeasured_prev = self.InspectionResult_PitchMeasured.copy()
-                            # self.InspectionResult_PitchResult_prev = self.InspectionResult_PitchResult.copy()
+                            self.P82833W050PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W040PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82833W090PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W080PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
 
                             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-                            self.part1Cam.emit(self.converQImageRGB(self.InspectionImages[0]))
+                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
-                            time.sleep(1.5)
+                            time.sleep(3.5)
 
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -950,8 +1007,12 @@ class InspectionThread(QThread):
 
     def frameCrop(self,img, x=0, y=0, w=640, h=480, wout=640, hout=480):
         #crop and resize image to wout and hout
+        #convert x y w h into int
+        x, y, w, h, wout, hout = int(x), int(y), int(w), int(h), int(wout), int(hout)
         if img is None:
             img = np.zeros((480, 640, 3), dtype=np.uint8)
+
+        # print(f"X: {x}, Y: {y}, W: {w}, H: {h}")
         img = img[y:y+h, x:x+w]
         try:
             img = cv2.resize(img, (wout, hout), interpolation=cv2.INTER_LINEAR)
@@ -969,21 +1030,27 @@ class InspectionThread(QThread):
         # #Change based on the widget
         # For all CTR PLR AI model
         P828XXW0X0P_CLIP_Model = None
-        P828XXW0X0P_CLIPFLIP_Model= None
+        P828XXW0X0P_KATABU_Model = None
+        P828XXW0X0P_CLIPFLIP_Model= None #For clip yellow flip detection 
         P828XXW0X0P_SEGMENT_Model = None
+        P828XXW0X0P_HAND_DETECT = None
 
         path_P828XXW0X0P_CLIP_Model = "./aikensa/models/P828XXW0X0P_detect.pt"
+        path_P828XXW0X0P_KATABU_Model = "./aikensa/models/P828XXW0X0P_katabu.pt"
         path_P828XXW0X0P_CLIPFLIP_Model = "./aikensa/models/P828XXW0X0P_detect_flip.pt"
         path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
+        path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
 
         P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P828XXW0X0P_CLIP_Model,
                                                                             confidence_threshold=0.5,
                                                                             device="cuda:0")
+        P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_CLIPFLIP_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
 
         self.P828XXW0X0P_CLIP_Model = P828XXW0X0P_CLIP_Model
-        self.path_P828XXW0X0P_CLIPFLIP_Model = path_P828XXW0X0P_CLIPFLIP_Model
+        self.P828XXW0X0P_KATABU_Model = P828XXW0X0P_KATABU_Model
+        self.P828XXW0X0P_CLIPFLIP_Model = P828XXW0X0P_CLIPFLIP_Model
         self.P828XXW0X0P_SEGMENT_Model = P828XXW0X0P_SEGMENT_Model
 
         print("Model Loaded")

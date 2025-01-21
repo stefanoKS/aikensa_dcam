@@ -125,7 +125,7 @@ class CalibrationThread(QThread):
         self.homography_blank_canvas_scaled = None
 
         self.narrow_planarize = (531, 2646)
-        self.wide_planarize = (531, 6491)
+        self.wide_planarize = (1342, 5672)
 
         self.combinedImage = None
         self.combinedImage_scaled = None
@@ -195,9 +195,12 @@ class CalibrationThread(QThread):
         if self.cap_cam2 is not None:
             self.cap_cam2.release()
             print(f"Camera 2 released.")
-        
-        self.cap_cam1 = initialize_camera(2)
-        self.cap_cam2 = initialize_camera(0)
+
+        actual_camID = self.cam_map.get(0, -1)
+        self.cap_cam1 = initialize_camera(actual_camID)
+
+        actual_camID = self.cam_map.get(1, -1)
+        self.cap_cam2 = initialize_camera(actual_camID)
 
         if not self.cap_cam1.isOpened():
             print(f"Failed to open camera with ID 1")
@@ -321,7 +324,6 @@ class CalibrationThread(QThread):
                 self.planarizeTransform_high_wide_scaled = np.array(transform_list)
 
 
-
         while self.running:
 
             if self.calib_config.widget == 0:
@@ -337,9 +339,11 @@ class CalibrationThread(QThread):
                     self.current_cameraID = self.calib_config.cameraID
                     # self.initialize_single_camera(self.current_cameraID)
                     if self.calib_config.widget == 1:
-                        self.initialize_single_camera(2)
-                    if self.calib_config.widget == 2:
                         self.initialize_single_camera(0)
+                        print("Initializing Camera 2")
+                    if self.calib_config.widget == 2:
+                        self.initialize_single_camera(1)
+                        print("Initializing Camera 0")
                   
                 if self.cap_cam is not None:
                     try:
@@ -609,12 +613,12 @@ class CalibrationThread(QThread):
                     cv2.imwrite("combinedImagelatest2.png", self.combinedImage)
                     self.combinedImage_wide, self.planarizeTransform_wide = planarize_image_wide(self.combinedImage, 
                                                                                   target_width=self.wide_planarize[1], target_height=self.wide_planarize[0], 
-                                                                                  top_offset=0, bottom_offset=0, side_offset=100)
+                                                                                  top_offset=0, bottom_offset=0, side_offset=0)
                     cv2.imwrite("combinedImage_wide_latest.png", self.combinedImage_wide)
                     
                     self.combinedImage_wide_scaled, self.planarizeTransform_wide_scaled = planarize_image_wide(self.combinedImage_scaled,
                                                                                                   target_width=int(self.wide_planarize[1]/self.scale_factor), target_height=int(self.wide_planarize[0]/self.scale_factor),
-                                                                                                  top_offset=0, bottom_offset=0, side_offset=int(100/self.scale_factor))
+                                                                                                  top_offset=0, bottom_offset=0, side_offset=int(0/self.scale_factor))
                     os.makedirs(self._save_dir, exist_ok=True)
                     # with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml", "w") as file:  
                     #     yaml.dump(self.planarizeTransform_narrow.tolist(), file)
@@ -646,10 +650,10 @@ class CalibrationThread(QThread):
                                                                                                     top_offset=0, bottom_offset=0, side_offset=0)
                     self.combinedImage_high_wide, self.planarizeTransform_high_wide = planarize_image_wide(self.combinedImage_high,
                                                                                                     target_width=self.wide_planarize[1], target_height=self.wide_planarize[0],
-                                                                                                    top_offset=0, bottom_offset=0, side_offset=100)             
+                                                                                                    top_offset=0, bottom_offset=0, side_offset=0)             
                     self.combinedImage_high_wide_scaled, self.planarizeTransform_high_wide_scaled = planarize_image_wide(self.combinedImage_high_scaled,
                                                                                                     target_width=int(self.wide_planarize[1]/self.scale_factor), target_height=int(self.wide_planarize[0]/self.scale_factor),
-                                                                                                    top_offset=0, bottom_offset=0, side_offset=int(100/self.scale_factor))
+                                                                                                    top_offset=0, bottom_offset=0, side_offset=int(0/self.scale_factor))
                     os.makedirs(self._save_dir, exist_ok=True)
                     with open("./aikensa/cameracalibration/planarizeTransform_high_narrow.yaml", "w") as file:
                         yaml.dump(self.planarizeTransform_high_narrow.tolist(), file)
