@@ -42,7 +42,7 @@ bbox_offset = 10
 
 
 
-def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanire_detection, partid=None):
+def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanire_detection, clipFlip_detection, partid=None):
 
     sorted_detections = sorted(detections, key=lambda d: d.bbox.minx)
 
@@ -52,6 +52,8 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
 
     detectedid = []
     customid = []
+
+    clipflipid = []
 
     detectedPitch = []
     deltaPitch = []
@@ -77,6 +79,33 @@ def partcheck(img, img_katabumarking, detections, katabumarking_detection, hanir
     flag_pitchfuryou = 0
     flag_clip_furyou = 0
     flag_clip_hanire = 0
+
+
+    #CLIP FLIP DETECTION
+
+    
+    for r in clipFlip_detection:
+
+        sorted_boxes = sorted(r.boxes, key=lambda box: float(box.xywh[0][1].cpu()))
+
+        for box in sorted_boxes:
+
+            clipflipid.append(int(box.cls.item()))
+
+        print(clipflipid)
+    
+    if clipflipid != [1, 0] :
+
+        allpitchresult = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        pitchresult =    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        deltaPitch =     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        status = "NG"
+
+        img = draw_status_text(img, status)
+
+        return img, img_katabumarking, allpitchresult, pitchresult, deltaPitch, flag_clip_hanire, status
+
+
 
     #KATABU MARKING DETECTION
     #class 0 is for clip, class 1 is for katabu marking

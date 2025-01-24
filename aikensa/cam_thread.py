@@ -189,6 +189,7 @@ class CameraThread(QThread):
 
         self.clip_detection = None
         self.marking_detection = None
+        self.clipFlip_detection = None
 
         self.kensa_cycle = False
         self.kensa_order = []
@@ -202,6 +203,8 @@ class CameraThread(QThread):
         self.prev_timestamp = None
         
         self.inspection_result = False
+
+        self.clipFlipImage = None
 
     def run(self):
 
@@ -1285,6 +1288,9 @@ class CameraThread(QThread):
                 
             
                     ##To manually set the work order
+
+
+
                 # self.cam_config.ctrplrWorkOrderNewSpec = [1, 1, 1, 1, 1, 1]
 
 
@@ -1364,10 +1370,15 @@ class CameraThread(QThread):
                                                                                             verbose=False,
                                                                                             conf=0.1, iou=0.5)
                                 self.hanire_detections = None
+
+                                self.clipFlipImage = combinedFrame_raw[:, :1280]
+                                self.clipFlip_detection = self.ctrplr_clipflipDetectionModel(cv2.cvtColor(self.clipFlipImage, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+
                                 imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheckNEW(combinedFrame_raw, croppedFrame2,
                                                                                                                                         self.clip_detection.object_prediction_list, 
                                                                                                                                         self.marking_detection, 
-                                                                                                                                        self.hanire_detections, 
+                                                                                                                                        self.hanire_detections,
+                                                                                                                                        self.clipFlip_detection, 
                                                                                                                                         partid="LH")
                        
                                 if status == "OK":
@@ -1396,10 +1407,15 @@ class CameraThread(QThread):
                                                                                             verbose=False,
                                                                                             conf=0.1, iou=0.5)
                                 self.hanire_detections = None
+
+                                self.clipFlipImage = combinedFrame_raw[:, -1280:]
+                                self.clipFlip_detection = self.ctrplr_clipflipDetectionModel(cv2.cvtColor(self.clipFlipImage, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+
                                 imgResult, katabumarkingResult, pitch_results, detected_pitch, delta_pitch, hanire, status = ctrplrCheckNEW(combinedFrame_raw, croppedFrame1,
                                                                                                                                         self.clip_detection.object_prediction_list, 
                                                                                                                                         self.marking_detection, 
                                                                                                                                         self.hanire_detections, 
+                                                                                                                                        self.clipFlip_detection,
                                                                                                                                         partid="RH")
                                 #check whether cam_config.current_numofPart is a tupple or a list
 
@@ -1900,7 +1916,9 @@ class CameraThread(QThread):
         os.makedirs(base_dir_nama, exist_ok=True)
         os.makedirs(base_dir_kekka, exist_ok=True)
 
-        #resize the image into 1/8th of original image if result id is OK
+        # resize the image into 1/8th of original image if result id is OK
+
+
         if resultid == "OK":
             save_image_nama = cv2.resize(save_image_nama, (save_image_nama.shape[1]//8, save_image_nama.shape[0]//8))
             save_image_kekka = cv2.resize(save_image_kekka, (save_image_kekka.shape[1]//8, save_image_kekka.shape[0]//8))
@@ -2297,6 +2315,8 @@ class CameraThread(QThread):
         ctrplr_clipDetectionModel = None
         ctrplr_hanireDetectionModel = None
         ctrplr_markingDetectionModel = None
+        ctrplr_clipFlipDetectionModel = None
+
 
         if self.cam_config.widget in [3, 4, 5, 6, 21, 22, 23]:
             handClassificationModel = YOLO("./aikensa/custom_weights/handClassify.pt")
@@ -2306,11 +2326,13 @@ class CameraThread(QThread):
                                                                            device="cuda:0",
             )
             ctrplr_markingDetectionModel = YOLO("./aikensa/custom_weights/weights_5755A49X_marking.pt")
+            ctrplr_clipflipDetectionModel = YOLO("./aikensa/custom_weights/weights_5755A49X_clipFlip.pt")
             
 
         self.handClassificationModel = handClassificationModel
         self.ctrplr_clipDetectionModel = ctrplr_clipDetectionModel
         self.ctrplr_markingDetectionModel = ctrplr_markingDetectionModel
+        self.ctrplr_clipflipDetectionModel = ctrplr_clipflipDetectionModel
         if ctrplr_clipDetectionModel is None:
             print("ClipDetectionModel not initialized.")
         print("HandClassificationModel initialized.")
