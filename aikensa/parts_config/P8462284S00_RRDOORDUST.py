@@ -61,6 +61,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     rightmostPitch = 0
 
     status = "OK"
+    print_status = ""
 
     # cannydetection_image = image.copy() #Make sure to copy the image to avoid modifying the original image
 
@@ -191,6 +192,9 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
+
+    #DRAW STATUS
+    image = draw_status_text_PIL(image, status, print_status, size="normal")
     
     return image, measuredPitch, resultPitch, resultid, status
 
@@ -200,7 +204,7 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
     if size == "large":
         font_scale = 130.0
     if size == "normal":
-        font_scale = 100.0
+        font_scale = 350.0
     elif size == "small":
         font_scale = 50.0
 
@@ -215,8 +219,8 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
     draw = ImageDraw.Draw(img_pil)
     font = ImageFont.truetype(kanjiFontPath, font_scale)
 
-    draw.text((120, 5), status, font=font, fill=color)  
-    draw.text((120, 100), print_status, font=font, fill=color)
+    draw.text((3120, 80), status, font=font, fill=color)  
+    draw.text((3120, 120), print_status, font=font, fill=color)
     image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
     return image
