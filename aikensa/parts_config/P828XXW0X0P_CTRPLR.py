@@ -220,6 +220,19 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         if len(katabumarking_lengths) > 1:
             katabumarking_lengths = katabumarking_lengths[:1]
         #since there is only one katabu marking, we can just use the first element -> detection POKAYOKE (if detection is not that great)
+        print(f"Katabu Marking Length: {katabumarking_lengths}")
+
+        #if katabumarking_lengths is empty, then it is NG
+        if katabumarking_lengths == []:
+            status = "NG"
+            print_status = print_status + "型部マーキング認識不良"
+            print(f"Status:{print_status}")
+            measuredPitch = [0] * len(pitchSpec)
+            resultPitch = [0] * len(pitchSpec)
+            resultid = [0] * len(idSpec)
+            image = draw_status_text_PIL(image, status, print_status, size = "normal")
+
+            return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
     
         
     for i, detection in enumerate(sorted_detections):
@@ -257,13 +270,13 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         
     if detectedid != idSpec:
         status = "NG"
-        print_status = "NG クリップ入れ間違い"
-        print(f"Status:{print_status}")
+        print_status = print_status + "NG クリップ入れ間違い"
+        # print(f"Status:{print_status}")
         measuredPitch = [0] * len(pitchSpec)
         resultPitch = [0] * len(pitchSpec)
         resultid = [0] * len(idSpec)
-        draw_status_text_PIL(image, status, print_status, size = "normal")
-
+        image = draw_status_text_PIL(image, status, print_status, size = "normal")
+        cv2.imwrite("test.png", image)
         return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
     
     # if len(measuredPitch) != len(pitchSpec):
@@ -277,30 +290,34 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     #     return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
     
-    if katabumarking_lengths[0] != 0:
-        measuredPitch.append(round(katabumarking_lengths[0], 1))
+    if katabumarking_lengths is not None:
+        if katabumarking_lengths and katabumarking_lengths[0] != 0:
+            measuredPitch.append(round(katabumarking_lengths[0], 1))
 
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
     # print(f"Measured Pitch: {measuredPitch}")
 
     #print measured pitch, print ID
-    print(f"Measured Pitch: {measuredPitch}")
-    print(f"Detected ID: {detectedid}")
+
 
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         resultid = check_id(detectedid, idSpec)
-        print(f"Result Pitch: {resultPitch}")
-        print(f"Result ID: {resultid}")
+        # print(f"Result Pitch: {resultPitch}")
+        # print(f"Result ID: {resultid}")
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)
 
     if any(result != 1 for result in resultPitch):
-        print_status = "ピッチ不良"
-        print(f"Status:{print_status}")
-        draw_status_text_PIL(image, status, print_status, size = "normal")
+        print_status = print_status + " ピッチ不良"
         status = "NG"
+        # print(f"Status:{print_status}")
+        image  = draw_status_text_PIL(image, status, print_status, size = "normal")
+
+    print(f"Measured Pitch: {measuredPitch}")
+    print(f"Detected ID: {detectedid}")
+    print(f"Result Pitch: {resultPitch}")
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
@@ -311,9 +328,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 def draw_status_text_PIL(image, status, print_status, size = "normal"):
 
     if size == "large":
-        font_scale = 130.0
+        font_scale = 50.0
     if size == "normal":
-        font_scale = 100.0
+        font_scale = 90.0
     elif size == "small":
         font_scale = 50.0
 
@@ -328,10 +345,10 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
     draw = ImageDraw.Draw(img_pil)
     font = ImageFont.truetype(kanjiFontPath, font_scale)
 
-    draw.text((120, 5), status, font=font, fill=color)  
-    draw.text((120, 100), print_status, font=font, fill=color)
+    draw.text((300, 5), status, font=font, fill=color)  
+    draw.text((300, 100), print_status, font=font, fill=color)
     image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-
+    cv2.imwrite("test.png", image)
     return image
 
 

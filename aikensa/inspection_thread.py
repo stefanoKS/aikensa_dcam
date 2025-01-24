@@ -157,10 +157,11 @@ class InspectionThread(QThread):
         self.katabuImageR_scaled = None
         
         self.katabuImage = None
+        self.katabuImage_init = None
 
         #Crop format: X Y W H OUTW OUTH
-        self.katabuImageL_Crop = np.array([620, 350, 320, 160, 320, 160])
-        self.katabuImageR_Crop = np.array([3800, 350, 320, 160, 320, 160])
+        self.katabuImageL_Crop = np.array([620, 360, 320, 160, 320, 160])
+        self.katabuImageR_Crop = np.array([3800, 360, 320, 160, 320, 160])
 
         self.clipImage1 = None
         self.clipImage2 = None
@@ -656,14 +657,14 @@ class InspectionThread(QThread):
                                     self.katabuImageL = self.createBlackImage(width=256, height=128)
                                     self.katabuImageR = self.frameCrop(self.combinedImage, self.katabuImageR_Crop[0], self.katabuImageR_Crop[1], self.katabuImageR_Crop[2], self.katabuImageR_Crop[3], self.katabuImageR_Crop[4], self.katabuImageR_Crop[5])
                                     self.katabuImage = self.katabuImageR.copy()
+                                    self.katabuImage_init = self.katabuImageR.copy()
                                 if self.inspection_config.widget in [6, 8, 10, 12]: 
                                     #katabu L is cropped image
                                     #katabu R is blank
                                     self.katabuImageL = self.frameCrop(self.combinedImage, self.katabuImageL_Crop[0], self.katabuImageL_Crop[1], self.katabuImageL_Crop[2], self.katabuImageL_Crop[3], self.katabuImageL_Crop[4], self.katabuImageL_Crop[5])
                                     self.katabuImageR = self.createBlackImage(width=256, height=128)
                                     self.katabuImage = self.katabuImageL.copy()
-
-
+                                    self.katabuImage_init = self.katabuImageL.copy()
 
                                 self.partKatabuL.emit(self.convertQImage(self.katabuImageL))
                                 self.partKatabuR.emit(self.convertQImage(self.katabuImageR))
@@ -672,7 +673,7 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.P828XXW0X0P_CLIP_Model, 
-                                            slice_height=968, slice_width=968, 
+                                            slice_height=1280, slice_width=1280, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,
@@ -715,6 +716,7 @@ class InspectionThread(QThread):
                                         play_ng_sound()
 
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
+                            self.save_image_result_withKatabu(self.combinedImage, self.InspectionImages[0], self.katabuImage_init, self.InspectionImagesKatabu[0], self.InspectionResult_Status[0])
 
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                                     numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
@@ -769,7 +771,16 @@ class InspectionThread(QThread):
                             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
                             self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
-                            time.sleep(3.5)
+                            if self.inspection_config.widget in [5, 7, 9, 11]:
+                                self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
+                            if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
+
+
+                            
+                            
+
+                            time.sleep(1.5)
 
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1042,7 +1053,7 @@ class InspectionThread(QThread):
         path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
 
         P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P828XXW0X0P_CLIP_Model,
-                                                                            confidence_threshold=0.5,
+                                                                            confidence_threshold=0.35,
                                                                             device="cuda:0")
         P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_CLIPFLIP_Model)
