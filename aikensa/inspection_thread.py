@@ -11,6 +11,8 @@ import yaml
 import time
 import logging
 import sqlite3
+import sqlite3
+import mysql.connector
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -215,6 +217,16 @@ class InspectionThread(QThread):
         self.InspectionWaitTime = 3.0
         self.InspectionTimeStart = None
 
+        "Read mysql id and password from yaml file"
+
+        with open("aikensa/mysql/id.yaml") as file:
+            credentials = yaml.load(file, Loader=yaml.FullLoader)
+            self.mysqlID = credentials["id"]
+            self.mysqlPassword = credentials["pass"]
+            self.mysqlHost = credentials["host"]
+            self.mysqlHostPort = credentials["port"]
+
+
     def release_all_camera(self):
         if self.cap_cam1 is not None:
             self.cap_cam1.release()
@@ -292,6 +304,42 @@ class InspectionThread(QThread):
         ''')
 
         self.conn.commit()
+
+                #Initialize connection to mysql server if available
+        try:
+            self.mysql_conn = mysql.connector.connect(
+                host=self.mysqlHost,
+                user=self.mysqlID,
+                password=self.mysqlPassword,
+                port=self.mysqlHostPort,
+                database="AIKENSAresults"
+            )
+            print(f"Connected to MySQL database at {self.mysqlHost}")
+        except Exception as e:
+            print(f"Error connecting to MySQL database: {e}")
+            self.mysql_conn = None
+
+        #try adding data to the schema in mysql
+        if self.mysql_conn is not None:
+            self.mysql_cursor = self.mysql_conn.cursor()
+            self.mysql_cursor.execute('''
+            CREATE TABLE IF NOT EXISTS inspection_results (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                partName TEXT,
+                numofPart TEXT,
+                currentnumofPart TEXT,
+                timestampHour TEXT,
+                timestampDate TEXT,
+                deltaTime REAL,
+                kensainName TEXT,
+                detected_pitch TEXT,
+                delta_pitch TEXT,
+                total_length REAL
+            )
+            ''')
+            self.mysql_conn.commit()
+
+
 
         print("Inspection Thread Started")
         self.initialize_model()
@@ -464,8 +512,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
@@ -532,8 +580,8 @@ class InspectionThread(QThread):
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                                    numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
-                                    currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                    currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
+                                    numofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
                                     deltaTime = 0.0,
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
@@ -600,8 +648,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
@@ -716,8 +764,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
@@ -818,7 +866,7 @@ class InspectionThread(QThread):
 
                             #Add custom text to the image
                             if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and self.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
-                                if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 130 == 0:
+                                if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 170 == 0:
                                     imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
                                     img_pil = Image.fromarray(imgresults)
                                     font = ImageFont.truetype(self.kanjiFontPath, 120)
@@ -1150,6 +1198,13 @@ class InspectionThread(QThread):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
         self.conn.commit()
+        
+        #Also save to mysql cursor
+        self.mysql_cursor.execute('''
+        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        self.mysql_conn.commit()
 
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
