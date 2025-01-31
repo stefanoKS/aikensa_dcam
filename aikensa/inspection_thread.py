@@ -512,8 +512,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
                             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
@@ -580,8 +580,8 @@ class InspectionThread(QThread):
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                                    currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
                                     numofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                    currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
                                     deltaTime = 0.0,
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
@@ -648,8 +648,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
                             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
@@ -764,8 +764,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
                             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
