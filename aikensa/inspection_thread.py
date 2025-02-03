@@ -167,9 +167,9 @@ class InspectionThread(QThread):
         self.clipImage2 = None
         self.clipImage3 = None
 
-        self.clipImage1_Crop = np.array([590, 0, 600, 600, 128, 128])
-        self.clipImage2_Crop = np.array([1900, 0, 600, 600, 128, 128])
-        self.clipImage3_Crop = np.array([600, 0, 600, 600, 128, 128])
+        self.clipImage1_Crop = np.array([1750, 1600, 600, 600, 128, 128])
+        self.clipImage2_Crop = np.array([600, 1600, 600, 600, 128, 128])
+        self.clipImage3_Crop = np.array([1880, 1600, 600, 600, 128, 128])
 
         # self.combinedImage_narrow = None
         # self.combinedImage_narrow_scaled = None
@@ -532,6 +532,10 @@ class InspectionThread(QThread):
                                 self.clipImage2 = self.frameCrop(self.mergeframe1, self.clipImage2_Crop[0], self.clipImage2_Crop[1], self.clipImage2_Crop[2], self.clipImage2_Crop[3], self.clipImage2_Crop[4], self.clipImage2_Crop[5])
                                 self.clipImage3 = self.frameCrop(self.mergeframe2, self.clipImage3_Crop[0], self.clipImage3_Crop[1], self.clipImage3_Crop[2], self.clipImage3_Crop[3], self.clipImage3_Crop[4], self.clipImage3_Crop[5])
                                 
+                                self.clipImage1 = cv2.rotate(self.clipImage1, cv2.ROTATE_180)
+                                self.clipImage2 = cv2.rotate(self.clipImage2, cv2.ROTATE_180)
+                                self.clipImage3 = cv2.rotate(self.clipImage3, cv2.ROTATE_180)
+
                                 self.clipImage1 = self.convertQImage(self.clipImage1)
                                 self.clipImage2 = self.convertQImage(self.clipImage2)
                                 self.clipImage3 = self.convertQImage(self.clipImage3)
@@ -593,8 +597,8 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
