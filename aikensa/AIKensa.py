@@ -173,6 +173,8 @@ class AIKensa(QMainWindow):
         self.inspection_thread.current_numofPart_signal.connect(self._update_OKNG_label)
         self.inspection_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
 
+        self.inspection_thread.pickingOrderSignal.connect(self._update_clipPickingOrder)
+
         self.stackedWidget = QStackedWidget()
 
         for ui in UI_FILES:
@@ -437,7 +439,6 @@ class AIKensa(QMainWindow):
                         current_furyou_label.setText(str(ng))
             else:
                 print(f"Widget key {widget_key} is out of bounds for todaynumofPart")
-
 
 
 #5
@@ -861,7 +862,27 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: white;")
 
 
-
+    def _update_clipPickingOrder(self, pickingOrder):
+        for widget_key, part_name in self.widget_dir_map.items():
+            if 0 <= widget_key < len(pickingOrder):
+                lightOrder = pickingOrder[widget_key]
+                widget = self.stackedWidget.widget(widget_key)
+        
+    def _update_OKNG_label(self, numofPart):
+        for widget_key, part_name in self.widget_dir_map.items():
+            # Get OK and NG values using widget_key as index
+            if 0 <= widget_key < len(numofPart):
+                ok, ng = numofPart[widget_key]
+                widget = self.stackedWidget.widget(widget_key)
+                if widget:
+                    current_kansei_label = widget.findChild(QLabel, "current_kansei")
+                    current_furyou_label = widget.findChild(QLabel, "current_furyou")
+                    if current_kansei_label:
+                        current_kansei_label.setText(str(ok))
+                    if current_furyou_label:
+                        current_furyou_label.setText(str(ng))
+            else:
+                print(f"Widget key {widget_key} is out of bounds for numofPart")
 
     def _set_labelFrame(self, widget, paramValue, label_names):
         colorOK = "blue"

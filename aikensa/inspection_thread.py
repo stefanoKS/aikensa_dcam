@@ -4,6 +4,7 @@ import cv2
 import os
 from datetime import datetime
 import numpy as np
+from scipy.fftpack import ifft
 import yaml
 import time
 import logging
@@ -93,6 +94,8 @@ class InspectionThread(QThread):
 
     ethernetStatus = pyqtSignal(list)
 
+    pickingOrderSignal = pyqtSignal(list)
+
     def __init__(self, inspection_config: InspectionConfig = None):
         super(InspectionThread, self).__init__()
         self.running = True
@@ -170,6 +173,10 @@ class InspectionThread(QThread):
         self.clipImage1_Crop = np.array([1750, 1600, 600, 600, 128, 128])
         self.clipImage2_Crop = np.array([600, 1600, 600, 600, 128, 128])
         self.clipImage3_Crop = np.array([1880, 1600, 600, 600, 128, 128])
+
+        self.HandinFrame1 = None
+        self.HandinFrame2 = None
+        self.HandinFrame3 = None
 
         # self.combinedImage_narrow = None
         # self.combinedImage_narrow_scaled = None
@@ -258,6 +265,10 @@ class InspectionThread(QThread):
 
         self.ethernetTrigger = [0]*5
 
+        self.clipPickingOrder = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] * 30
+
+        self.OrderTargetMore = [1, 1, 1, 1, 1, 1]
+        self.OrderTargetLess = [1, 1, 1, 1, 1]
         
         self.cam_config_file = "aikensa/camscripts/cam_config.yaml"
         
@@ -536,6 +547,49 @@ class InspectionThread(QThread):
                                 self.clipImage2 = cv2.rotate(self.clipImage2, cv2.ROTATE_180)
                                 self.clipImage3 = cv2.rotate(self.clipImage3, cv2.ROTATE_180)
 
+                                self.HandinFrame1 = self.P828XXW0X0P_HAND_DETECT(cv2.cvtColor(self.clipImage1, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                self.HandinFrame2 = self.P828XXW0X0P_HAND_DETECT(cv2.cvtColor(self.clipImage2, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                self.HandinFrame3 = self.P828XXW0X0P_HAND_DETECT(cv2.cvtColor(self.clipImage3, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                
+                                self.HandinFrame1 = list(self.HandinFrame1)[0].probs.data.argmax().item()
+                                self.HandinFrame2 = list(self.HandinFrame2)[0].probs.data.argmax().item()
+                                self.HandinFrame3 = list(self.HandinFrame3)[0].probs.data.argmax().item()
+                                # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
+                                print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
+
+                                #LOGIC to handle the CLIP PICKING ORDER
+                                if self.HandinFrame1 == 0:
+                                    if self.ClipPickingOrder[self.inspection_config.widget][0] == 0:
+                                        self.ClipPickingOrder[self.inspection_config.widget][0] = 1
+                                    if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 0, 0, 0, 0, 0]:
+                                        self.ClipPickingOrder[self.inspection_config.widget][1] = 1
+                                    else:
+                                        play_alarm_sound()
+
+                                if self.HandinFrame2 == 0:
+                                    if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 0, 0, 0, 0]:
+                                        self.ClipPickingOrder[self.inspection_config.widget][2] = 1
+                                    if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 0, 0, 0]:
+                                        self.ClipPickingOrder[self.inspection_config.widget][3] = 1
+                                    if self.inspection_config.widget in [7, 8]:
+                                        if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
+                                            self.ClipPickingOrder[self.inspection_config.widget][4] = 1
+                                    else:
+                                        play_alarm_sound()
+                                
+                                if self.HandinFrame3 == 0:
+                                    if self.inspection_config.widget in [7, 8]:
+                                        if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 1, 0]:
+                                            self.ClipPickingOrder[self.inspection_config.widget][5] = 1
+                                    if self.inspection_config.widget in [5, 6]:
+                                        if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
+                                            self.ClipPickingOrder[self.inspection_config.widget][4] = 1
+                                    else:
+                                        play_alarm_sound()
+
+                                #emit the signal for the clip picking order
+                                self.pickingOrderSignal.emit(self.ClipPickingOrder)
+
                                 self.clipImage1 = self.convertQImage(self.clipImage1)
                                 self.clipImage2 = self.convertQImage(self.clipImage2)
                                 self.clipImage3 = self.convertQImage(self.clipImage3)
@@ -543,7 +597,6 @@ class InspectionThread(QThread):
                                 self.clip1Signal.emit(self.clipImage1)
                                 self.clip2Signal.emit(self.clipImage2)
                                 self.clip3Signal.emit(self.clipImage3)
-
 
                     self.InspectionResult_PitchMeasured = [None]*30
                     self.InspectionResult_PitchResult = [None]*30
@@ -614,7 +667,7 @@ class InspectionThread(QThread):
                 if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
 
-                    if self.inspection_config.kensainNumber != "10194":
+                    if self.inspection_config.kensainNumber != "10194" or self.inspection_config.kensainNumber != "KENGEN":
                         imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
                         img_pil = Image.fromarray(imgresults)
                         font = ImageFont.truetype(self.kanjiFontPath, 60)
@@ -731,9 +784,6 @@ class InspectionThread(QThread):
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
                                     total_length=0)
 
-
-
-
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
                             # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
@@ -779,8 +829,6 @@ class InspectionThread(QThread):
                                 self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
                             if self.inspection_config.widget in [6, 8, 10, 12]: 
                                 self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
-
-
                             
                             
 
@@ -1062,11 +1110,13 @@ class InspectionThread(QThread):
         P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_CLIPFLIP_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
+        P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
 
         self.P828XXW0X0P_CLIP_Model = P828XXW0X0P_CLIP_Model
         self.P828XXW0X0P_KATABU_Model = P828XXW0X0P_KATABU_Model
         self.P828XXW0X0P_CLIPFLIP_Model = P828XXW0X0P_CLIPFLIP_Model
         self.P828XXW0X0P_SEGMENT_Model = P828XXW0X0P_SEGMENT_Model
+        self.P828XXW0X0P_HAND_DETECT = P828XXW0X0P_HAND_DETECT
 
         print("Model Loaded")
         
