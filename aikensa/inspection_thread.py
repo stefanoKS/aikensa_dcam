@@ -666,8 +666,11 @@ class InspectionThread(QThread):
 
                 if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
+                    print("Inspection Started")
+                    print(self.inspection_config.widget)
 
                     if self.inspection_config.kensainNumber != "10194" or self.inspection_config.kensainNumber != "KENGEN":
+                        print("NoKengen")
                         imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
                         img_pil = Image.fromarray(imgresults)
                         font = ImageFont.truetype(self.kanjiFontPath, 60)
@@ -675,11 +678,12 @@ class InspectionThread(QThread):
                         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
                         draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
                         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                        play_alarm_sound()
                         self.combinedImage_scaled = imgResult
+                        play_alarm_sound()
                         self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
                         time.sleep(2)
                         continue
+                    
 
                     if self.InspectionTimeStart is not None:
 

@@ -188,3 +188,4 @@ aikensa/capturedimages/*
 aikensa/tiscamera/*
 aikensa/cameracalibration/*
 aikensa/param/*
+aikensa/camscripts/cam_config.yaml
