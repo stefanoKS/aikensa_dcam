@@ -164,7 +164,7 @@ class InspectionThread(QThread):
 
         #Crop format: X Y W H OUTW OUTH
         self.katabuImageL_Crop = np.array([620, 360, 320, 160, 320, 160])
-        self.katabuImageR_Crop = np.array([3800, 360, 320, 160, 320, 160])
+        self.katabuImageR_Crop = np.array([4000, 360, 320, 160, 320, 160])
 
         self.clipImage1 = None
         self.clipImage2 = None
@@ -667,19 +667,24 @@ class InspectionThread(QThread):
                 if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
                     print("Inspection Started")
-                    print(self.inspection_config.widget)
-
-                    if self.inspection_config.kensainNumber != "10194" or self.inspection_config.kensainNumber != "KENGEN":
+                    # print(self.inspection_config.widget)
+                    print(self.inspection_config.kensainNumber)
+                    if self.inspection_config.kensainNumber != "KENGEN":
                         print("NoKengen")
-                        imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
-                        img_pil = Image.fromarray(imgresults)
-                        font = ImageFont.truetype(self.kanjiFontPath, 60)
-                        draw = ImageDraw.Draw(img_pil)
-                        centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                        draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
-                        imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                        self.combinedImage_scaled = imgResult
-                        play_alarm_sound()
+                        # imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
+                        # imgresults = np.ascontiguousarray(imgresults)
+                        # img_pil = Image.fromarray(imgresults)
+                        # font = ImageFont.truetype(self.kanjiFontPath, 60)
+                        # draw = ImageDraw.Draw(img_pil)
+                        # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                        # draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
+                        # imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                        # self.combinedImage_scaled = imgResult
+                        # print("Image shape:", self.combinedImage_scaled.shape)
+                        # print("Data type:", self.combinedImage_scaled.dtype)
+                        # play_alarm_sound()
+                        self.combinedImage_scaled = self.draw_status_text_PIL(self.combinedImage_scaled, "管理者権限が必要", (50,150,10), size="large", x_offset = -500, y_offset = -100)
+                        # self.combinedImage_scaled = self.add_admin_warning(self.combinedImage_scaled, u"管理者権限が必要", self.kanjiFontPath)
                         self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
                         time.sleep(2)
                         continue
@@ -744,7 +749,7 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
                                 if self.inspection_config.widget in [5, 7, 9, 11]:
-                                    self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtcolor(self.katabuImage, cv2.COLOR_BGR2RGB),
+                                    self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtColor(self.katabuImage, cv2.COLOR_BGR2RGB),
                                                                                                         stream=True,
                                                                                                         verbose=False,
                                                                                                         conf=0.1,
@@ -841,7 +846,25 @@ class InspectionThread(QThread):
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
 
-        self.msleep(5)
+        # self.msleep(5)
+        time.sleep(0.02)
+
+    def add_admin_warning(self, image, text, font_path):
+        try:
+            print("Image shape:", image.shape)
+            print("Data type:", image.dtype)
+            img_results = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            img_results = np.ascontiguousarray(img_results)
+            img_pil = Image.fromarray(img_results)
+            font = ImageFont.truetype(font_path, 60)
+            draw = ImageDraw.Draw(img_pil)
+            center_pos = (img_results.shape[1] // 2, img_results.shape[0] // 2) 
+            draw.text((center_pos[0]-800, center_pos[1]+20), text, font=font, fill=(160, 200, 10, 0))
+            img_result = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+            return img_result
+        except Exception as e:
+            print(f"Error adding admin warning: {str(e)}")
+            return image  # Return the original image if an error occurs
 
     def setCounterFalse(self):
         self.inspection_config.furyou_plus = False
