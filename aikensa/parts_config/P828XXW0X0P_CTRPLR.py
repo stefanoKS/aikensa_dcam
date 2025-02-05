@@ -23,7 +23,7 @@ pitchSpec_080P = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85]
 
 pitchSpec_050PKENGEN = [85, 87, 98, 98, 78, 113, 103]
 pitchSpec_040PKENGEN = [103, 113, 78, 98, 98, 87, 85]
-pitchSpec_090PKENGEN = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28]
+pitchSpec_090PKENGEN = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28, 14]
 pitchSpec_080PKENGEN = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85, 14]
 
 pitchSpec_050PCLIPSOUNYUUKI = [87, 98, 98, 78, 113, 103]
@@ -33,7 +33,7 @@ pitchSpec_080PCLIPSOUNYUUKI = [28, 37, 38, 52, 61, 78, 98, 98, 87]
 
 pitchTolerance_050P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
 pitchTolerance_040P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0]
-pitchTolerance_090P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_090P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
 pitchTolerance_080P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0, 1.7]
 
 pitchTolerance_050PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
@@ -251,6 +251,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         if prev_center is not None:
             length = calclength(prev_center, center)*pixelMultiplier
             measuredPitch.append(length)
+            line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
+            image = drawbox(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
+            image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
         prev_center = center
 
     #POP The first and last element for the KENGEN and normal
@@ -295,10 +298,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
             measuredPitch.append(round(katabumarking_lengths[0], 1))
 
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
-    # print(f"Measured Pitch: {measuredPitch}")
 
     #print measured pitch, print ID
-
+    # print(f"Spec:,{pitchSpec}")
 
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
@@ -321,6 +323,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
+
+    if status == "OK":
+        image = draw_status_text(image, status, size = "normal")
     
     return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
 

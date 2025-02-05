@@ -164,7 +164,7 @@ class InspectionThread(QThread):
 
         #Crop format: X Y W H OUTW OUTH
         self.katabuImageL_Crop = np.array([620, 360, 320, 160, 320, 160])
-        self.katabuImageR_Crop = np.array([4000, 360, 320, 160, 320, 160])
+        self.katabuImageR_Crop = np.array([4800, 360, 320, 160, 320, 160])
 
         self.clipImage1 = None
         self.clipImage2 = None
@@ -218,6 +218,9 @@ class InspectionThread(QThread):
         self.timerFinish_mini = None
         self.fps_mini = None
 
+        self.pickingTimerStart = time.time()
+        self.pickingWaitTime = 3.0
+
         self.InspectionImages = [None]*1
         self.InspectionImages_bgr = [None]*1
 
@@ -265,7 +268,7 @@ class InspectionThread(QThread):
 
         self.ethernetTrigger = [0]*5
 
-        self.clipPickingOrder = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] * 30
+        self.clipPickingOrder = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] for _ in range(30)]
 
         self.OrderTargetMore = [1, 1, 1, 1, 1, 1]
         self.OrderTargetLess = [1, 1, 1, 1, 1]
@@ -555,40 +558,92 @@ class InspectionThread(QThread):
                                 self.HandinFrame2 = list(self.HandinFrame2)[0].probs.data.argmax().item()
                                 self.HandinFrame3 = list(self.HandinFrame3)[0].probs.data.argmax().item()
                                 # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
-                                print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
+                                # print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
 
                                 #LOGIC to handle the CLIP PICKING ORDER
-                                if self.HandinFrame1 == 0:
-                                    if self.ClipPickingOrder[self.inspection_config.widget][0] == 0:
-                                        self.ClipPickingOrder[self.inspection_config.widget][0] = 1
-                                    if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 0, 0, 0, 0, 0]:
-                                        self.ClipPickingOrder[self.inspection_config.widget][1] = 1
-                                    else:
-                                        play_alarm_sound()
+                                # if self.HandinFrame1 == 0:
+                                #     if self.clipPickingOrder[self.inspection_config.widget][0] == 0:
+                                #         self.clipPickingOrder[self.inspection_config.widget][0] = 1
+                                #     if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 0, 0, 0, 0, 0]:
+                                #         self.clipPickingOrder[self.inspection_config.widget][1] = 1
+                                #     else:
+                                #         play_alarm_sound()
 
-                                if self.HandinFrame2 == 0:
-                                    if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 0, 0, 0, 0]:
-                                        self.ClipPickingOrder[self.inspection_config.widget][2] = 1
-                                    if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 0, 0, 0]:
-                                        self.ClipPickingOrder[self.inspection_config.widget][3] = 1
-                                    if self.inspection_config.widget in [7, 8]:
-                                        if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
-                                            self.ClipPickingOrder[self.inspection_config.widget][4] = 1
-                                    else:
-                                        play_alarm_sound()
+                                # if self.HandinFrame2 == 0:
+                                #     if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 0, 0, 0, 0]:
+                                #         self.clipPickingOrder[self.inspection_config.widget][2] = 1
+                                #     if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 0, 0, 0]:
+                                #         self.clipPickingOrder[self.inspection_config.widget][3] = 1
+                                #     if self.inspection_config.widget in [7, 8]:
+                                #         if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
+                                #             self.clipPickingOrder[self.inspection_config.widget][4] = 1
+                                #     else:
+                                #         play_alarm_sound()
                                 
-                                if self.HandinFrame3 == 0:
-                                    if self.inspection_config.widget in [7, 8]:
-                                        if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 1, 0]:
-                                            self.ClipPickingOrder[self.inspection_config.widget][5] = 1
-                                    if self.inspection_config.widget in [5, 6]:
-                                        if self.ClipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
-                                            self.ClipPickingOrder[self.inspection_config.widget][4] = 1
-                                    else:
-                                        play_alarm_sound()
+                                # if self.HandinFrame3 == 0:
+                                #     if self.inspection_config.widget in [7, 8]:
+                                #         if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 1, 0]:
+                                #             self.clipPickingOrder[self.inspection_config.widget][5] = 1
+                                #     if self.inspection_config.widget in [5, 6]:
+                                #         if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
+                                #             self.clipPickingOrder[self.inspection_config.widget][4] = 1
+                                #     else:
+                                #         play_alarm_sound()
 
+                                if self.inspection_config.widget in [7, 8]:
+                                    if (time.time() - self.pickingTimerStart) > self.pickingWaitTime:
+                                        # print("Picking Timer Reset")
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 1, 1]:
+                                            if self.HandinFrame1 == 0 or self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 1, 0]:
+                                            if self.HandinFrame3 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][5] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame2 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
+                                            if self.HandinFrame2 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][4] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 0, 0, 0]:
+                                            if self.HandinFrame2 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][3] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 0, 0, 0, 0]:
+                                            if self.HandinFrame2 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][2] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 0, 0, 0, 0, 0]:
+                                            if self.HandinFrame1 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][1] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+                                                
+                                        if self.clipPickingOrder[self.inspection_config.widget][:6] == [0, 0, 0, 0, 0, 0]:
+                                            if self.HandinFrame1 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][0] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                # print(time.time() - self.pickingTimerStart)
                                 #emit the signal for the clip picking order
-                                self.pickingOrderSignal.emit(self.ClipPickingOrder)
+                                self.pickingOrderSignal.emit(self.clipPickingOrder)
+                                # print(f"Clip Picking Order: {self.clipPickingOrder[self.inspection_config.widget]}")
 
                                 self.clipImage1 = self.convertQImage(self.clipImage1)
                                 self.clipImage2 = self.convertQImage(self.clipImage2)
