@@ -863,16 +863,16 @@ class AIKensa(QMainWindow):
 
 
     def _update_clipPickingOrder(self, pickingOrder):
-        
-        col040 = ["white", "white", "orange", "orange", "yellow"]
-        col050 = ["brown", "brown", "orange", "orange", "yellow"]
-        col080 = ["white", "white", "orange", "orange", "orange", "yellow"]
-        col090 = ["brown", "brown", "orange", "orange", "orange", "yellow"]
 
-        label040 = ["order1", "order2", "order3", "order4", "order5"]
+        col050 = ["brown", "brown", "orange", "orange", "yellow"]
+        col040 = ["white", "white", "orange", "orange", "yellow"]
+        col090 = ["brown", "brown", "orange", "orange", "orange", "yellow"]
+        col080 = ["white", "white", "orange", "orange", "orange", "yellow"]
+
         label050 = ["order1", "order2", "order3", "order4", "order5"]
-        label080 = ["order1", "order2", "order3", "order4", "order5", "order6"]
+        label040 = ["order1", "order2", "order3", "order4", "order5"]
         label090 = ["order1", "order2", "order3", "order4", "order5", "order6"]
+        label080 = ["order1", "order2", "order3", "order4", "order5", "order6"]
 
         # print(f"pickingOrder: {pickingOrder}")
 
@@ -881,8 +881,38 @@ class AIKensa(QMainWindow):
                 lightOrder = pickingOrder[widget_key][:6]
                 widget = self.stackedWidget.widget(widget_key)
                 # print(f"Widget number {widget_key}, LightOrder: {lightOrder}")
+                if widget_key in [5]:
+                    for i, order in enumerate(col050):
+                        label = widget.findChild(QLabel, f"order{i+1}")
+                        if lightOrder[i] == 1:
+                            label.setStyleSheet("QLabel { background-color: green; }")
+                        elif lightOrder[i] == 0:
+                            label.setStyleSheet(f"QLabel {{ background-color: {order}; }}")
 
+                if widget_key in [6]:
+                    for i, order in enumerate(col040):
+                        label = widget.findChild(QLabel, f"order{i+1}")
+                        if lightOrder[i] == 1:
+                            label.setStyleSheet("QLabel { background-color: green; }")
+                        elif lightOrder[i] == 0:
+                            label.setStyleSheet(f"QLabel {{ background-color: {order}; }}")
+                        
+                if widget_key in [7]:
+                    for i, order in enumerate(col090):
+                        label = widget.findChild(QLabel, f"order{i+1}")
+                        if lightOrder[i] == 1:
+                            label.setStyleSheet("QLabel { background-color: green; }")
+                        elif lightOrder[i] == 0:
+                            label.setStyleSheet(f"QLabel {{ background-color: {order}; }}")
 
+                if widget_key in [8]:
+                    for i, order in enumerate(col080):
+                        label = widget.findChild(QLabel, f"order{i+1}")
+                        if lightOrder[i] == 1:
+                            label.setStyleSheet("QLabel { background-color: green; }")
+                        elif lightOrder[i] == 0:
+                            label.setStyleSheet(f"QLabel {{ background-color: {order}; }}")
+                
 
         
     def _update_OKNG_label(self, numofPart):
