@@ -874,11 +874,13 @@ class AIKensa(QMainWindow):
         label080 = ["order1", "order2", "order3", "order4", "order5", "order6"]
         label090 = ["order1", "order2", "order3", "order4", "order5", "order6"]
 
+        # print(f"pickingOrder: {pickingOrder}")
+
         for widget_key, part_name in self.widget_dir_map.items():
             if 0 <= widget_key < len(pickingOrder):
-                lightOrder = pickingOrder[widget_key]
+                lightOrder = pickingOrder[widget_key][:6]
                 widget = self.stackedWidget.widget(widget_key)
-                print(f"LightOrder: {lightOrder}")
+                # print(f"Widget number {widget_key}, LightOrder: {lightOrder}")
 
 
 
