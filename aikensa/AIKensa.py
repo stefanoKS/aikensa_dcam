@@ -863,10 +863,25 @@ class AIKensa(QMainWindow):
 
 
     def _update_clipPickingOrder(self, pickingOrder):
+        
+        col040 = ["white", "white", "orange", "orange", "yellow"]
+        col050 = ["brown", "brown", "orange", "orange", "yellow"]
+        col080 = ["white", "white", "orange", "orange", "orange", "yellow"]
+        col090 = ["brown", "brown", "orange", "orange", "orange", "yellow"]
+
+        label040 = ["order1", "order2", "order3", "order4", "order5"]
+        label050 = ["order1", "order2", "order3", "order4", "order5"]
+        label080 = ["order1", "order2", "order3", "order4", "order5", "order6"]
+        label090 = ["order1", "order2", "order3", "order4", "order5", "order6"]
+
         for widget_key, part_name in self.widget_dir_map.items():
             if 0 <= widget_key < len(pickingOrder):
                 lightOrder = pickingOrder[widget_key]
                 widget = self.stackedWidget.widget(widget_key)
+                print(f"LightOrder: {lightOrder}")
+
+
+
         
     def _update_OKNG_label(self, numofPart):
         for widget_key, part_name in self.widget_dir_map.items():
