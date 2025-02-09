@@ -1516,7 +1516,7 @@ class InspectionThread(QThread):
         print("Inspection thread stopped.")
 
     
-    def add_columns(cursor, table_name, columns):
+    def add_columns(self, cursor, table_name, columns):
         for column_name, column_type in columns:
             try:
                 cursor.execute(f'''
