@@ -242,6 +242,8 @@ class InspectionThread(QThread):
         self.InspectionResult_DetectionID = [None]*30
         self.InspectionResult_Status = [None]*30
         self.InspectionResult_DeltaPitch = [None]*30
+        self.InspectionResult_NGReason = [None]*30
+
 
         self.InspectionImages_prev = [None]*30
         self._test = [0]*30
@@ -277,6 +279,15 @@ class InspectionThread(QThread):
         
         with open(self.cam_config_file, 'r') as file:
             self.cam_map = yaml.safe_load(file)
+
+
+        # "Read mysql id and password from yaml file"
+        with open("aikensa/mysql/id.yaml") as file:
+            credentials = yaml.load(file, Loader=yaml.FullLoader)
+            self.mysqlID = credentials["id"]
+            self.mysqlPassword = credentials["pass"]
+            self.mysqlHost = credentials["host"]
+            self.mysqlHostPort = credentials["port"]
 
 
     def release_all_camera(self):
@@ -355,7 +366,54 @@ class InspectionThread(QThread):
         )
         ''')
 
+        # List of columns to add
+        columns_to_add = [
+            ("resultpitch", "TEXT"),
+            ("status", "TEXT"),
+            ("NGreason", "TEXT")
+        ]
+
+        # Using the function to add columns
+        self.add_columns(self.cursor, "inspection_results", columns_to_add)
+
         self.conn.commit()
+
+        #Initialize connection to mysql server if available
+        try:
+            self.mysql_conn = mysql.connector.connect(
+                host=self.mysqlHost,
+                user=self.mysqlID,
+                password=self.mysqlPassword,
+                port=self.mysqlHostPort,
+                database="AIKENSAresults"
+            )
+            print(f"Connected to MySQL database at {self.mysqlHost}")
+        except Exception as e:
+            print(f"Error connecting to MySQL database: {e}")
+            self.mysql_conn = None
+
+        #try adding data to the schema in mysql
+        if self.mysql_conn is not None:
+            self.mysql_cursor = self.mysql_conn.cursor()
+            self.mysql_cursor.execute('''
+            CREATE TABLE IF NOT EXISTS inspection_results (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                partName TEXT,
+                numofPart TEXT,
+                currentnumofPart TEXT,
+                timestampHour TEXT,
+                timestampDate TEXT,
+                deltaTime REAL,
+                kensainName TEXT,
+                detected_pitch TEXT,
+                delta_pitch TEXT,
+                total_length REAL,
+                resultpitch TEXT,
+                status TEXT,
+                NGreason TEXT
+            )
+            ''')
+            self.mysql_conn.commit()
 
         print("Inspection Thread Started")
         self.initialize_model()
@@ -560,35 +618,6 @@ class InspectionThread(QThread):
                                 # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
                                 # print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
 
-                                #LOGIC to handle the CLIP PICKING ORDER
-                                # if self.HandinFrame1 == 0:
-                                #     if self.clipPickingOrder[self.inspection_config.widget][0] == 0:
-                                #         self.clipPickingOrder[self.inspection_config.widget][0] = 1
-                                #     if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 0, 0, 0, 0, 0]:
-                                #         self.clipPickingOrder[self.inspection_config.widget][1] = 1
-                                #     else:
-                                #         play_alarm_sound()
-
-                                # if self.HandinFrame2 == 0:
-                                #     if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 0, 0, 0, 0]:
-                                #         self.clipPickingOrder[self.inspection_config.widget][2] = 1
-                                #     if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 0, 0, 0]:
-                                #         self.clipPickingOrder[self.inspection_config.widget][3] = 1
-                                #     if self.inspection_config.widget in [7, 8]:
-                                #         if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
-                                #             self.clipPickingOrder[self.inspection_config.widget][4] = 1
-                                #     else:
-                                #         play_alarm_sound()
-                                
-                                # if self.HandinFrame3 == 0:
-                                #     if self.inspection_config.widget in [7, 8]:
-                                #         if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 1, 0]:
-                                #             self.clipPickingOrder[self.inspection_config.widget][5] = 1
-                                #     if self.inspection_config.widget in [5, 6]:
-                                #         if self.clipPickingOrder[self.inspection_config.widget][:6] == [1, 1, 1, 1, 0, 0]:
-                                #             self.clipPickingOrder[self.inspection_config.widget][4] = 1
-                                #     else:
-                                #         play_alarm_sound()
 
                                 if self.inspection_config.widget in [7, 8]:
                                     if (time.time() - self.pickingTimerStart) > self.pickingWaitTime:
@@ -640,10 +669,50 @@ class InspectionThread(QThread):
                                             if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
-                                # print(time.time() - self.pickingTimerStart)
-                                #emit the signal for the clip picking order
+                                if self.inspection_config.widget in [5, 6]:
+                                    if (time.time() - self.pickingTimerStart) > self.pickingWaitTime:
+                                        # print("Picking Timer Reset")
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:5] == [1, 1, 1, 1, 1]:
+                                            if self.HandinFrame1 == 0 or self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:5] == [1, 1, 1, 1, 0]:
+                                            if self.HandinFrame2 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][4] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:5] == [1, 1, 1, 0, 0]:
+                                            if self.HandinFrame2 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][3] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:5] == [1, 1, 0, 0, 0]:
+                                            if self.HandinFrame2 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][2] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
+                                        if self.clipPickingOrder[self.inspection_config.widget][:5] == [1, 0, 0, 0, 0]:
+                                            if self.HandinFrame1 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][1] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+                                                
+                                        if self.clipPickingOrder[self.inspection_config.widget][:5] == [0, 0, 0, 0, 0]:
+                                            if self.HandinFrame1 == 0:
+                                                self.clipPickingOrder[self.inspection_config.widget][0] = 1
+                                                self.pickingTimerStart = time.time()
+                                            if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
+                                                play_alarm_sound()
+
                                 self.pickingOrderSignal.emit(self.clipPickingOrder)
-                                # print(f"Clip Picking Order: {self.clipPickingOrder[self.inspection_config.widget]}")
 
                                 self.clipImage1 = self.convertQImage(self.clipImage1)
                                 self.clipImage2 = self.convertQImage(self.clipImage2)
@@ -676,6 +745,218 @@ class InspectionThread(QThread):
                     self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
+            #for normal inspection
+            if self.inspection_config.widget in [5, 6, 7, 8]:
+                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
+                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
+                        self.inspection_config.furyou_plus, 
+                        self.inspection_config.furyou_minus, 
+                        self.inspection_config.furyou_plus_10, 
+                        self.inspection_config.furyou_minus_10, 
+                        self.inspection_config.kansei_plus, 
+                        self.inspection_config.kansei_minus,
+                        self.inspection_config.kansei_plus_10,
+                        self.inspection_config.kansei_minus_10)
+                    print("Manual Adjustment Done")
+                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
+                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
+                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
+                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
+                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
+                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
+                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
+                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
+                    
+                if self.inspection_config.counterReset is True:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
+                    self.inspection_config.counterReset = False
+                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
+                            deltaTime = 0.0,
+                            kensainName = self.inspection_config.kensainNumber, 
+                            detected_pitch_str = "COUNTERRESET", 
+                            delta_pitch_str = "COUNTERRESET", 
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
+
+                if self.InspectionTimeStart is None:
+                    self.InspectionTimeStart = time.time()
+
+                if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
+                    self.inspection_config.doInspection = False
+
+                if self.inspection_config.doInspection is True:
+                    self.inspection_config.doInspection = False
+                    print("Inspection Started")
+
+                    if self.inspection_config.widget in [5, 6]:
+                        if self.clipPickingOrder[self.inspection_config.widget][:5] != [1, 1, 1, 1, 1]:
+                            play_alarm_sound()
+                            continue
+
+                    if self.inspection_config.widget in [7, 8]:
+                        if self.clipPickingOrder[self.inspection_config.widget][:6] != [1, 1, 1, 1, 1, 1]:
+                            play_alarm_sound()
+                            continue
+                
+                    if self.InspectionTimeStart is not None:
+
+                        if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
+                            print("Inspection Time is over")
+                            self.InspectionTimeStart = time.time()
+
+                            self.emit = self.combinedImage_scaled
+                            if self.emit is None:
+                                self.emit = np.zeros((428, 1791, 3), dtype=np.uint8)
+
+                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
+                            self.partCam.emit(self.convertQImage(self.emit))
+
+                            self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
+                            self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+
+                            self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+
+                            self.InspectionImages[0] = self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] =self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
+
+                            if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12]: # emit katabu
+                                if self.inspection_config.widget in [5, 7, 9, 11]:
+                                    #katabu L is blank
+                                    #katabu R is cropped image
+                                    self.katabuImageL = self.createBlackImage(width=256, height=128)
+                                    self.katabuImageR = self.frameCrop(self.combinedImage, self.katabuImageR_Crop[0], self.katabuImageR_Crop[1], self.katabuImageR_Crop[2], self.katabuImageR_Crop[3], self.katabuImageR_Crop[4], self.katabuImageR_Crop[5])
+                                    self.katabuImage = self.katabuImageR.copy()
+                                    self.katabuImage_init = self.katabuImageR.copy()
+                                if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                    #katabu L is cropped image
+                                    #katabu R is blank
+                                    self.katabuImageL = self.frameCrop(self.combinedImage, self.katabuImageL_Crop[0], self.katabuImageL_Crop[1], self.katabuImageL_Crop[2], self.katabuImageL_Crop[3], self.katabuImageL_Crop[4], self.katabuImageL_Crop[5])
+                                    self.katabuImageR = self.createBlackImage(width=256, height=128)
+                                    self.katabuImage = self.katabuImageL.copy()
+                                    self.katabuImage_init = self.katabuImageL.copy()
+
+                                self.partKatabuL.emit(self.convertQImage(self.katabuImageL))
+                                self.partKatabuR.emit(self.convertQImage(self.katabuImageR))
+
+                            for i in range(len(self.InspectionImages)):
+                                self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                            self.InspectionImages_bgr[i], 
+                                            self.P828XXW0X0P_CLIP_Model, 
+                                            slice_height=1280, slice_width=1280, 
+                                            overlap_height_ratio=0.0, overlap_width_ratio=0.2,
+                                            postprocess_match_metric="IOS",
+                                            postprocess_match_threshold=0.2,
+                                            postprocess_class_agnostic=True,
+                                            postprocess_type="GREEDYNMM",
+                                            verbose=0,
+                                            perform_standard_pred=False
+                                        )
+                                if self.inspection_config.widget in [5, 7, 9, 11]:
+                                    self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtColor(self.katabuImage, cv2.COLOR_BGR2RGB),
+                                                                                                        stream=True,
+                                                                                                        verbose=False,
+                                                                                                        conf=0.1,
+                                                                                                        iou=0.5)
+
+                                if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                    self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtColor(self.katabuImage, cv2.COLOR_BGR2RGB),
+                                                                                                        stream=True,
+                                                                                                        verbose=False,
+                                                                                                        conf=0.1,
+                                                                                                        iou=0.5)    
+                                    
+                                self.InspectionImages[i], self.InspectionImagesKatabu[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P828XXW0X0P_check(self.InspectionImages[i], self.katabuImage,
+                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list,
+                                                                                                                                                                                                                self.InspectionResult_KatabuDetection,
+                                                                                                                                                                                                                self.widget_name_map[self.inspection_config.widget])
+
+
+                                for i in range(len(self.InspectionResult_Status)):
+                                    if self.InspectionResult_Status[i] == "OK": 
+                                        # Increment the 'OK' count at the appropriate index (1)
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
+                                        play_ok_sound()
+
+                                    elif self.InspectionResult_Status[i] == "NG": 
+                                        # Increment the 'NG' count at the appropriate index (0)
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
+                                        play_ng_sound()
+
+                            self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
+                            self.save_image_result_withKatabu(self.combinedImage, self.InspectionImages[0], self.katabuImage_init, self.InspectionImagesKatabu[0], self.InspectionResult_Status[0])
+
+                            self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                                    numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
+                                    currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                    deltaTime = 0.0,
+                                    kensainName = self.inspection_config.kensainNumber, 
+                                    detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
+                                    delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
+
+                            # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
+                            # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
+                            # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
+
+                            # #Add custom text to the image
+                            # if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and self.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
+                            #     if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 150 == 0:
+                            #         imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
+                            #         img_pil = Image.fromarray(imgresults)
+                            #         font = ImageFont.truetype(self.kanjiFontPath, 120)
+                            #         draw = ImageDraw.Draw(img_pil)
+                            #         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                            #         draw.text((centerpos[0]-900, centerpos[1]+20), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
+                            #         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                            #         play_konpou_sound()
+                            #         self.InspectionImages[0] = imgResult
+
+                            #     else:
+                            #         imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
+                            #         img_pil = Image.fromarray(imgresults)
+                            #         font = ImageFont.truetype(self.kanjiFontPath, 120)
+                            #         draw = ImageDraw.Draw(img_pil)
+                            #         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                            #         draw.text((centerpos[0]-900, centerpos[1]+20), u"束ねてください", font=font, fill=(5, 80, 160, 0))
+                            #         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                            #         play_keisoku_sound()         
+                            #         self.InspectionImages[0] = imgResult                         
+
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
+
+                            self.P82833W050PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W040PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82833W090PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W080PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
+
+                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
+                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
+
+                            if self.inspection_config.widget in [5, 7, 9, 11]:
+                                self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
+                            if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
+                            
+                            time.sleep(1.5)
 
             #for the kengen
             if self.inspection_config.widget in [9, 10, 11, 12]:    
@@ -711,7 +992,10 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -817,7 +1101,7 @@ class InspectionThread(QThread):
                                                                                                         conf=0.1,
                                                                                                         iou=0.5)    
                                     
-                                self.InspectionImages[i], self.InspectionImagesKatabu[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i] = P828XXW0X0P_check(self.InspectionImages[i], self.katabuImage,
+                                self.InspectionImages[i], self.InspectionImagesKatabu[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P828XXW0X0P_check(self.InspectionImages[i], self.katabuImage,
                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                 self.InspectionResult_KatabuDetection,
                                                                                                                                                                                                                 self.widget_name_map[self.inspection_config.widget])
@@ -846,7 +1130,10 @@ class InspectionThread(QThread):
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                                    total_length=0)
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
 
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -983,14 +1270,18 @@ class InspectionThread(QThread):
                 kensainName = self.inspection_config.kensainNumber, 
                 detected_pitch_str = "MANUAL", 
                 delta_pitch_str = "MANUAL", 
-                total_length=0)
+                total_length=0,
+                resultPitch = "MANUAL",
+                status = "MANUAL",
+                NGreason = "MANUAL")
 
         return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
     
     def save_result_database(self, partname, numofPart, 
                              currentnumofPart, deltaTime, 
                              kensainName, detected_pitch_str, 
-                             delta_pitch_str, total_length):
+                             delta_pitch_str, total_length, 
+                             resultPitch, status, NGreason):
         # Ensure all inputs are strings or compatible types
 
         timestamp = datetime.now()
@@ -1007,12 +1298,27 @@ class InspectionThread(QThread):
         detected_pitch_str = str(detected_pitch_str)
         delta_pitch_str = str(delta_pitch_str)
         total_length = float(total_length)  # Ensure this is a float
+        resultPitch = str(resultPitch)
+        status = str(status)
+        NGreason = str(NGreason)
 
         self.cursor.execute('''
-        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.conn.commit()
+
+        # Update the totatl part number (Maybe the day has been changed)
+        for key, value in self.widget_dir_map.items():
+            self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
+
+        #Also save to mysql cursor
+        self.mysql_cursor.execute('''
+        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
+        self.mysql_conn.commit()
+
 
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
@@ -1208,3 +1514,15 @@ class InspectionThread(QThread):
         print("Releasing all cameras.")
         self.release_all_camera()
         print("Inspection thread stopped.")
+
+    
+    def add_columns(cursor, table_name, columns):
+        for column_name, column_type in columns:
+            try:
+                cursor.execute(f'''
+                ALTER TABLE {table_name}
+                ADD COLUMN {column_name} {column_type};
+                ''')
+                print(f"Added column: {column_name}")
+            except sqlite3.OperationalError as e:
+                print(f"Could not add column {column_name}: {e}")

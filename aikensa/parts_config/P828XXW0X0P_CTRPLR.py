@@ -128,7 +128,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         idSpec = clipSpec_080P
 
 
-
     elif partname == "P82833W050PKENGEN":
         pitchSpec = pitchSpec_050PKENGEN
         tolerance_pitch = pitchTolerance_050P
@@ -150,7 +149,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         idSpec = clipSpec_080P
 
 
-
     elif partname == "P82833W050PCLIPSOUNYUUKI":
         pitchSpec = pitchSpec_050PCLIPSOUNYUUKI
         tolerance_pitch = pitchTolerance_050PCLIPSOUNYUUKI
@@ -170,8 +168,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         pitchSpec = pitchSpec_080PCLIPSOUNYUUKI
         tolerance_pitch = pitchTolerance_080PCLIPSOUNYUUKI
         idSpec = clipSpec_080P
-
-
 
 
     #KATABU MARKING DETECTION
@@ -231,8 +227,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
             resultPitch = [0] * len(pitchSpec)
             resultid = [0] * len(idSpec)
             image = draw_status_text_PIL(image, status, print_status, size = "normal")
+            ngreason = "KATABU MARKING NOT FOUND"
 
-            return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
+            return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
     
         
     for i, detection in enumerate(sorted_detections):
@@ -280,18 +277,8 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         resultid = [0] * len(idSpec)
         image = draw_status_text_PIL(image, status, print_status, size = "normal")
         cv2.imwrite("test.png", image)
-        return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
-    
-    # if len(measuredPitch) != len(pitchSpec):
-    #     status = "NG"
-    #     print_status = "NG クリップ数"
-    #     print(f"Status:{print_status}")
-    #     measuredPitch = [0] * len(pitchSpec)
-    #     resultPitch = [0] * len(pitchSpec)
-    #     resultid = [0] * len(idSpec)
-    #     draw_status_text_PIL(image, status, print_status, size = "normal")
-
-    #     return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
+        ngreason = "CLIP COLOR MISMATCH"
+        return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
     
     if katabumarking_lengths is not None:
         if katabumarking_lengths and katabumarking_lengths[0] != 0:
@@ -310,12 +297,15 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)
+        status = "NG"
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if any(result != 1 for result in resultPitch):
         print_status = print_status + " ピッチ不良"
         status = "NG"
         # print(f"Status:{print_status}")
         image  = draw_status_text_PIL(image, status, print_status, size = "normal")
+        ngreason = "CLIP PITCH NG"
 
     print(f"Measured Pitch: {measuredPitch}")
     print(f"Detected ID: {detectedid}")
@@ -326,8 +316,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     if status == "OK":
         image = draw_status_text(image, status, size = "normal")
+        ngreason = "None"
     
-    return image, img_katabumarking, measuredPitch, resultPitch, resultid, status
+    return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
 
 
 def draw_status_text_PIL(image, status, print_status, size = "normal"):
