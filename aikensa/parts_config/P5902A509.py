@@ -119,6 +119,10 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
             ngreason = "CLIP COLOR MISMATCH"
+
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
             
 
     if widgetNumber == 6:
@@ -129,6 +133,10 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
             ngreason = "CLIP COLOR MISMATCH"
+
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
     for h in hanire_detection_result:
         # print(h.boxes)
@@ -155,6 +163,10 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
             ngreason = "CLIP IS NOT INSERTED PROPERLY DETECTED"
+
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
     combined_mask = None
 
@@ -190,12 +202,20 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
         measuredPitch = [0] * (len(pitchSpec)+1)
         ngreason = "NUMBER OF CLIP MISMATCH"
 
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
+
     if len(detectedid) > 5:
         print_status = print_status + " クリップ数過多 "
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
         ngreason = "NUMBER OF CLIP MISMATCH"
+
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
     if len(detectedid) == 5 and status == "OK":
 

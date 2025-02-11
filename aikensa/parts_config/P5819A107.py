@@ -187,12 +187,22 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        measuredPitch = [0] * (len(pitchSpec))
         ngreason = "NUMBER OF CLIP MISMATCH"
+        status = "NG"
+        print_status = "クリップ数不足"
+
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
+
 
     if any(result != 1 for result in resultPitch):
         flag_pitch_furyou = 1
         status = "NG"
         ngreason = "CLIP PITCH NG"
+        print_status = "クリップピッチ不良"
 
     # print("Resultpitch: ", resultPitch)
     # print("Resultid: ", resultid)

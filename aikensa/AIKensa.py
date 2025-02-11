@@ -295,6 +295,8 @@ class AIKensa(QMainWindow):
             self.connect_inspectionConfig_button(i, "furyou_minus_10", "furyou_minus_10", True)
             #connect reset button
             self.connect_inspectionConfig_button(i, "counterReset", "counterReset", True)
+            self.connect_line_edit_text_changed(widget_index=i, line_edit_name="kensain_name", inspection_param="kensainNumber")
+
 
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
