@@ -9,6 +9,7 @@ import yaml
 import time
 import logging
 import sqlite3
+import mysql.connector
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -1008,7 +1009,7 @@ class InspectionThread(QThread):
                     print("Inspection Started")
                     # print(self.inspection_config.widget)
                     print(self.inspection_config.kensainNumber)
-                    if self.inspection_config.kensainNumber != "KENGEN":
+                    if self.inspection_config.kensainNumber not in ["KENGEN", "10194"]:
                         print("NoKengen")
                         # imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
                         # imgresults = np.ascontiguousarray(imgresults)

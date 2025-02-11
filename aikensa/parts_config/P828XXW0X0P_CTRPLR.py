@@ -253,7 +253,21 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
             image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
         prev_center = center
 
-    #POP The first and last element for the KENGEN and normal
+    #First check, check if any clip is detected or not
+    if len (detectedid) == 0:
+        status = "NG"
+        print_status = print_status + "製品認識不良"
+        print(f"Status:{print_status}")
+        measuredPitch = [0] * len(pitchSpec)
+        resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        image = draw_status_text_PIL(image, status, print_status, size = "normal")
+        ngreason = "PART NOT FOUND"
+
+        return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
+
+
+    #POP The first and last element for the KENGEN and normal if the detectin lost is not empty
     if partname in ["P82833W050P", "P82832W040P", "P82833W090P", "P82832W080P", "P82833W050PKENGEN", "P82832W040PKENGEN", "P82833W090PKENGEN", "P82832W080PKENGEN"]:
         #Pop the first and last element
         detectedposX.pop(0)
