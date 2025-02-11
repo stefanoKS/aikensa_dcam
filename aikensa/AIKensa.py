@@ -369,11 +369,11 @@ class AIKensa(QMainWindow):
         else:
             print(f"Button '{qtbutton}' not found.")
 
-    def connect_line_edit_text_changed(self, widget_index, line_edit_name, cam_param):
+    def connect_line_edit_text_changed(self, widget_index, line_edit_name, inspection_param):
         widget = self.stackedWidget.widget(widget_index)
         line_edit = widget.findChild(QLineEdit, line_edit_name)
         if line_edit:
-            line_edit.textChanged.connect(lambda text: self._set_cam_params(self.cam_thread, cam_param, text))
+            line_edit.textChanged.connect(lambda text: self._set_inspection_params(self.inspection_thread, inspection_param, text))
 
     def connect_inspectionConfig_button(self, widget_index, button_name, cam_param, value):
         widget = self.stackedWidget.widget(widget_index)
