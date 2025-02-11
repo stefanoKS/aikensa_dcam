@@ -118,6 +118,8 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             status = "NG"
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
+            ngreason = "CLIP COLOR MISMATCH"
+            
 
     if widgetNumber == 6:
         if 0 in detectedid:
@@ -126,6 +128,7 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             status = "NG"
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
+            ngreason = "CLIP COLOR MISMATCH"
 
     for h in hanire_detection_result:
         # print(h.boxes)
@@ -151,6 +154,7 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             status = "NG"
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
+            ngreason = "CLIP IS NOT INSERTED PROPERLY DETECTED"
 
     combined_mask = None
 
@@ -174,23 +178,24 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
             status = "NG"
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
-
+            ngreason = "PART IS NOT FOUND"
             image = draw_status_text_PIL(image, status, print_status, size="normal")
 
-            return image, measuredPitch, resultPitch, deltaPitch, status
-
+            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
     if len(detectedid) < 5:
         print_status = print_status + " クリップ数不足 "
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedid) > 5:
         print_status = print_status + " クリップ数過多 "
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedid) == 5 and status == "OK":
 
@@ -242,19 +247,22 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
         if abs(totalLength - totalLengthSpec) <= totalLengthTolerance:
             status = "OK"
             resultPitch.append(1)
+            ngreason = "None"
         else:
             status = "NG"
             print_status = print_status + " 全長不良"
             resultPitch.append(0)
+            ngreason = "TOTAL LENGTH NG"
 
         if 0 in resultPitch:
             status = "NG"
             print_status = print_status + "ピッチ不良 "
+            ngreason = "CLIP PITCH NG"
 
     #Add print status to the top center of the image
     image = draw_status_text_PIL(image, status, print_status, size="normal")
 
-    return image, measuredPitch, resultPitch, deltaPitch, status
+    return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
     
@@ -289,6 +297,7 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
 
     status = "OK"
     print_status = ""
+    ngreason = "None"
 
     pitchSpec = pitchSpec_dailyTenken01
     tolerance_pitch = pitchTolerance
@@ -361,8 +370,9 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
             measuredPitch = [0] * (len(pitchSpec)+1)
 
             image = draw_status_text_PIL(image, status, print_status, size="normal")
+            ngreason = "PART NOT FOUND"
 
-            return image, measuredPitch, resultPitch, deltaPitch, status
+            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 
     if len(detectedid) < 5:
@@ -370,12 +380,14 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedid) > 5:
         print_status = print_status + " クリップ数過多 "
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedid) == 5 and status == "OK":
 
@@ -426,7 +438,7 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
     #Add print status to the top center of the image
     image = draw_status_text_PIL(image, status, print_status, size="normal")
 
-    return image, measuredPitch, resultPitch, deltaPitch, status
+    return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 def dailyTenken02(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
     
@@ -461,6 +473,7 @@ def dailyTenken02(image, clip_detection_result, segmentation_result, hanire_dete
 
     status = "OK"
     print_status = ""
+    ngreason = "None"
 
     pitchSpec = pitchSpec_dailyTenken01
     tolerance_pitch = pitchTolerance
@@ -494,12 +507,14 @@ def dailyTenken02(image, clip_detection_result, segmentation_result, hanire_dete
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedid) > 4:
         print_status = print_status + " クリップ数過多 "
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedid) == 4:
         result = check_id(detectedid, idSpec_dailyTenken02)
@@ -508,10 +523,11 @@ def dailyTenken02(image, clip_detection_result, segmentation_result, hanire_dete
             print_status = print_status + " クリップ類不良"
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
+            ngreason = "CLIP COLOR MISMATCH"
  
     image = draw_status_text_PIL(image, status, print_status, size="normal")
 
-    return image, measuredPitch, resultPitch, deltaPitch, status
+    return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 def dailyTenken03(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
     
@@ -546,6 +562,7 @@ def dailyTenken03(image, clip_detection_result, segmentation_result, hanire_dete
 
     status = "OK"
     print_status = ""
+    ngreason = "None"
 
     pitchSpec = pitchSpec_dailyTenken01
     tolerance_pitch = pitchTolerance
@@ -573,12 +590,14 @@ def dailyTenken03(image, clip_detection_result, segmentation_result, hanire_dete
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedHanireid) > 4:
         print_status = print_status + " クリップ数過多 "
         status = "NG"
         resultPitch = [0] * (len(pitchSpec)+1)
         measuredPitch = [0] * (len(pitchSpec)+1)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if len(detectedHanireid) == 4:
         result = check_id(detectedHanireid, idSpec_dailyTenken03)
@@ -587,10 +606,11 @@ def dailyTenken03(image, clip_detection_result, segmentation_result, hanire_dete
             print_status = print_status + " 半入れ認識不良"
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
+            ngreason = "HANIRE AI NOT WORKING"
 
     image = draw_status_text_PIL(image, status, print_status, size="normal")
 
-    return image, measuredPitch, resultPitch, deltaPitch, status
+    return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 
 def extend_line(p1, p2):

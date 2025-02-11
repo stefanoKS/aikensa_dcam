@@ -90,8 +90,9 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
             resultPitch = [0] * (len(pitchSpec))
             measuredPitch = [0] * (len(pitchSpec))
             resultid = [0] * len(idSpec)
+            ngreason = "PART IS NOT FOUND"
 
-            return image, measuredPitch, resultPitch, resultid, status
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     combined_rmask = None
 
@@ -114,8 +115,9 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
             resultPitch = [0] * (len(pitchSpec))
             measuredPitch = [0] * (len(pitchSpec))
             resultid = [0] * len(idSpec)
+            ngreason = "PART IS NOT FOUND"
 
-            return image, measuredPitch, resultPitch, resultid, status
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
         
 
 
@@ -185,10 +187,12 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)
+        ngreason = "NUMBER OF CLIP MISMATCH"
 
     if any(result != 1 for result in resultPitch):
         flag_pitch_furyou = 1
         status = "NG"
+        ngreason = "CLIP PITCH NG"
 
     # print("Resultpitch: ", resultPitch)
     # print("Resultid: ", resultid)
@@ -202,7 +206,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     image = draw_status_text_PIL(image, status, print_status, size="normal")
     
-    return image, measuredPitch, resultPitch, resultid, status
+    return image, measuredPitch, resultPitch, resultid, status, ngreason
 
 
 

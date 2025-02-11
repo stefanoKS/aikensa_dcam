@@ -87,9 +87,6 @@ class InspectionThread(QThread):
     today_numofPart_signal = pyqtSignal(list)
     current_numofPart_signal = pyqtSignal(list)
     
-
-
-
     # ethernet_status_red_tenmetsu = pyqtSignal(list)
     # ethernet_status_green_hold = pyqtSignal(list)
     # ethernet_status_red_hold = pyqtSignal(list)
@@ -197,6 +194,7 @@ class InspectionThread(QThread):
         self.InspectionResult_DetectionID = [None]*30
         self.InspectionResult_Status = [None]*30
         self.InspectionResult_DeltaPitch = [None]*30
+        self.InspectionResult_NGReason = [None]*30
 
         self.DetectionResult_HoleDetection = [None]*30
 
@@ -303,6 +301,16 @@ class InspectionThread(QThread):
         )
         ''')
 
+        # List of columns to add
+        columns_to_add = [
+            ("resultpitch", "TEXT"),
+            ("status", "TEXT"),
+            ("NGreason", "TEXT")
+        ]
+
+        # Using the function to add columns
+        self.add_columns(self.cursor, "inspection_results", columns_to_add)
+
         self.conn.commit()
 
                 #Initialize connection to mysql server if available
@@ -334,7 +342,10 @@ class InspectionThread(QThread):
                 kensainName TEXT,
                 detected_pitch TEXT,
                 delta_pitch TEXT,
-                total_length REAL
+                total_length REAL,
+                resultpitch TEXT,
+                status TEXT,
+                NGreason TEXT
             )
             ''')
             self.mysql_conn.commit()
@@ -362,8 +373,6 @@ class InspectionThread(QThread):
         for key, value in self.widget_dir_map.items():
             self.inspection_config.current_numofPart[key] = self.get_last_entry_currentnumofPart(value)
             self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
-
-
 
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam1.yaml"):
             with open("./aikensa/cameracalibration/homography_param_cam1.yaml") as file:
@@ -518,7 +527,10 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -562,7 +574,8 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
                                 self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=1080, verbose=False)
                                 self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P5902A509_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -586,7 +599,10 @@ class InspectionThread(QThread):
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                                    total_length=0)
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
                                 
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -654,7 +670,10 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -694,7 +713,7 @@ class InspectionThread(QThread):
                             for i in range(len(self.InspectionImages)):
                                 self.InspectionResult_ClipDetection[i] = self.P658207LE0A_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
                                 self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=1080, verbose=False)
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P658207LE0A_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i])
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P658207LE0A_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i])
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -718,7 +737,10 @@ class InspectionThread(QThread):
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                                    total_length=0)
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
 
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
@@ -770,7 +792,10 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -831,10 +856,10 @@ class InspectionThread(QThread):
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P5819A107_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=960, verbose=False)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P5819A107_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=960, verbose=False)
 
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5819A107_check(self.InspectionImages[i], 
-                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list,
-                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Left[i],
-                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P5819A107_check(self.InspectionImages[i], 
+                                                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list,
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -858,7 +883,10 @@ class InspectionThread(QThread):
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                                    total_length=0)
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
                                 
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -933,7 +961,7 @@ class InspectionThread(QThread):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
                         self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
-                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_dailyTenken01(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P5902A509_dailyTenken01(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 
                         for i in range(len(self.InspectionResult_Status)):
                             if self.InspectionResult_Status[i] == "OK": 
@@ -951,7 +979,10 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                             delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = self.InspectionResult_PitchResult[0], 
+                            status = self.InspectionResult_Status[0], 
+                            NGreason = self.InspectionResult_NGReason[0])
                         
                     # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                     # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -997,7 +1028,7 @@ class InspectionThread(QThread):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
                         self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
-                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_dailyTenken02(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P5902A509_dailyTenken02(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 
                         for i in range(len(self.InspectionResult_Status)):
                             if self.InspectionResult_Status[i] == "OK": 
@@ -1015,8 +1046,11 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                             delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                            total_length=0)
-                        
+                            total_length=0,
+                            resultPitch = self.InspectionResult_PitchResult[0], 
+                            status = self.InspectionResult_Status[0], 
+                            NGreason = self.InspectionResult_NGReason[0])
+                
                     # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                     # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
                     # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
@@ -1061,7 +1095,7 @@ class InspectionThread(QThread):
                         self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
                         self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
                         self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
-                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i] = P5902A509_dailyTenken03(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P5902A509_dailyTenken03(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
 
                         for i in range(len(self.InspectionResult_Status)):
                             if self.InspectionResult_Status[i] == "OK": 
@@ -1079,7 +1113,10 @@ class InspectionThread(QThread):
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                             delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = self.InspectionResult_PitchResult[0], 
+                            status = self.InspectionResult_Status[0], 
+                            NGreason = self.InspectionResult_NGReason[0])
                         
                     # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                     # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -1168,14 +1205,18 @@ class InspectionThread(QThread):
                 kensainName = self.inspection_config.kensainNumber, 
                 detected_pitch_str = "MANUAL", 
                 delta_pitch_str = "MANUAL", 
-                total_length=0)
+                total_length=0,
+                resultPitch = "MANUAL",
+                status = "MANUAL",
+                NGreason = "MANUAL")
 
         return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
     
     def save_result_database(self, partname, numofPart, 
                              currentnumofPart, deltaTime, 
                              kensainName, detected_pitch_str, 
-                             delta_pitch_str, total_length):
+                             delta_pitch_str, total_length, 
+                             resultPitch, status, NGreason):
         # Ensure all inputs are strings or compatible types
 
         timestamp = datetime.now()
@@ -1192,19 +1233,27 @@ class InspectionThread(QThread):
         detected_pitch_str = str(detected_pitch_str)
         delta_pitch_str = str(delta_pitch_str)
         total_length = float(total_length)  # Ensure this is a float
+        resultPitch = str(resultPitch)
+        status = str(status)
+        NGreason = str(NGreason)
 
         self.cursor.execute('''
-        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.conn.commit()
-        
+
+        # Update the totatl part number (Maybe the day has been changed)
+        for key, value in self.widget_dir_map.items():
+            self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
+
         #Also save to mysql cursor
         self.mysql_cursor.execute('''
-        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.mysql_conn.commit()
+
 
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
