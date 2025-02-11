@@ -1446,3 +1446,15 @@ class InspectionThread(QThread):
         print("Releasing all cameras.")
         self.release_all_camera()
         print("Inspection thread stopped.")
+
+    def add_columns(self, cursor, table_name, columns):
+        for column_name, column_type in columns:
+            try:
+                cursor.execute(f'''
+                ALTER TABLE {table_name}
+                ADD COLUMN {column_name} {column_type};
+                ''')
+                print(f"Added column: {column_name}")
+                
+            except sqlite3.OperationalError as e:
+                print(f"Could not add column {column_name}: {e}")
