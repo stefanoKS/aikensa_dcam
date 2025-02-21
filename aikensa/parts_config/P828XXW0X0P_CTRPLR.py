@@ -17,10 +17,10 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
-pitchSpec_050P = [85, 87, 98, 98, 78, 113, 103]
-pitchSpec_040P = [103, 113, 78, 98, 98, 87, 85]
-pitchSpec_090P = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28]
-pitchSpec_080P = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85]
+pitchSpec_050P = [85, 87, 98, 98, 78, 113, 103, 14]
+pitchSpec_040P = [103, 113, 78, 98, 98, 87, 85, 14]
+pitchSpec_090P = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28, 14]
+pitchSpec_080P = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85, 14]
 
 pitchSpec_050PKENGEN = [85, 87, 98, 98, 78, 113, 103, 14]
 pitchSpec_040PKENGEN = [103, 113, 78, 98, 98, 87, 85, 14]
@@ -47,10 +47,10 @@ clipSpec_040P = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2]
 clipSpec_090P = [2, 1, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 1]
 clipSpec_080P = [0, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 2]
 
-clipSpec_050PCLIPSOUNYUUKI = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
-clipSpec_040PCLIPSOUNYUUKI = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2]
-clipSpec_090PCLIPSOUNYUUKI = [2, 1, 0, 0, 0, 0, 3, 3, 3, 0, 0, 0, 1]
-clipSpec_080PCLIPSOUNYUUKI = [0, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 2]
+clipSpec_050PCLIPSOUNYUUKI = [0, 0, 0, 0, 4, 4, 0] #white is 0, brown is 1, yellow is 2, orange is 3, 4 is hole
+clipSpec_040PCLIPSOUNYUUKI = [1, 4, 4, 1, 1, 1, 1]
+clipSpec_090PCLIPSOUNYUUKI = [0, 0, 0, 0, 4, 4, 4, 0, 0, 0]
+clipSpec_080PCLIPSOUNYUUKI = [1, 1, 1, 4, 4, 4, 1, 1, 1, 1]
 
 pitchSpec_Katabu = [14]
 pitchTolerance_Katabu = [1.7]
@@ -172,6 +172,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
 
     #KATABU MARKING DETECTION
+    #only do the katabu marking detection if the part is not ___clipsounyuuki
+    if partname not in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
+        
     #class 0 is for clip, class 1 is for katabu marking
     for r in katabumarking_detection:
         for box in r.boxes:
