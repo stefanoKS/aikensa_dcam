@@ -174,67 +174,68 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
     #KATABU MARKING DETECTION
     #only do the katabu marking detection if the part is not ___clipsounyuuki
     if partname not in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
-        
-    #class 0 is for clip, class 1 is for katabu marking
-    for r in katabumarking_detection:
-        for box in r.boxes:
-            x_marking, y_marking = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
-            w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
-            class_id_marking = int(box.cls.cpu())
-
-            if class_id_marking == 0:
-                color = (0, 255, 0)
-            elif class_id_marking == 1:
-                color = (100, 100, 200)
-
-            center_katabummarking = draw_bounding_box(img_katabumarking, 
-                                       x_marking, y_marking, 
-                                       w_marking, h_marking, 
-                                       [img_katabumarking.shape[1], img_katabumarking.shape[0]], color=color,
-                                       bbox_offset=3, thickness=2)
-
-            if class_id_marking == 1:
-                if partname in ["P82833W050P", "P82833W090P", "P82833W050PKENGEN", "P82833W090PKENGEN"]:
-                    center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
-                elif partname in ["P82832W040P", "P82832W080P", "P82832W040PKENGEN", "P82832W080PKEGEN"]:
-                    center_katabummarking = (int(x_marking + w_marking/2), int(y_marking))
             
-            if prev_center_katabumarking is not None:
-                length = calclength(prev_center_katabumarking, center_katabummarking)*pixelMultiplier_katabumarking
-                katabumarking_lengths.append(length)
-                line_center = ((prev_center_katabumarking[0] + center_katabummarking[0]) // 2, (prev_center_katabumarking[1] + center_katabummarking[1]) // 2)
-                img_katabumarking = drawbox(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
-                img_katabumarking = drawtext(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
+        #class 0 is for clip, class 1 is for katabu marking
+        for r in katabumarking_detection:
+            for box in r.boxes:
+                x_marking, y_marking = float(box.xywh[0][0].cpu()), float(box.xywh[0][1].cpu())
+                w_marking, h_marking = float(box.xywh[0][2].cpu()), float(box.xywh[0][3].cpu())
+                class_id_marking = int(box.cls.cpu())
 
-            prev_center_katabumarking = center_katabummarking
+                if class_id_marking == 0:
+                    color = (0, 255, 0)
+                elif class_id_marking == 1:
+                    color = (100, 100, 200)
 
-            detectedposX_katabumarking.append(center_katabummarking[0])
-            detectedposY_katabumarking.append(center_katabummarking[1])
-  
-        katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpec_Katabu, pitchTolerance_Katabu)
+                center_katabummarking = draw_bounding_box(img_katabumarking, 
+                                        x_marking, y_marking, 
+                                        w_marking, h_marking, 
+                                        [img_katabumarking.shape[1], img_katabumarking.shape[0]], color=color,
+                                        bbox_offset=3, thickness=2)
 
-        xy_pairs_katabumarking = list(zip(detectedposX_katabumarking, detectedposY_katabumarking))
-        draw_pitch_line(img_katabumarking, xy_pairs_katabumarking, katabupitchresult, thickness=2)
+                if class_id_marking == 1:
+                    if partname in ["P82833W050P", "P82833W090P", "P82833W050PKENGEN", "P82833W090PKENGEN"]:
+                        center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
+                    elif partname in ["P82832W040P", "P82832W080P", "P82832W040PKENGEN", "P82832W080PKEGEN"]:
+                        center_katabummarking = (int(x_marking + w_marking/2), int(y_marking))
+                
+                if prev_center_katabumarking is not None:
+                    length = calclength(prev_center_katabumarking, center_katabummarking)*pixelMultiplier_katabumarking
+                    katabumarking_lengths.append(length)
+                    line_center = ((prev_center_katabumarking[0] + center_katabummarking[0]) // 2, (prev_center_katabumarking[1] + center_katabummarking[1]) // 2)
+                    img_katabumarking = drawbox(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
+                    img_katabumarking = drawtext(img_katabumarking, line_center, length, font_scale=0.8, offset=40, font_thickness=2)
 
-        #pick only the first element if array consists of more than 1 element -> detection POKAYOKE (if detection is not that great)
-        if len(katabumarking_lengths) > 1:
-            katabumarking_lengths = katabumarking_lengths[:1]
-        #since there is only one katabu marking, we can just use the first element -> detection POKAYOKE (if detection is not that great)
-        print(f"Katabu Marking Length: {katabumarking_lengths}")
+                prev_center_katabumarking = center_katabummarking
 
-        #if katabumarking_lengths is empty, then it is NG
-        if katabumarking_lengths == []:
-            status = "NG"
-            print_status = print_status + "型部マーキング認識不良"
-            print(f"Status:{print_status}")
-            measuredPitch = [0] * len(pitchSpec)
-            resultPitch = [0] * len(pitchSpec)
-            resultid = [0] * len(idSpec)
-            image = draw_status_text_PIL(image, status, print_status, size = "normal")
-            ngreason = "KATABU MARKING NOT FOUND"
-
-            return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
+                detectedposX_katabumarking.append(center_katabummarking[0])
+                detectedposY_katabumarking.append(center_katabummarking[1])
     
+            katabupitchresult = check_tolerance(katabumarking_lengths, pitchSpec_Katabu, pitchTolerance_Katabu)
+
+            xy_pairs_katabumarking = list(zip(detectedposX_katabumarking, detectedposY_katabumarking))
+            draw_pitch_line(img_katabumarking, xy_pairs_katabumarking, katabupitchresult, thickness=2)
+
+            #pick only the first element if array consists of more than 1 element -> detection POKAYOKE (if detection is not that great)
+            if len(katabumarking_lengths) > 1:
+                katabumarking_lengths = katabumarking_lengths[:1]
+            #since there is only one katabu marking, we can just use the first element -> detection POKAYOKE (if detection is not that great)
+            print(f"Katabu Marking Length: {katabumarking_lengths}")
+
+            #if katabumarking_lengths is empty, then it is NG
+            if katabumarking_lengths == []:
+                status = "NG"
+                print_status = print_status + "型部マーキング認識不良"
+                print(f"Status:{print_status}")
+                measuredPitch = [0] * len(pitchSpec)
+                resultPitch = [0] * len(pitchSpec)
+                resultid = [0] * len(idSpec)
+                image = draw_status_text_PIL(image, status, print_status, size = "normal")
+                ngreason = "KATABU MARKING NOT FOUND"
+
+                return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
+    
+        
         
     for i, detection in enumerate(sorted_detections):
         detectedid.append(detection.category.id)
