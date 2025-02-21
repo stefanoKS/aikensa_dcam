@@ -1,4 +1,5 @@
 import stat
+from matplotlib.pylab import f
 import numpy as np
 import cv2
 import math
@@ -21,8 +22,8 @@ pitchSpec_040P = [103, 113, 78, 98, 98, 87, 85]
 pitchSpec_090P = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28]
 pitchSpec_080P = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85]
 
-pitchSpec_050PKENGEN = [85, 87, 98, 98, 78, 113, 103]
-pitchSpec_040PKENGEN = [103, 113, 78, 98, 98, 87, 85]
+pitchSpec_050PKENGEN = [85, 87, 98, 98, 78, 113, 103, 14]
+pitchSpec_040PKENGEN = [103, 113, 78, 98, 98, 87, 85, 14]
 pitchSpec_090PKENGEN = [85, 87, 98, 98, 78, 61, 52, 38, 37, 28, 14]
 pitchSpec_080PKENGEN = [28, 37, 38, 52, 61, 78, 98, 98, 87, 85, 14]
 
@@ -31,8 +32,8 @@ pitchSpec_040PCLIPSOUNYUUKI = [103, 113, 78, 98, 98, 87]
 pitchSpec_090PCLIPSOUNYUUKI = [87, 98, 98, 78, 61, 52, 38, 37, 28]
 pitchSpec_080PCLIPSOUNYUUKI = [28, 37, 38, 52, 61, 78, 98, 98, 87]
 
-pitchTolerance_050P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
-pitchTolerance_040P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0]
+pitchTolerance_050P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_040P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0, 1.7]
 pitchTolerance_090P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
 pitchTolerance_080P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0, 1.7]
 
@@ -314,6 +315,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         status = "NG"
         ngreason = "NUMBER OF CLIP MISMATCH"
 
+    
     if any(result != 1 for result in resultPitch):
         print_status = print_status + " ピッチ不良"
         status = "NG"
