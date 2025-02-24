@@ -235,8 +235,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
                 return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
     
-        
-        
     for i, detection in enumerate(sorted_detections):
         detectedid.append(detection.category.id)
         bbox = detection.bbox
@@ -286,7 +284,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
         print("Element Popped")
 
-        
     if detectedid != idSpec:
         status = "NG"
         print_status = print_status + "NG クリップ入れ間違い"
