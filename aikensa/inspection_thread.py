@@ -632,6 +632,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame3 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][5] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame2 == 0:
                                                 play_alarm_sound()
 
@@ -639,6 +640,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame2 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][4] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -646,6 +648,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame2 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][3] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -653,6 +656,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame2 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][2] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -660,6 +664,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame1 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][1] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
                                                 
@@ -667,6 +672,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame1 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][0] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -679,9 +685,10 @@ class InspectionThread(QThread):
                                                 play_alarm_sound()
 
                                         if self.clipPickingOrder[self.inspection_config.widget][:5] == [1, 1, 1, 1, 0]:
-                                            if self.HandinFrame2 == 0:
+                                            if self.HandinFrame3 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][4] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -689,6 +696,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame2 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][3] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -696,6 +704,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame2 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][2] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame1 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -703,6 +712,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame1 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][1] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
                                                 
@@ -710,6 +720,7 @@ class InspectionThread(QThread):
                                             if self.HandinFrame1 == 0:
                                                 self.clipPickingOrder[self.inspection_config.widget][0] = 1
                                                 self.pickingTimerStart = time.time()
+                                                play_ok_sound()
                                             if self.HandinFrame2 == 0 or self.HandinFrame3 == 0:
                                                 play_alarm_sound()
 
@@ -806,6 +817,7 @@ class InspectionThread(QThread):
                             continue
                 
                     if self.InspectionTimeStart is not None:
+                        self.clipPickingOrder[self.inspection_config.widget][:6] = [0, 0, 0, 0, 0, 0]
 
                         if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
                             print("Inspection Time is over")

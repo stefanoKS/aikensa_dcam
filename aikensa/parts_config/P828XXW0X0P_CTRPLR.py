@@ -32,15 +32,15 @@ pitchSpec_040PCLIPSOUNYUUKI = [103, 113, 78, 98, 98, 87]
 pitchSpec_090PCLIPSOUNYUUKI = [87, 98, 98, 78, 61, 52, 38, 37, 28]
 pitchSpec_080PCLIPSOUNYUUKI = [28, 37, 38, 52, 61, 78, 98, 98, 87]
 
-pitchTolerance_050P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
-pitchTolerance_040P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0, 1.7]
-pitchTolerance_090P = [2.0, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
-pitchTolerance_080P = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 2.0, 1.7]
+pitchTolerance_050P = [2.0, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8]
+pitchTolerance_040P = [1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 2.0, 1.8]
+pitchTolerance_090P = [2.0, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8]
+pitchTolerance_080P = [1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 2.0, 1.8]
 
-pitchTolerance_050PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
-pitchTolerance_040PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
-pitchTolerance_090PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
-pitchTolerance_080PCLIPSOUNYUUKI = [1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]
+pitchTolerance_050PCLIPSOUNYUUKI = [1.8, 1.8, 1.8, 1.8, 1.8, 1.8]
+pitchTolerance_040PCLIPSOUNYUUKI = [1.8, 1.8, 1.8, 1.8, 1.8, 1.8]
+pitchTolerance_090PCLIPSOUNYUUKI = [1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8]
+pitchTolerance_080PCLIPSOUNYUUKI = [1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8]
 
 clipSpec_050P = [2, 1, 0, 0, 0, 0, 3, 3, 0, 1] #white is 0, brown is 1, yellow is 2, orange is 3
 clipSpec_040P = [0, 1, 3, 3, 1, 1, 1, 1, 0, 2]
@@ -53,7 +53,7 @@ clipSpec_090PCLIPSOUNYUUKI = [0, 0, 0, 0, 4, 4, 4, 0, 0, 0]
 clipSpec_080PCLIPSOUNYUUKI = [1, 1, 1, 4, 4, 4, 1, 1, 1, 1]
 
 pitchSpec_Katabu = [14]
-pitchTolerance_Katabu = [1.7]
+pitchTolerance_Katabu = [1.8]
 
 color = (0, 255, 0)
 text_offset = 40
@@ -62,8 +62,8 @@ bbox_offset = 10
 
 # segmentation_width = 1640
 
-pixelMultiplier = 0.1607
-pixelMultiplier_katabumarking = 0.1607
+pixelMultiplier = 0.1598
+pixelMultiplier_katabumarking = 0.1598
 
 
 def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detection, partname):
