@@ -9,6 +9,8 @@ import os
 import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
+from ultralytics import YOLO
+
 
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
@@ -65,6 +67,7 @@ bbox_offset = 10
 pixelMultiplier = 0.1598
 pixelMultiplier_katabumarking = 0.1598
 
+P828XXW0X0P_CLIPFLIP_DETECT = YOLO("./../aikensa/models/P828XXW0X0P_detect_flip.pt")
 
 def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detection, partname):
         
@@ -255,6 +258,21 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
             image = drawbox(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
             image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
         prev_center = center
+
+        if detection.category.id == 2:
+            #yellow clip is found, do inference check to see if the clip is flipped
+            #crop image to a fixed size of 128x128 from the center of yellow clip
+            crop_size = 128
+            x1 = int(x - crop_size / 2)
+            y1 = int(y - crop_size / 2)
+            x2 = int(x + crop_size / 2)
+            y2 = int(y + crop_size / 2)
+            #crop the image
+            crop_img = image[y1:y2, x1:x2]
+            clipflip_detection = P828XXW0X0P_CLIPFLIP_DETECT(cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+            clipflip_detection = list(clipflip_detection)[0].probs.data.argmax().item()
+            print(clipflip_detection)
+
 
     #First check, check if any clip is detected or not
     if len (detectedid) == 0:

@@ -619,7 +619,6 @@ class InspectionThread(QThread):
                                 # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
                                 # print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
 
-
                                 if self.inspection_config.widget in [7, 8]:
                                     if (time.time() - self.pickingTimerStart) > self.pickingWaitTime:
                                         # print("Picking Timer Reset")
@@ -1631,7 +1630,6 @@ class InspectionThread(QThread):
         # For all CTR PLR AI model
         P828XXW0X0P_CLIP_Model = None
         P828XXW0X0P_KATABU_Model = None
-        P828XXW0X0P_CLIPFLIP_Model= None #For clip yellow flip detection 
         P828XXW0X0P_SEGMENT_Model = None
         P828XXW0X0P_HAND_DETECT = None
 
@@ -1645,13 +1643,11 @@ class InspectionThread(QThread):
                                                                             confidence_threshold=0.35,
                                                                             device="cuda:0")
         P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
-        P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_CLIPFLIP_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
         P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
 
         self.P828XXW0X0P_CLIP_Model = P828XXW0X0P_CLIP_Model
         self.P828XXW0X0P_KATABU_Model = P828XXW0X0P_KATABU_Model
-        self.P828XXW0X0P_CLIPFLIP_Model = P828XXW0X0P_CLIPFLIP_Model
         self.P828XXW0X0P_SEGMENT_Model = P828XXW0X0P_SEGMENT_Model
         self.P828XXW0X0P_HAND_DETECT = P828XXW0X0P_HAND_DETECT
 
