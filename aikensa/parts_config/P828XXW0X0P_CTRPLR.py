@@ -111,6 +111,9 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     combined_infer_mask = None
 
+    color = (0, 255, 0)
+
+
     if partname == "P82833W050P":
         pitchSpec = pitchSpec_050P
         tolerance_pitch = pitchTolerance_050P
@@ -156,22 +159,22 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
     elif partname == "P82833W050PCLIPSOUNYUUKI":
         pitchSpec = pitchSpec_050PCLIPSOUNYUUKI
         tolerance_pitch = pitchTolerance_050PCLIPSOUNYUUKI
-        idSpec = clipSpec_050P
+        idSpec = clipSpec_050PCLIPSOUNYUUKI
 
     elif partname == "P82832W040PCLIPSOUNYUUKI":
         pitchSpec = pitchSpec_040PCLIPSOUNYUUKI
         tolerance_pitch = pitchTolerance_040PCLIPSOUNYUUKI
-        idSpec = clipSpec_040P
+        idSpec = clipSpec_040PCLIPSOUNYUUKI
 
     elif partname == "P82833W090PCLIPSOUNYUUKI":
         pitchSpec = pitchSpec_090PCLIPSOUNYUUKI
         tolerance_pitch = pitchTolerance_090PCLIPSOUNYUUKI
-        idSpec = clipSpec_090P
+        idSpec = clipSpec_090PCLIPSOUNYUUKI
 
     elif partname == "P82832W080PCLIPSOUNYUUKI":
         pitchSpec = pitchSpec_080PCLIPSOUNYUUKI
         tolerance_pitch = pitchTolerance_080PCLIPSOUNYUUKI
-        idSpec = clipSpec_080P
+        idSpec = clipSpec_080PCLIPSOUNYUUKI
 
 
     #KATABU MARKING DETECTION
@@ -249,6 +252,8 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         detectedposY.append(y)
         detectedWidth.append(w)
 
+        image_copy = image.copy()
+
         center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
 
         if prev_center is not None:
@@ -259,19 +264,35 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
             image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
         prev_center = center
 
-        if detection.category.id == 2:
-            #yellow clip is found, do inference check to see if the clip is flipped
-            #crop image to a fixed size of 128x128 from the center of yellow clip
-            crop_size = 128
-            x1 = int(x - crop_size / 2)
-            y1 = int(y - crop_size / 2)
-            x2 = int(x + crop_size / 2)
-            y2 = int(y + crop_size / 2)
-            #crop the image
-            crop_img = image[y1:y2, x1:x2]
-            clipflip_detection = P828XXW0X0P_CLIPFLIP_DETECT(cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
-            clipflip_detection = list(clipflip_detection)[0].probs.data.argmax().item()
-            print(clipflip_detection)
+
+        #only do the not clipsounyuuki once
+        if partname not in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
+            if detection.category.id == 2:
+                #yellow clip is found, do inference check to see if the clip is flipped
+                #crop image to a fixed size of 128x128 from the center of yellow clip
+                crop_size = 128
+                x1 = int(x - crop_size / 2)
+                y1 = int(y - crop_size / 2)
+                x2 = int(x + crop_size / 2)
+                y2 = int(y + crop_size / 2)
+                #crop the image
+                crop_img = image_copy[y1:y2, x1:x2]
+                cv2.imwrite("crop_img.png", crop_img)
+                clipflip_detection = P828XXW0X0P_CLIPFLIP_DETECT(cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                print(clipflip_detection)
+                clipflip_detection = list(clipflip_detection)[0].probs.data.argmax().item()
+                #0 is flipped, 1 is not flipped
+                if clipflip_detection == 0:
+                            status = "NG"
+                            print_status = print_status + "型部クリップ向き不良"
+                            print(f"Status:{print_status}")
+                            measuredPitch = [0] * len(pitchSpec)
+                            resultPitch = [0] * len(pitchSpec)
+                            resultid = [0] * len(idSpec)
+                            image = draw_status_text_PIL(image, status, print_status, size = "normal")
+                            ngreason = "KATABU CLIP FLIPPED"
+
+                            return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
 
 
     #First check, check if any clip is detected or not
@@ -301,6 +322,10 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         measuredPitch.pop(-1)
 
         print("Element Popped")
+
+    print(f"Detected ID: {detectedid}")
+    print(f"idSpec: {idSpec}")
+
 
     if detectedid != idSpec:
         status = "NG"
