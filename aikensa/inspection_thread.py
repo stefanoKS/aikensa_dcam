@@ -617,7 +617,7 @@ class InspectionThread(QThread):
                                 self.HandinFrame2 = list(self.HandinFrame2)[0].probs.data.argmax().item()
                                 self.HandinFrame3 = list(self.HandinFrame3)[0].probs.data.argmax().item()
                                 # 0 for hand in frame, 1 for hand not in frame. It's flipped, I know
-                                # print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
+                                print(f"HandFrame1,2,and 3: {self.HandinFrame1}, {self.HandinFrame2}, {self.HandinFrame3}")
 
                                 if self.inspection_config.widget in [7, 8]:
                                     if (time.time() - self.pickingTimerStart) > self.pickingWaitTime:
@@ -807,12 +807,12 @@ class InspectionThread(QThread):
 
                     if self.inspection_config.widget in [5, 6]:
                         if self.clipPickingOrder[self.inspection_config.widget][:5] != [1, 1, 1, 1, 1]:
-                            play_alarm_sound()
+                            # play_alarm_sound()
                             continue
 
                     if self.inspection_config.widget in [7, 8]:
                         if self.clipPickingOrder[self.inspection_config.widget][:6] != [1, 1, 1, 1, 1, 1]:
-                            play_alarm_sound()
+                            # play_alarm_sound()
                             continue
                 
                     if self.InspectionTimeStart is not None:
