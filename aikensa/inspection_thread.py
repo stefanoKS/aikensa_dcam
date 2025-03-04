@@ -275,6 +275,12 @@ class InspectionThread(QThread):
 
         self.OrderTargetMore = [1, 1, 1, 1, 1, 1]
         self.OrderTargetLess = [1, 1, 1, 1, 1]
+
+        self.InspectionResult_PitchResult_sounyuuki = [None]*30
+        self.InspectionResult_PitchMeasured_sounyuuki = [None]*30
+        self.InspectionImages_sounyuuki = [None]*1
+
+        self.bool_keep_measurement = False
         
         self.cam_config_file = "aikensa/camscripts/cam_config.yaml"
         
@@ -1240,7 +1246,7 @@ class InspectionThread(QThread):
                 if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
                     self.inspection_config.doInspection = False
 
-                if self.inspection_config.doInspection is True:
+                if self.inspection_config.doInspection is True and self.bool_keep_measurement is False:
                     self.inspection_config.doInspection = False
                     print("Inspection Started")
 
@@ -1328,9 +1334,22 @@ class InspectionThread(QThread):
                             self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
                             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
+
                             self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
+                            self.bool_keep_measurement = True
+
                             time.sleep(1.5)
+
+                if self.inspection_config.doInspection is True and self.bool_keep_measurement is True:
+                    self.bool_keep_measurement = False
+
+                if self.bool_keep_measurement = True:
+                    self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
 
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
