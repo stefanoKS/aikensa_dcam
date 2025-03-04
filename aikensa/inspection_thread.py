@@ -1344,7 +1344,7 @@ class InspectionThread(QThread):
                 if self.inspection_config.doInspection is True and self.bool_keep_measurement is True:
                     self.bool_keep_measurement = False
 
-                if self.bool_keep_measurement = True:
+                if self.bool_keep_measurement == True:
                     self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
