@@ -29,8 +29,8 @@ bbox_offset = 10
 
 segmentation_width = 1640
 
-pixelMultiplier = 0.16097859
-
+# pixelMultiplier = 0.16097859
+pixelMultiplier = 0.15969076128
 
 def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
