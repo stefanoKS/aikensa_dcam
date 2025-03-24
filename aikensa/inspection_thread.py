@@ -531,6 +531,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET")
+                    print(self.inspection_config.current_numofPart[self.inspection_config.widget])
+                    print(self.inspection_config.today_numofPart[self.inspection_config.widget])
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1243,9 +1245,10 @@ class InspectionThread(QThread):
         ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.conn.commit()
 
-        # Update the totatl part number (Maybe the day has been changed)
-        for key, value in self.widget_dir_map.items():
-            self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
+        # # Update the totatl part number (Maybe the day has been changed)
+        # for key, value in self.widget_dir_map.items():
+        #     # self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
+        #     self.inspection_config.today_numofPart[key] = [0, 0]
 
         #Also save to mysql cursor
         self.mysql_cursor.execute('''
@@ -1275,7 +1278,7 @@ class InspectionThread(QThread):
         # Get today's date in yyyymmdd format
         today_date = datetime.now().strftime("%Y%m%d")
 
-        print (today_date)
+        # print (today_date)
 
         self.cursor.execute('''
         SELECT numofPart 
