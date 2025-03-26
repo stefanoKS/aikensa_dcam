@@ -46,6 +46,9 @@ from aikensa.parts_config.P8462284S00_RRDOORDUST import partcheck as P8462284S00
 
 from PIL import ImageFont, ImageDraw, Image
 
+from aikensa.tools.yolo_tools import remove_imageborder_yolo
+from aikensa.tools.opencv_tools import add_imageborder
+
 @dataclass
 class InspectionConfig:
     widget: int = 0
@@ -235,6 +238,7 @@ class InspectionThread(QThread):
         self.InspectionResult_DetectionID = [None]*30
         self.InspectionResult_Status = [None]*30
         self.InspectionResult_DeltaPitch = [None]*30
+        self.InspectionResult_NGReason = [None]*30
 
         self.DetectionResult_HoleDetection = [None]*30
 
@@ -356,6 +360,16 @@ class InspectionThread(QThread):
         )
         ''')
 
+        # List of columns to add
+        columns_to_add = [
+            ("resultpitch", "TEXT"),
+            ("status", "TEXT"),
+            ("NGreason", "TEXT")
+        ]
+
+        # Using the function to add columns
+        self.add_columns(self.cursor, "inspection_results", columns_to_add)
+
         self.conn.commit()
 
         #Initialize connection to mysql server if available
@@ -387,12 +401,13 @@ class InspectionThread(QThread):
                 kensainName TEXT,
                 detected_pitch TEXT,
                 delta_pitch TEXT,
-                total_length REAL
+                total_length REAL,
+                resultpitch TEXT,
+                status TEXT,
+                NGreason TEXT
             )
             ''')
             self.mysql_conn.commit()
-
-
 
         print("Inspection Thread Started")
         self.initialize_model()
@@ -643,13 +658,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -811,13 +829,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -979,13 +1000,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1147,13 +1171,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1324,13 +1351,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1500,13 +1530,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1667,13 +1700,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1834,13 +1870,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -2002,13 +2041,16 @@ class InspectionThread(QThread):
                     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = [0, 0], 
-                            currentnumofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
                             deltaTime = 0.0,
                             kensainName = self.inspection_config.kensainNumber, 
                             detected_pitch_str = "COUNTERRESET", 
                             delta_pitch_str = "COUNTERRESET", 
-                            total_length=0)
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -2043,8 +2085,6 @@ class InspectionThread(QThread):
                 #     self.gaikanStart = True
                 #     self.gaikanTime = time.time()
                     
-
-                  
 
                 if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
@@ -2095,10 +2135,18 @@ class InspectionThread(QThread):
                                         
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1640, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1640:, :]
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False)
+                                #pad white color around the image with 200 pixels of white color
+                                self.InspectionImages_endSegmentation_Left[i] = add_imageborder(img = self.InspectionImages_endSegmentation_Left[i], width = 200)
+                                self.InspectionImages_endSegmentation_Right[i] = add_imageborder(img = self.InspectionImages_endSegmentation_Right[i], width = 200)
+                                # self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                                # self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                                #save the inspectionimages_endsegmentation_left and right
+                                # cv2.imwrite("InspectionImages_endSegmentation_Left.jpg", self.InspectionImages_endSegmentation_Left[i])
+                                # cv2.imwrite("InspectionImages_endSegmentation_Right.jpg", self.InspectionImages_endSegmentation_Right[i])
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False)
 
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i] = P8462284S00_check(self.InspectionImages[i], 
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]   = P8462284S00_check(self.InspectionImages[i], 
                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i])
@@ -2119,6 +2167,15 @@ class InspectionThread(QThread):
 
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
+                            # self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                            #         numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
+                            #         currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                            #         deltaTime = 0.0,
+                            #         kensainName = self.inspection_config.kensainNumber, 
+                            #         detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
+                            #         delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
+                            #         total_length=0)
+
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                                     numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
                                     currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
@@ -2126,7 +2183,10 @@ class InspectionThread(QThread):
                                     kensainName = self.inspection_config.kensainNumber, 
                                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
                                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                                    total_length=0)
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
                                 
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -2438,14 +2498,18 @@ class InspectionThread(QThread):
                 kensainName = self.inspection_config.kensainNumber, 
                 detected_pitch_str = "MANUAL", 
                 delta_pitch_str = "MANUAL", 
-                total_length=0)
+                total_length=0,
+                resultPitch = "MANUAL",
+                status = "MANUAL",
+                NGreason = "MANUAL")
 
         return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
-    
+
     def save_result_database(self, partname, numofPart, 
                              currentnumofPart, deltaTime, 
                              kensainName, detected_pitch_str, 
-                             delta_pitch_str, total_length):
+                             delta_pitch_str, total_length, 
+                             resultPitch, status, NGreason):
         # Ensure all inputs are strings or compatible types
 
         timestamp = datetime.now()
@@ -2462,21 +2526,26 @@ class InspectionThread(QThread):
         detected_pitch_str = str(detected_pitch_str)
         delta_pitch_str = str(delta_pitch_str)
         total_length = float(total_length)  # Ensure this is a float
+        resultPitch = str(resultPitch)
+        status = str(status)
+        NGreason = str(NGreason)
 
         self.cursor.execute('''
-        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.conn.commit()
+
+        # Update the totatl part number (Maybe the day has been changed)
+        for key, value in self.widget_dir_map.items():
+            self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
 
         #Also save to mysql cursor
         self.mysql_cursor.execute('''
-        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length))
+        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.mysql_conn.commit()
-
-
 
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
@@ -2509,6 +2578,7 @@ class InspectionThread(QThread):
         row = self.cursor.fetchone()
         if row:
             numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+            # print(f"Part: {part_name} - NumofPart: {numofPart}")
             return numofPart
         else:
             return [0, 0]  # Default values if no entry is found
@@ -2708,3 +2778,16 @@ class InspectionThread(QThread):
         print("Releasing all cameras.")
         self.release_all_camera()
         print("Inspection thread stopped.")
+
+    def add_columns(self, cursor, table_name, columns):
+        for column_name, column_type in columns:
+            try:
+                cursor.execute(f'''
+                ALTER TABLE {table_name}
+                ADD COLUMN {column_name} {column_type};
+                ''')
+                print(f"Added column: {column_name}")
+            except sqlite3.OperationalError as e:
+                print(f"Could not add column {column_name}: {e}")
+
+

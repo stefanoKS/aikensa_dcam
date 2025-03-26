@@ -95,7 +95,7 @@ class AIKensa(QMainWindow):
         }
 
         self.prevTriggerStates = 0
-        self.TriggerWaitTime = 3.0
+        self.TriggerWaitTime = 5.0
         self.currentTime = time.time()
 
     def timeUpdate(self, time):

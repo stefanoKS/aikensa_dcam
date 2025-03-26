@@ -28,6 +28,7 @@ endoffset_y = 0
 bbox_offset = 10
 
 segmentation_width = 1640
+border_width = 200
 
 # pixelMultiplier = 0.16097859
 pixelMultiplier = 0.15969076128
@@ -68,15 +69,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     combined_lmask = None
     for lm in leftSegmentation:
         if lm.masks is not None:
-            orig_shape = (image.shape[0], segmentation_width)
+            orig_shape = (image.shape[0] + border_width * 2 , segmentation_width + border_width * 2 )
             segmentation_xyn = lm.masks.xyn
             lmask = create_masks(segmentation_xyn, orig_shape)
             if combined_lmask is None:
                 combined_lmask = np.zeros_like(lmask)
             combined_lmask = cv2.bitwise_or(combined_lmask, lmask)
+            #resize back to original size
+            combined_lmask = combined_lmask[border_width:-border_width, border_width:-border_width]
+            combined_lmask = cv2.resize(combined_lmask, (segmentation_width, image.shape[0]))
             # cv2.imwrite("leftmask.jpg", combined_lmask)
 
-                    #Checkgate for mask segmentation handling
+
         if lm.masks is None:
             status = "NG"
             print_status = "製品は見つかりません"
@@ -85,32 +89,37 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
             resultPitch = [0] * (len(pitchSpec))
             measuredPitch = [0] * (len(pitchSpec))
             resultid = [0] * len(idSpec)
+            ngreason = "PART NOT FOUND"
 
-            return image, measuredPitch, resultPitch, resultid, status
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
 
             
     combined_rmask = None
     for rm in rightSegmentation:
         if rm.masks is not None:
-            orig_shape = (image.shape[0], segmentation_width)
+            orig_shape = (image.shape[0] + border_width * 2 , segmentation_width + border_width * 2 )
             segmentation_xyn = rm.masks.xyn
             rmask = create_masks(segmentation_xyn, orig_shape)
             if combined_rmask is None:
                 combined_rmask = np.zeros_like(rmask)
             combined_rmask = cv2.bitwise_or(combined_rmask, rmask)
+            #remove the pad from the image (pad size is 200 around the image)
+            combined_rmask = combined_rmask[border_width:-border_width, border_width:-border_width]
+            combined_rmask = cv2.resize(combined_rmask, (segmentation_width, image.shape[0]))
             # cv2.imwrite("rightmask.jpg", combined_rmask)
 
         #Checkgate for mask segmentation handling
         if rm.masks is None:
             status = "NG"
             print_status = "製品は見つかりません"
-            image = draw_status_text_PIL(image, status, print_status, size="normal")
+            image = draw_status_text_PIL(image, status, print_status, size="small")
 
             resultPitch = [0] * (len(pitchSpec))
             measuredPitch = [0] * (len(pitchSpec))
             resultid = [0] * len(idSpec)
+            ngreason = "PART NOT FOUND"
 
-            return image, measuredPitch, resultPitch, resultid, status
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
 
@@ -180,11 +189,19 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         resultid = check_id(detectedid, idSpec)
 
     if len(measuredPitch) != len(pitchSpec):
-        resultPitch = [0] * len(pitchSpec)
+        resultPitch = [0] * (len(pitchSpec))
+        measuredPitch = [0] * (len(pitchSpec))
+        resultid = [0] * len(idSpec)
+        status = "NG"
+        image  = draw_status_text_PIL(image, status, print_status, size = "normal")
+        ngreason = "NUMBER OF CLIP MISMATCH"
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     if any(result != 1 for result in resultPitch):
         flag_pitch_furyou = 1
         status = "NG"
+        image  = draw_status_text_PIL(image, status, print_status, size = "normal")
+        ngreason = "CLIP PITCH NG"
 
     # if any(result != 1 for result in resultid):
     #     flag_clip_furyou = 1
@@ -194,9 +211,11 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
 
     #DRAW STATUS
-    image = draw_status_text_PIL(image, status, print_status, size="normal")
-    
-    return image, measuredPitch, resultPitch, resultid, status
+    if status == "OK":
+        image = draw_status_text(image, status, size = "normal")
+        ngreason = "None"
+
+    return image, measuredPitch, resultPitch, resultid, status, ngreason
 
 
 def draw_status_text_PIL(image, status, print_status, size = "normal"):
