@@ -2567,21 +2567,49 @@ class InspectionThread(QThread):
         # Get today's date in yyyymmdd format
         today_date = datetime.now().strftime("%Y%m%d")
 
-        self.cursor.execute('''
-        SELECT numofPart 
-        FROM inspection_results 
-        WHERE partName = ? AND timestampDate = ? 
-        ORDER BY id DESC 
-        LIMIT 1
-        ''', (part_name, today_date))
+        # self.cursor.execute('''
+        # SELECT numofPart 
+        # FROM inspection_results 
+        # WHERE partName = ? AND timestampDate = ? 
+        # ORDER BY id DESC 
+        # LIMIT 1
+        # ''', (part_name, today_date))
+
         
+        # row = self.cursor.fetchone()
+        # if row:
+        #     numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+        #     print(f"Part: {part_name} - NumofPart: {numofPart}")
+        #     return numofPart
+        # else:
+        #     print(f"Last entry for today not found for {part_name}")
+        #     return [0, 0]  # Default values if no entry is found
+
+        # Select the last entry for the given part_name, regardless of date.
+        self.cursor.execute('''
+            SELECT numofPart, timestampDate 
+            FROM inspection_results 
+            WHERE partName = ? 
+            ORDER BY id DESC 
+            LIMIT 1
+        ''', (part_name,))
+
         row = self.cursor.fetchone()
+        #print last entry and today date
+        print(f"Part name: {part_name}, Last entry: {row}")
+        print(f"Today date: {today_date}")
         if row:
-            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-            # print(f"Part: {part_name} - NumofPart: {numofPart}")
-            return numofPart
+            last_entry_date = row[1]
+            if last_entry_date == today_date:
+                # Convert the string (e.g., "[10, 5]") into an actual list
+                numofPart = eval(row[0])
+                return numofPart
+            else:
+                # If the last entry is not from today, return [0, 0]
+                return [0, 0]
         else:
             return [0, 0]  # Default values if no entry is found
+
 
     def draw_status_text_PIL(self, image, text, color, size = "normal", x_offset = 0, y_offset = 0):
 
