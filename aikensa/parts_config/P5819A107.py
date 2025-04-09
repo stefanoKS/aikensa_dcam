@@ -70,6 +70,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     print_status = ""
 
     combined_lmask = None
+    ngreason = ""
 
     for lm in leftSegmentation:
         if lm.masks is not None:
