@@ -9,7 +9,7 @@ import datetime
 
 from PyQt5 import QtCore
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget, QLabel, QSlider, QMainWindow, QWidget, QCheckBox, QShortcut, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget, QLabel, QSlider, QMainWindow, QWidget, QCheckBox, QShortcut, QLineEdit, QComboBox
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QCoreApplication
 from PyQt5.QtGui import QImage, QPixmap, QKeySequence, QColor
@@ -349,6 +349,11 @@ class AIKensa(QMainWindow):
             self.connect_inspectionConfig_button(i, "counterReset", "counterReset", True)
             self.connect_line_edit_text_changed(widget_index=i, line_edit_name="kensain_name", inspection_param="kensainNumber")
 
+            #extra logic to handle the clipsounyuu selection
+            if i in [13]:
+                self.connect_QComboBox_changed(widget_index=i, comboBox_name="ClipSounyuuSelection", inspection_param="clipSounyuuNumber")
+
+
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
             button_quit = widget.findChild(QPushButton, "quitbutton")
@@ -425,6 +430,15 @@ class AIKensa(QMainWindow):
         line_edit = widget.findChild(QLineEdit, line_edit_name)
         if line_edit:
             line_edit.textChanged.connect(lambda text: self._set_inspection_params(self.inspection_thread, inspection_param, text))
+
+    def connect_QComboBox_changed(self, widget_index, comboBox_name, inspection_param):
+        widget = self.stackedWidget.widget(widget_index)
+        comboBox = widget.findChild(QComboBox, comboBox_name)
+        if comboBox:
+            id_map = [None, 7, 21, 23]
+            comboBox.currentIndexChanged.connect(
+                lambda index: self._set_inspection_params(self.inspection_thread, inspection_param, id_map[index])
+            )
 
     def connect_inspectionConfig_button(self, widget_index, button_name, cam_param, value):
         widget = self.stackedWidget.widget(widget_index)
