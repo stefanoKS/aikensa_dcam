@@ -36,9 +36,7 @@ from aikensa.parts_config.P658207LE0A import partcheck as P658207LE0A_check
 from aikensa.parts_config.P5902A509 import partcheck as P5902A509_check
 from aikensa.parts_config.P5819A107 import partcheck as P5819A107_check
 
-from aikensa.parts_config.P5902A509 import dailyTenken01 as P5902A509_dailyTenken01
-from aikensa.parts_config.P5902A509 import dailyTenken02 as P5902A509_dailyTenken02
-from aikensa.parts_config.P5902A509 import dailyTenken03 as P5902A509_dailyTenken03
+from aikensa.parts_config.dailyTenken import dailyTenken
 
 from PIL import ImageFont, ImageDraw, Image
 
@@ -205,9 +203,9 @@ class InspectionThread(QThread):
             6: "5902A510",
             7: "658207LE0A",
             8: "5819A107",
-            21: "5902A509_dailyTenken01",
-            22: "5902A509_dailyTenken02",
-            23: "5902A509_dailyTenken03",
+            21: "dailyTenken01",
+            22: "dailyTenken02",
+            23: "dailyTenken03",
             24: "658207LE0A_dailyTenken01",
             25: "658207LE0A_dailyTenken02",
         }
@@ -932,38 +930,63 @@ class InspectionThread(QThread):
 
                             time.sleep(1.2)
 
-            
             if self.inspection_config.widget == 21:
+
+                if self.InspectionTimeStart is None:
+                    self.InspectionTimeStart = time.time()
+
+                if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
+                    self.inspection_config.doInspection = False
                                    
                 if self.inspection_config.doInspection is True:
-
                     self.inspection_config.doInspection = False
 
-                    self.emit = self.combinedImage_scaled
-                    if self.emit is None:
-                        self.emit = np.zeros((337, 1742, 3), dtype=np.uint8)
+                    if self.InspectionTimeStart is not None:
+                            
+                        if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
+                            print("Inspection Time is over")
+                            self.InspectionTimeStart = time.time()
 
-                    self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
-                    self.part1Cam.emit(self.convertQImage(self.emit))
+                            self.emit = self.combinedImage_scaled
 
-                    self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-                    self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[2], self.inspection_config.map2[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-                    self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
-                    self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+                            if self.emit is None:
+                                self.emit = np.zeros((241, 1742, 3), dtype=np.uint8)
 
-                    self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                    self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
-                    self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
+                            self.emit = self.draw_status_text_PIL(self.emit, "構成確認中", (50,150,10), size="large", x_offset = -200, y_offset = -90)
+                            self.part1Cam.emit(self.convertQImage(self.emit))
 
-                    self.InspectionImages[0] = self.combinedImage
+                            self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[2], self.inspection_config.map2[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
+                            self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+
+                            self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+
+                            self.InspectionImages[0] = self.combinedImage.copy()
+
+                            self.InspectionImages_bgr[0] =self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
 
                     # self.save_image(self.InspectionImages[0])
 
                     for i in range(len(self.InspectionImages)):
-                        self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.7, imgsz=2500, iou=0.7, verbose=False)
-                        self.InspectionResult_Segmentation[i] = self.P658207LE0A_SEGMENT_Model(source=self.InspectionImages[i], conf=0.5, imgsz=960, verbose=False)
-                        self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
-                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P5902A509_dailyTenken01(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+
+                        self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                self.InspectionImages_bgr[i], 
+                                self.NICHIJOU_TENKEN_Model, 
+                                slice_height=256, slice_width=1980, 
+                                overlap_height_ratio=0.0, overlap_width_ratio=0.2,
+                                postprocess_match_metric="IOS",
+                                postprocess_match_threshold=0.005,
+                                postprocess_class_agnostic=True,
+                                postprocess_type="GREEDYNMM",
+                                verbose=0,
+                                perform_standard_pred=False
+                            )
+                                                        
+                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = dailyTenken(self.InspectionImages[i], self.InspectionResult_ClipDetection[i])
 
                         for i in range(len(self.InspectionResult_Status)):
                             if self.InspectionResult_Status[i] == "OK": 
@@ -986,20 +1009,13 @@ class InspectionThread(QThread):
                             status = self.InspectionResult_Status[0], 
                             NGreason = self.InspectionResult_NGReason[0])
                         
-                    # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
-                    # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
-                    # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
-
-                    self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                    self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                    self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=337)
-                    self.P5902A509_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=184)
 
                     self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
                     self.part1Cam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
                     time.sleep(3)
-            
+                 
             if self.inspection_config.widget == 22:
                                    
                 if self.inspection_config.doInspection is True:
@@ -1442,7 +1458,17 @@ class InspectionThread(QThread):
         if self.P5819A107_SEGMENT_Model is not None:
             print("P5819A107_SEGMENT_Model loaded")
         
+        NICHIJOU_TENKEN_Model = None
+        path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA1GO_NICHIJOU_TENKEN.pt"
 
+        if os.path.exists(path_NICHIJOU_TENKEN_Model):
+            NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
+                                                                            model_path=path_NICHIJOU_TENKEN_Model,
+                                                                            confidence_threshold=0.7,
+                                                                            device="cuda:0")
+            
+        self.NICHIJOU_TENKEN_Model = NICHIJOU_TENKEN_Model
+        
     def stop(self):
         self.inspection_config.widget = -1
         self.running = False
