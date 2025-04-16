@@ -189,9 +189,9 @@ class AIKensa(QMainWindow):
         dailytenken03_button = dailytenken02_widget.findChild(QPushButton, "nextButton")
         dailytenken_kanryou_button = dailytenken03_widget.findChild(QPushButton, "finishButton")
 
-        dailytenken01_P658207LE0A_button= main_widget.findChild(QPushButton, "dailytenkenbutton_P658207LE0A")
-        dailytenken02_P658207LE0A_button = dailytenken01_P658207LE0A_widget.findChild(QPushButton, "nextButton")
-        dailytenken_kanryou_P658207LE0A_button = dailytenken02_P658207LE0A_widget.findChild(QPushButton, "finishButton")
+        # dailytenken01_P658207LE0A_button= main_widget.findChild(QPushButton, "dailytenkenbutton_P658207LE0A")
+        # dailytenken02_P658207LE0A_button = dailytenken01_P658207LE0A_widget.findChild(QPushButton, "nextButton")
+        # dailytenken_kanryou_P658207LE0A_button = dailytenken02_P658207LE0A_widget.findChild(QPushButton, "finishButton")
 
         if cameraCalibration1_button:
             cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -225,7 +225,7 @@ class AIKensa(QMainWindow):
         planarize_combined.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize", True))
 
 
-        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button and partInspection_P5819A107_button and dailytenken01_P5902A509_button and dailytenken01_P658207LE0A_button:
+        if partInspection_P5902A509_button and partInspection_P5902A510_button and partInspection_P658207LE0A_button and partInspection_P5819A107_button and dailytenken01_button:
 
             partInspection_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(5))
             partInspection_P5902A509_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 5))
@@ -262,15 +262,15 @@ class AIKensa(QMainWindow):
             dailytenken03_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
             dailytenken03_button.clicked.connect(self.calibration_thread.stop)
 
-            dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(24))
-            dailytenken01_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 24))
-            dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-            dailytenken01_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
+            # dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(24))
+            # dailytenken01_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 24))
+            # dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            # dailytenken01_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
 
-            dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(25))
-            dailytenken02_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 25))
-            dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-            dailytenken02_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
+            # dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(25))
+            # dailytenken02_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 25))
+            # dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
+            # dailytenken02_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
 
 
         self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25]]

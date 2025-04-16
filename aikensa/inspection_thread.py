@@ -477,7 +477,7 @@ class InspectionThread(QThread):
                         self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_narrow_scaled, (int(self.narrow_planarize[1]/(self.scale_factor)), int(self.narrow_planarize[0]/(self.scale_factor))))
                         self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
 
-                    if self.inspection_config.widget in [8]:
+                    if self.inspection_config.widget in [8, 21, 22, 23]:
                         self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_wide_scaled, (int(self.wide_planarize[1]/(self.scale_factor)), int(self.wide_planarize[0]/(self.scale_factor))))
                         self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.555683)
 
@@ -985,8 +985,8 @@ class InspectionThread(QThread):
                                 verbose=0,
                                 perform_standard_pred=False
                             )
-                                                        
-                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = dailyTenken(self.InspectionImages[i], self.InspectionResult_ClipDetection[i])
+                            
+                        self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = dailyTenken(self.InspectionImages[i], self.InspectionResult_ClipDetection[i].object_prediction_list)
 
                         for i in range(len(self.InspectionResult_Status)):
                             if self.InspectionResult_Status[i] == "OK": 
@@ -996,6 +996,8 @@ class InspectionThread(QThread):
                             elif self.InspectionResult_Status[i] == "NG": 
                                 self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
                                 self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
+
+                    self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
