@@ -261,6 +261,7 @@ class InspectionThread(QThread):
             14: "82832W040PCLIPSOUNYUUKI",
             15: "82833W090PCLIPSOUNYUUKI",
             16: "82832W080PCLIPSOUNYUUKI",
+            21: 
         }
 
         #for widget name map, append the string "P" to the initial widget dir map
@@ -582,7 +583,7 @@ class InspectionThread(QThread):
                     self.mergeframe1_scaled = cv2.rotate(self.mergeframe1_scaled, cv2.ROTATE_180)
                     self.mergeframe2_scaled = cv2.rotate(self.mergeframe2_scaled, cv2.ROTATE_180)
 
-                    if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
+                    if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]: # no need to emit katabu
                         self.combinedImage_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_scaled)
                         self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
 
@@ -787,8 +788,8 @@ class InspectionThread(QThread):
                     print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
                     
                 if self.inspection_config.counterReset is True:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.inspection_config.counterReset = False
+                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
                     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
                             currentnumofPart = [0, 0], 
@@ -1351,6 +1352,91 @@ class InspectionThread(QThread):
                     self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
+            #for daily inspection
+            if self.inspection_config.widget in [21, 22, 23]:
+
+                if self.InspectionTimeStart is None:
+                    self.InspectionTimeStart = time.time()
+
+                if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
+                    self.inspection_config.doInspection = False
+
+                if self.inspection_config.doInspection is True:
+                    self.inspection_config.doInspection = False
+                    print("Inspection Started")
+
+                    if self.InspectionTimeStart is not None:
+
+                        if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
+                            print("Inspection Time is over")
+                            self.InspectionTimeStart = time.time()
+
+                            self.emit = self.combinedImage_scaled
+                            if self.emit is None:
+                                self.emit = np.zeros((428, 1791, 3), dtype=np.uint8)
+
+                            self.emit = self.draw_status_text_PIL(self.emit, "構成確認中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
+                            self.partCam.emit(self.convertQImage(self.emit))
+
+                            self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
+                            self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+
+                            self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+
+                            self.InspectionImages[0] = self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] =self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
+
+                            for i in range(len(self.InspectionImages)):
+                                self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                            self.InspectionImages_bgr[i], 
+                                            self.NICHIJOU_TENKEN_Model, 
+                                            slice_height=1980, slice_width=1280, 
+                                            overlap_height_ratio=0.0, overlap_width_ratio=0.2,
+                                            postprocess_match_metric="IOS",
+                                            postprocess_match_threshold=0.2,
+                                            postprocess_class_agnostic=True,
+                                            postprocess_type="GREEDYNMM",
+                                            verbose=0,
+                                            perform_standard_pred=False
+                                        )
+ 
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P828XXW0X0P_check(self.InspectionImages[i],
+                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list)
+
+                                for i in range(len(self.InspectionResult_Status)):
+                                    if self.InspectionResult_Status[i] == "OK": 
+                                        play_ok_sound()
+
+                                    elif self.InspectionResult_Status[i] == "NG": 
+                                        play_ng_sound()
+
+                            self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
+
+                            self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                                    numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
+                                    currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                    deltaTime = 0.0,
+                                    kensainName = self.inspection_config.kensainNumber, 
+                                    detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
+                                    delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0])
+
+
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
+
+                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
+                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
+
+                            time.sleep(1.5)
+
 
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1651,16 +1737,25 @@ class InspectionThread(QThread):
         P828XXW0X0P_KATABU_Model = None
         P828XXW0X0P_SEGMENT_Model = None
         P828XXW0X0P_HAND_DETECT = None
+        NICHIJOU_TENKEN_Model = None
 
         path_P828XXW0X0P_CLIP_Model = "./aikensa/models/P828XXW0X0P_detect.pt"
         path_P828XXW0X0P_KATABU_Model = "./aikensa/models/P828XXW0X0P_katabu.pt"
         path_P828XXW0X0P_CLIPFLIP_Model = "./aikensa/models/P828XXW0X0P_detect_flip.pt"
         path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
         path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
+        path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
 
         P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P828XXW0X0P_CLIP_Model,
                                                                             confidence_threshold=0.35,
                                                                             device="cuda:0")
+        
+        NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
+                                                                            model_path=path_NICHIJOU_TENKEN_Model,
+                                                                            confidence_threshold=0.4,
+                                                                            device="cuda:0")
+            
+
         P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
         P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
@@ -1669,6 +1764,7 @@ class InspectionThread(QThread):
         self.P828XXW0X0P_KATABU_Model = P828XXW0X0P_KATABU_Model
         self.P828XXW0X0P_SEGMENT_Model = P828XXW0X0P_SEGMENT_Model
         self.P828XXW0X0P_HAND_DETECT = P828XXW0X0P_HAND_DETECT
+        self.NICHIJOU_TENKEN_Model = NICHIJOU_TENKEN_Model
 
         print("Model Loaded")
         

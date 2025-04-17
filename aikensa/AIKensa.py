@@ -46,9 +46,9 @@ UI_FILES = [
     "aikensa/qtui/empty.ui", #empty 18
     "aikensa/qtui/empty.ui", #empty 19
     "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/dailyTenken2go3go_01.ui",  # index 21
-    "aikensa/qtui/dailyTenken2go3go_02.ui",  # index 22
-    "aikensa/qtui/dailyTenken2go3go_03.ui",  # index 23
+    "aikensa/qtui/dailyTenken_new_01.ui",  # index 21
+    "aikensa/qtui/dailyTenken_new_02.ui",  # index 22
+    "aikensa/qtui/dailyTenken_new_03.ui",  # index 23
 ]
 
 
@@ -93,6 +93,9 @@ class AIKensa(QMainWindow):
             14: "82832W040PCLIPSOUNYUUKI",
             15: "82833W090PCLIPSOUNYUUKI",
             16: "82832W080PCLIPSOUNYUUKI",
+            21: "dailyTenken_new_01",
+            22: "dailyTenken_new_02",
+            23: "dailyTenken_new_03",
         }
 
         self.prevTriggerStates = 0
@@ -185,9 +188,9 @@ class AIKensa(QMainWindow):
 
         main_widget = self.stackedWidget.widget(0)
 
-        dailyTenken2go3go_01_widget = self.stackedWidget.widget(21)
-        dailyTenken2go3go_02_widget = self.stackedWidget.widget(22)
-        dailyTenken2go3go_03_widget = self.stackedWidget.widget(23)
+        dailyTenken_new_01_widget = self.stackedWidget.widget(21)
+        dailyTenken_new_02_widget = self.stackedWidget.widget(22)
+        dailyTenken_new_03_widget = self.stackedWidget.widget(23)
 
         cameraCalibration1_widget = self.stackedWidget.widget(1)
         cameraCalibration2_widget = self.stackedWidget.widget(2)
@@ -198,10 +201,9 @@ class AIKensa(QMainWindow):
         mergeCamera_button = main_widget.findChild(QPushButton, "cameraMerge")
 
         dailytenken01_button = main_widget.findChild(QPushButton, "dailytenkenbutton")
-        dailytenken02_button = dailyTenken2go3go_01_widget.findChild(QPushButton, "nextButton")
-        dailytenken03_button = dailyTenken2go3go_02_widget.findChild(QPushButton, "nextButton")
-        dailytenken_kanryou_button = dailyTenken2go3go_03_widget.findChild(QPushButton, "finishButton")
-
+        dailytenken02_button = dailyTenken_new_01_widget.findChild(QPushButton, "nextButton")
+        dailytenken03_button = dailyTenken_new_02_widget.findChild(QPushButton, "nextButton")
+        dailytenken_kanryou_button = dailyTenken_new_03_widget.findChild(QPushButton, "finishButton")
 
         if cameraCalibration1_button:
             cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
