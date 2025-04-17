@@ -34,7 +34,7 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.1592
+pixelMultiplier = 0.1635
 
 
 def dailyTenken(image, sahi_predictionList):
@@ -102,12 +102,14 @@ def dailyTenken(image, sahi_predictionList):
 
     #if length is not equal to spec plus minus tolerance, status is NG
     if len(measuredPitch) > 0:
+        print(abs(pitchSpech - measuredPitch[0]))
         if abs(pitchSpech - measuredPitch[0]) > pitchTolerance:
             status = "NG"
             print_status += f"構成不良 {measuredPitch[0]:.2f}mm\n"
             flag_pitch_furyou = 1
             ngreason = "CALIBRATION NG"
         else:
+            status = "OK"
             print_status += f"構成良好 {measuredPitch[0]:.2f}mm\n"
 
     xy_pairs = list(zip(detectedposX, detectedposY))
