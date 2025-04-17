@@ -64,7 +64,7 @@ def dailyTenken(image, sahi_predictionList):
     leftmostPitch = 0
     rightmostPitch = 0
 
-    status = "OK"
+    status = "NG"
     print_status = ""
     ngreason = ""
 
