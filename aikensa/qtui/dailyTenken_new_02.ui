@@ -393,8 +393,8 @@ RT Pers.Warp</string>
    <widget class="QPushButton" name="nextButton">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>890</y>
+      <x>1130</x>
+      <y>880</y>
       <width>221</width>
       <height>71</height>
      </rect>
@@ -499,7 +499,7 @@ RT Pers.Warp</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>02 構成 保証 キャリブレーション 確認</string>
+     <string>02 寸法 校正 保証 確認</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -508,8 +508,8 @@ RT Pers.Warp</string>
    <widget class="QPushButton" name="InspectButton">
     <property name="geometry">
      <rect>
-      <x>650</x>
-      <y>890</y>
+      <x>890</x>
+      <y>880</y>
       <width>221</width>
       <height>71</height>
      </rect>
@@ -537,6 +537,38 @@ RT Pers.Warp</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="prevButton">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>880</y>
+      <width>221</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>20</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+      <stylestrategy>PreferAntialias</stylestrategy>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>&lt; 前</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -544,7 +576,7 @@ RT Pers.Warp</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

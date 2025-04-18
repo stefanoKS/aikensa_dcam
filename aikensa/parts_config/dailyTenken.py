@@ -34,7 +34,7 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.1635
+pixelMultiplier = 0.1636
 
 
 def dailyTenken(image, sahi_predictionList):

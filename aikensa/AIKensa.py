@@ -87,6 +87,11 @@ class AIKensa(QMainWindow):
             6: "5902A510",
             7: "658207LE0A",
             8: "5819A107",
+            21: "dailyTenken01",
+            22: "dailyTenken02",
+            23: "dailyTenken03",
+            24: "658207LE0A_dailyTenken01",
+            25: "658207LE0A_dailyTenken02",
         }
 
         self.prevTriggerStates = 0
@@ -186,7 +191,9 @@ class AIKensa(QMainWindow):
 
         dailytenken01_button = main_widget.findChild(QPushButton, "dailytenkenbutton")
         dailytenken02_button = dailytenken01_widget.findChild(QPushButton, "nextButton")
+        dailytenken02_back_button = dailytenken02_widget.findChild(QPushButton, "prevButton")
         dailytenken03_button = dailytenken02_widget.findChild(QPushButton, "nextButton")
+        dailytenken03_back_button = dailytenken03_widget.findChild(QPushButton, "prevButton")
         dailytenken_kanryou_button = dailytenken03_widget.findChild(QPushButton, "finishButton")
 
         # dailytenken01_P658207LE0A_button= main_widget.findChild(QPushButton, "dailytenkenbutton_P658207LE0A")
@@ -254,23 +261,17 @@ class AIKensa(QMainWindow):
 
             dailytenken02_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
             dailytenken02_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
-            dailytenken02_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-            dailytenken02_button.clicked.connect(self.calibration_thread.stop)
+
+            dailytenken02_back_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
+            dailytenken02_back_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 21))
+
 
             dailytenken03_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(23))
             dailytenken03_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 23))
-            dailytenken03_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-            dailytenken03_button.clicked.connect(self.calibration_thread.stop)
 
-            # dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(24))
-            # dailytenken01_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 24))
-            # dailytenken01_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-            # dailytenken01_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
 
-            # dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(25))
-            # dailytenken02_P658207LE0A_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 25))
-            # dailytenken02_P658207LE0A_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-            # dailytenken02_P658207LE0A_button.clicked.connect(self.calibration_thread.stop)
+            dailytenken03_back_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
+            dailytenken03_back_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
 
 
         self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25]]
@@ -309,6 +310,8 @@ class AIKensa(QMainWindow):
             if button_main_menu:
                 button_main_menu.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
                 button_main_menu.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 0))
+
+                dailytenken_kanryou_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
 
                 # dailytenken_kanryou_P5902A509_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
                 # dailytenken_kanryou_P658207LE0A_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))
