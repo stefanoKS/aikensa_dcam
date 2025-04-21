@@ -105,12 +105,12 @@ def dailyTenken(image, sahi_predictionList):
         print(abs(pitchSpech - measuredPitch[0]))
         if abs(pitchSpech - measuredPitch[0]) > pitchTolerance:
             status = "NG"
-            print_status += f"構成不良 {measuredPitch[0]:.2f}mm\n"
+            print_status += f"校正不良 {measuredPitch[0]:.2f}mm\n"
             flag_pitch_furyou = 1
             ngreason = "CALIBRATION NG"
         else:
             status = "OK"
-            print_status += f"構成良好 {measuredPitch[0]:.2f}mm\n"
+            print_status += f"校正良好 {measuredPitch[0]:.2f}mm\n"
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
