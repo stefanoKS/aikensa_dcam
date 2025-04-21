@@ -93,9 +93,9 @@ class AIKensa(QMainWindow):
             14: "82832W040PCLIPSOUNYUUKI",
             15: "82833W090PCLIPSOUNYUUKI",
             16: "82832W080PCLIPSOUNYUUKI",
-            21: "dailyTenken_new_01",
-            22: "dailyTenken_new_02",
-            23: "dailyTenken_new_03",
+            21: "dailyTenken_01",
+            22: "dailyTenken_02",
+            23: "dailyTenken_03",
         }
 
         self.prevTriggerStates = 0
@@ -188,9 +188,9 @@ class AIKensa(QMainWindow):
 
         main_widget = self.stackedWidget.widget(0)
 
-        dailyTenken_new_01_widget = self.stackedWidget.widget(21)
-        dailyTenken_new_02_widget = self.stackedWidget.widget(22)
-        dailyTenken_new_03_widget = self.stackedWidget.widget(23)
+        dailyTenken01_widget = self.stackedWidget.widget(21)
+        dailyTenken02_widget = self.stackedWidget.widget(22)
+        dailyTenken03_widget = self.stackedWidget.widget(23)
 
         cameraCalibration1_widget = self.stackedWidget.widget(1)
         cameraCalibration2_widget = self.stackedWidget.widget(2)
@@ -201,9 +201,11 @@ class AIKensa(QMainWindow):
         mergeCamera_button = main_widget.findChild(QPushButton, "cameraMerge")
 
         dailytenken01_button = main_widget.findChild(QPushButton, "dailytenkenbutton")
-        dailytenken02_button = dailyTenken_new_01_widget.findChild(QPushButton, "nextButton")
-        dailytenken03_button = dailyTenken_new_02_widget.findChild(QPushButton, "nextButton")
-        dailytenken_kanryou_button = dailyTenken_new_03_widget.findChild(QPushButton, "finishButton")
+        dailytenken02_button = dailyTenken01_widget.findChild(QPushButton, "nextButton")
+        dailytenken02_back_button = dailyTenken02_widget.findChild(QPushButton, "prevButton")
+        dailytenken03_button = dailyTenken02_widget.findChild(QPushButton, "nextButton")
+        dailytenken03_back_button = dailyTenken03_widget.findChild(QPushButton, "prevButton")
+        dailytenken_kanryou_button = dailyTenken03_widget.findChild(QPushButton, "finishButton")
 
         if cameraCalibration1_button:
             cameraCalibration1_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
@@ -276,13 +278,15 @@ class AIKensa(QMainWindow):
 
         dailytenken02_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
         dailytenken02_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
-        dailytenken02_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-        dailytenken02_button.clicked.connect(self.calibration_thread.stop)
+
+        dailytenken02_back_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
+        dailytenken02_back_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 21))
 
         dailytenken03_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(23))
         dailytenken03_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 23))
-        dailytenken03_button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-        dailytenken03_button.clicked.connect(self.calibration_thread.stop)
+
+        dailytenken03_back_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
+        dailytenken03_back_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
 
 
         self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]]

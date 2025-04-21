@@ -268,7 +268,7 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>1220</x>
        <y>130</y>
        <width>441</width>
        <height>16</height>
@@ -284,7 +284,7 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>1220</x>
        <y>130</y>
        <width>16</width>
        <height>191</height>
@@ -300,7 +300,7 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
-       <x>1010</x>
+       <x>1650</x>
        <y>130</y>
        <width>16</width>
        <height>191</height>
@@ -316,7 +316,7 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>1220</x>
        <y>305</y>
        <width>441</width>
        <height>16</height>
@@ -393,8 +393,8 @@ RT Pers.Warp</string>
    <widget class="QPushButton" name="nextButton">
     <property name="geometry">
      <rect>
-      <x>820</x>
-      <y>890</y>
+      <x>1060</x>
+      <y>880</y>
       <width>221</width>
       <height>71</height>
      </rect>
@@ -499,7 +499,7 @@ RT Pers.Warp</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>03 構成 保証 キャリブレーション 確認</string>
+     <string>03 寸法 校正 保証 確認</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -508,8 +508,8 @@ RT Pers.Warp</string>
    <widget class="QPushButton" name="checkButton">
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>890</y>
+      <x>820</x>
+      <y>880</y>
       <width>221</width>
       <height>71</height>
      </rect>
@@ -532,6 +532,38 @@ RT Pers.Warp</string>
     </property>
     <property name="text">
      <string>確認</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="prevButton">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>880</y>
+      <width>221</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>20</pointsize>
+      <weight>75</weight>
+      <italic>false</italic>
+      <bold>true</bold>
+      <stylestrategy>PreferAntialias</stylestrategy>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>&lt; 前</string>
     </property>
     <property name="checkable">
      <bool>false</bool>

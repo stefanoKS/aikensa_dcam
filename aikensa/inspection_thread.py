@@ -29,9 +29,7 @@ from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_r
 from ultralytics import YOLO
 from aikensa.parts_config.P828XXW0X0P_CTRPLR import partcheck as P828XXW0X0P_check               #5
 
-# from aikensa.parts_config.P5902A509 import dailyTenken01 as P5902A509_dailyTenken01
-# from aikensa.parts_config.P5902A509 import dailyTenken02 as P5902A509_dailyTenken02
-# from aikensa.parts_config.P5902A509 import dailyTenken03 as P5902A509_dailyTenken03
+from aikensa.parts_config.dailyTenken import dailyTenken
 
 from PIL import ImageFont, ImageDraw, Image
 
@@ -261,7 +259,6 @@ class InspectionThread(QThread):
             14: "82832W040PCLIPSOUNYUUKI",
             15: "82833W090PCLIPSOUNYUUKI",
             16: "82832W080PCLIPSOUNYUUKI",
-            21: 
         }
 
         #for widget name map, append the string "P" to the initial widget dir map
@@ -1405,8 +1402,7 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
  
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P828XXW0X0P_check(self.InspectionImages[i],
-                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list)
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = dailyTenken(self.InspectionImages[i], self.InspectionResult_ClipDetection[i].object_prediction_list)
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -1572,7 +1568,6 @@ class InspectionThread(QThread):
         ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
         self.mysql_conn.commit()
 
-
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
         SELECT currentnumofPart 
@@ -1737,24 +1732,17 @@ class InspectionThread(QThread):
         P828XXW0X0P_KATABU_Model = None
         P828XXW0X0P_SEGMENT_Model = None
         P828XXW0X0P_HAND_DETECT = None
-        NICHIJOU_TENKEN_Model = None
 
         path_P828XXW0X0P_CLIP_Model = "./aikensa/models/P828XXW0X0P_detect.pt"
         path_P828XXW0X0P_KATABU_Model = "./aikensa/models/P828XXW0X0P_katabu.pt"
         path_P828XXW0X0P_CLIPFLIP_Model = "./aikensa/models/P828XXW0X0P_detect_flip.pt"
         path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
         path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
-        path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
 
         P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P828XXW0X0P_CLIP_Model,
                                                                             confidence_threshold=0.35,
                                                                             device="cuda:0")
         
-        NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
-                                                                            model_path=path_NICHIJOU_TENKEN_Model,
-                                                                            confidence_threshold=0.4,
-                                                                            device="cuda:0")
-            
 
         P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
         P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
@@ -1764,7 +1752,18 @@ class InspectionThread(QThread):
         self.P828XXW0X0P_KATABU_Model = P828XXW0X0P_KATABU_Model
         self.P828XXW0X0P_SEGMENT_Model = P828XXW0X0P_SEGMENT_Model
         self.P828XXW0X0P_HAND_DETECT = P828XXW0X0P_HAND_DETECT
+
+        NICHIJOU_TENKEN_Model = None
+        path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
+
+        if os.path.exists(path_NICHIJOU_TENKEN_Model):
+            NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
+                                                                            model_path=path_NICHIJOU_TENKEN_Model,
+                                                                            confidence_threshold=0.5,
+                                                                            device="cuda:0")
+            
         self.NICHIJOU_TENKEN_Model = NICHIJOU_TENKEN_Model
+
 
         print("Model Loaded")
         
