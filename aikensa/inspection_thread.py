@@ -246,6 +246,7 @@ class InspectionThread(QThread):
 
         self.InspectionImages_prev = [None]*30
         self._test = [0]*30
+
         self.widget_dir_map = {
             5: "82833W050P",
             6: "82832W040P",
@@ -259,6 +260,9 @@ class InspectionThread(QThread):
             14: "82832W040PCLIPSOUNYUUKI",
             15: "82833W090PCLIPSOUNYUUKI",
             16: "82832W080PCLIPSOUNYUUKI",
+            21: "dailyTenken_01",
+            22: "dailyTenken_02",
+            23: "dailyTenken_03",
         }
 
         #for widget name map, append the string "P" to the initial widget dir map
@@ -1022,25 +1026,25 @@ class InspectionThread(QThread):
                     print("Inspection Started")
                     # print(self.inspection_config.widget)
                     print(self.inspection_config.kensainNumber)
-                    if self.inspection_config.kensainNumber not in ["KENGEN", "10194"]:
-                        print("NoKengen")
-                        # imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
-                        # imgresults = np.ascontiguousarray(imgresults)
-                        # img_pil = Image.fromarray(imgresults)
-                        # font = ImageFont.truetype(self.kanjiFontPath, 60)
-                        # draw = ImageDraw.Draw(img_pil)
-                        # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                        # draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
-                        # imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                        # self.combinedImage_scaled = imgResult
-                        # print("Image shape:", self.combinedImage_scaled.shape)
-                        # print("Data type:", self.combinedImage_scaled.dtype)
-                        # play_alarm_sound()
-                        self.combinedImage_scaled = self.draw_status_text_PIL(self.combinedImage_scaled, "管理者権限が必要", (50,150,10), size="large", x_offset = -500, y_offset = -100)
-                        # self.combinedImage_scaled = self.add_admin_warning(self.combinedImage_scaled, u"管理者権限が必要", self.kanjiFontPath)
-                        self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
-                        time.sleep(2)
-                        continue
+                    # if self.inspection_config.kensainNumber not in ["KENGEN", "10194"]:
+                    #     print("NoKengen")
+                    #     # imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
+                    #     # imgresults = np.ascontiguousarray(imgresults)
+                    #     # img_pil = Image.fromarray(imgresults)
+                    #     # font = ImageFont.truetype(self.kanjiFontPath, 60)
+                    #     # draw = ImageDraw.Draw(img_pil)
+                    #     # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
+                    #     # draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
+                    #     # imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+                    #     # self.combinedImage_scaled = imgResult
+                    #     # print("Image shape:", self.combinedImage_scaled.shape)
+                    #     # print("Data type:", self.combinedImage_scaled.dtype)
+                    #     # play_alarm_sound()
+                    #     self.combinedImage_scaled = self.draw_status_text_PIL(self.combinedImage_scaled, "管理者権限が必要", (50,150,10), size="large", x_offset = -500, y_offset = -100)
+                    #     # self.combinedImage_scaled = self.add_admin_warning(self.combinedImage_scaled, u"管理者権限が必要", self.kanjiFontPath)
+                    #     self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
+                    #     time.sleep(2)
+                    #     continue
                     
 
                     if self.InspectionTimeStart is not None:
@@ -1372,7 +1376,7 @@ class InspectionThread(QThread):
                             if self.emit is None:
                                 self.emit = np.zeros((428, 1791, 3), dtype=np.uint8)
 
-                            self.emit = self.draw_status_text_PIL(self.emit, "構成確認中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
+                            self.emit = self.draw_status_text_PIL(self.emit, "校正確認中", (50,150,10), size="large", x_offset = -280, y_offset = -100)
                             self.partCam.emit(self.convertQImage(self.emit))
 
                             self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -1392,7 +1396,7 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.NICHIJOU_TENKEN_Model, 
-                                            slice_height=1980, slice_width=1280, 
+                                            slice_height=1980, slice_width=1980, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,

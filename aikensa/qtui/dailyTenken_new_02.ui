@@ -64,7 +64,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="mergeFrame">
+    <widget class="QLabel" name="framePart">
      <property name="geometry">
       <rect>
        <x>11</x>
@@ -265,43 +265,11 @@ RT Pers.Warp</string>
       <string>Quit</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
-     <property name="geometry">
-      <rect>
-       <x>650</x>
-       <y>130</y>
-       <width>441</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(237, 51, 59);</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>650</x>
-       <y>130</y>
-       <width>16</width>
-       <height>191</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(237, 51, 59);</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
-       <x>1080</x>
-       <y>130</y>
+       <x>1090</x>
+       <y>60</y>
        <width>16</width>
        <height>191</height>
       </rect>
@@ -316,10 +284,42 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>650</x>
-       <y>305</y>
-       <width>441</width>
+       <x>710</x>
+       <y>235</y>
+       <width>391</width>
        <height>16</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(237, 51, 59);</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>60</y>
+       <width>391</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(237, 51, 59);</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>710</x>
+       <y>60</y>
+       <width>16</width>
+       <height>191</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -335,11 +335,11 @@ RT Pers.Warp</string>
     <zorder>rtwarpcolor</zorder>
     <zorder>savewarpbutton</zorder>
     <zorder>rekensaButton</zorder>
-    <zorder>mergeFrame</zorder>
-    <zorder>label_3</zorder>
-    <zorder>label</zorder>
+    <zorder>framePart</zorder>
     <zorder>label_2</zorder>
     <zorder>label_4</zorder>
+    <zorder>label_3</zorder>
+    <zorder>label</zorder>
    </widget>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">
@@ -505,7 +505,7 @@ RT Pers.Warp</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="checkButton">
+   <widget class="QPushButton" name="InspectButton">
     <property name="geometry">
      <rect>
       <x>820</x>
@@ -576,7 +576,7 @@ RT Pers.Warp</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

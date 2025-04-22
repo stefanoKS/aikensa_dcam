@@ -64,7 +64,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="mergeFrame">
+    <widget class="QLabel" name="framePart">
      <property name="geometry">
       <rect>
        <x>11</x>
@@ -268,9 +268,9 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>180</x>
-       <y>130</y>
-       <width>441</width>
+       <x>230</x>
+       <y>50</y>
+       <width>391</width>
        <height>16</height>
       </rect>
      </property>
@@ -284,8 +284,8 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
-       <x>180</x>
-       <y>130</y>
+       <x>230</x>
+       <y>50</y>
        <width>16</width>
        <height>191</height>
       </rect>
@@ -301,7 +301,7 @@ RT Pers.Warp</string>
      <property name="geometry">
       <rect>
        <x>610</x>
-       <y>130</y>
+       <y>50</y>
        <width>16</width>
        <height>191</height>
       </rect>
@@ -316,9 +316,9 @@ RT Pers.Warp</string>
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>180</x>
-       <y>305</y>
-       <width>441</width>
+       <x>230</x>
+       <y>225</y>
+       <width>391</width>
        <height>16</height>
       </rect>
      </property>
@@ -335,7 +335,7 @@ RT Pers.Warp</string>
     <zorder>rtwarpcolor</zorder>
     <zorder>savewarpbutton</zorder>
     <zorder>rekensaButton</zorder>
-    <zorder>mergeFrame</zorder>
+    <zorder>framePart</zorder>
     <zorder>label_3</zorder>
     <zorder>label</zorder>
     <zorder>label_2</zorder>
@@ -505,7 +505,7 @@ RT Pers.Warp</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="checkButton">
+   <widget class="QPushButton" name="InspectButton">
     <property name="geometry">
      <rect>
       <x>820</x>
@@ -576,7 +576,7 @@ RT Pers.Warp</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -20,7 +20,7 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
-pitchSpech = 100.0
+pitchSpec = 100.0
 pitchTolerance = 1.0
 
 color = (0, 255, 0)
@@ -31,7 +31,7 @@ bbox_offset = 10
 
 # segmentation_width = 1640
 
-pixelMultiplier = 0.1598
+pixelMultiplier = 0.1594
 
 def dailyTenken(image, sahi_predictionList):
 
@@ -61,7 +61,7 @@ def dailyTenken(image, sahi_predictionList):
     leftmostPitch = 0
     rightmostPitch = 0
 
-    status = "OK"
+    status = "NG"
     print_status = ""
     ngreason = ""
 
@@ -92,24 +92,35 @@ def dailyTenken(image, sahi_predictionList):
         measuredPitch.append(length)
 
     #if length is not equal to spec plus minus tolerance, status is NG
+    if len(measuredPitch) == 0:
+        status = "NG"
+        print_status += f"製品認識不良\n"
+        flag_pitch_furyou = 1
+        ngreason = "CALIBRATION NG"
+
+    print(pitchSpec - measuredPitch[0])
+
+    print(f"Pitch Tolerance: {pitchTolerance}")
+
     if len(measuredPitch) > 0:
-        if abs(pitchSpech - measuredPitch[0]) > pitchTolerance:
+        if abs(pitchSpec - measuredPitch[0]) > pitchTolerance:
             status = "NG"
-            print_status += f"構成不良 {measuredPitch[0]:.2f}mm\n"
+            print_status += f"校正不良 {measuredPitch[0]:.2f}mm\n"
             flag_pitch_furyou = 1
             ngreason = "CALIBRATION NG"
         else:
-            print_status += f"構成良好 {measuredPitch[0]:.2f}mm\n"
+            status = "OK"
+            print_status += f"校正良好 {measuredPitch[0]:.2f}mm\n"
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
 
-    image = draw_status_text_PIL(image, status, print_status, size="normal")
+    image = draw_status_text_PIL(image, status, print_status, size="normal", offset_y=650)
     
     return image, measuredPitch, resultPitch, resultid, status, ngreason
 
 
-def draw_status_text_PIL(image, status, print_status, size = "normal"):
+def draw_status_text_PIL(image, status, print_status, size = "normal", offset_y=0):
 
     if size == "large":
         font_scale = 50.0
@@ -129,8 +140,8 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
     draw = ImageDraw.Draw(img_pil)
     font = ImageFont.truetype(kanjiFontPath, font_scale)
 
-    draw.text((300, 5), status, font=font, fill=color)  
-    draw.text((300, 100), print_status, font=font, fill=color)
+    draw.text((300, 5 + offset_y), status, font=font, fill=color)  
+    draw.text((300, 100 + offset_y), print_status, font=font, fill=color)
     image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     cv2.imwrite("test.png", image)
     return image
