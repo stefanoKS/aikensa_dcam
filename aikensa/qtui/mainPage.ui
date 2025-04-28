@@ -321,7 +321,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="dailytenkenbutton_P5902A509">
+   <widget class="QPushButton" name="dailytenkenbutton">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -340,8 +340,7 @@
      <string notr="true">background-color: rgb(46, 194, 126);</string>
     </property>
     <property name="text">
-     <string extracomment="Generate intrinsic camera parameter">5902A509/5902A510用
-日常点検</string>
+     <string extracomment="Generate intrinsic camera parameter">日常点検</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_7">
@@ -438,29 +437,6 @@ Camera②Calib.</string>
     <property name="text">
      <string extracomment="Generate intrinsic camera parameter">カメラマージ 
 Camera Merge</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="dailytenkenbutton_P658207LE0A">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>340</y>
-      <width>231</width>
-      <height>91</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(46, 194, 126);</string>
-    </property>
-    <property name="text">
-     <string extracomment="Generate intrinsic camera parameter">65820 7LE0A用
-日常点検</string>
     </property>
    </widget>
    <widget class="QPushButton" name="P808387YA0Abutton">
