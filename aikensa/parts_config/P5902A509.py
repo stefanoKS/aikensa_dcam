@@ -44,7 +44,11 @@ bbox_offset = 1
 pixelMultiplier = 0.1592
 
 
-def partcheck(image, clip_detection_result, segmentation_result, hanire_detection_result, widgetNumber):
+segmentation_width = 1640
+border_width = 360
+
+
+def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation, hanire_detection_result, widgetNumber):
 
     # print(clip_detection_result)
     detectedid = []
@@ -168,32 +172,98 @@ def partcheck(image, clip_detection_result, segmentation_result, hanire_detectio
 
             return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
-    combined_mask = None
+    # combined_mask = None
 
-    for m in segmentation_result:
-        #use image size
-        if m.masks is not None:
-            orig_shape = (image.shape[0], image.shape[1])
-            segmentation_xyn = m.masks.xyn
-            mask = create_masks(segmentation_xyn, orig_shape)
-            if combined_mask is None:
-                combined_mask = np.zeros_like(mask)
-            combined_mask = cv2.bitwise_or(combined_mask, mask)
+    # for m in segmentation_result:
+    #     #use image size
+    #     if m.masks is not None:
+    #         orig_shape = (image.shape[0], image.shape[1])
+    #         segmentation_xyn = m.masks.xyn
+    #         mask = create_masks(segmentation_xyn, orig_shape)
+    #         if combined_mask is None:
+    #             combined_mask = np.zeros_like(mask)
+    #         combined_mask = cv2.bitwise_or(combined_mask, mask)
 
-            #draw the mask as overlay
-            image_overlay = image.copy()
-            image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-            # cv2.imwrite("mask_overlay2.jpg", image_overlay)
+    #         #draw the mask as overlay
+    #         image_overlay = image.copy()
+    #         image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
+    #         # cv2.imwrite("mask_overlay2.jpg", image_overlay)
         
-        if m.masks is None:
-            print_status = print_status + " 製品は見つかりません"
+    #     if m.masks is None:
+    #         print_status = print_status + " 製品は見つかりません"
+    #         status = "NG"
+    #         resultPitch = [0] * (len(pitchSpec)+1)
+    #         measuredPitch = [0] * (len(pitchSpec)+1)
+    #         ngreason = "PART IS NOT FOUND"
+    #         image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+    #         return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
+
+            #Checkgate for mask segmentation handling
+
+
+
+
+    combined_lmask = None
+    for lm in leftSegmentation:
+        if lm.masks is not None:
+            orig_shape = (image.shape[0] + border_width * 2 , segmentation_width + border_width * 2 )
+            segmentation_xyn = lm.masks.xyn
+            lmask = create_masks(segmentation_xyn, orig_shape)
+            if combined_lmask is None:
+                combined_lmask = np.zeros_like(lmask)
+            combined_lmask = cv2.bitwise_or(combined_lmask, lmask)
+            #resize back to original size
+            combined_lmask = combined_lmask[border_width:-border_width, border_width:-border_width]
+            combined_lmask = cv2.resize(combined_lmask, (segmentation_width, image.shape[0]))
+            # cv2.imwrite("leftmask.jpg", combined_lmask)
+
+
+        if lm.masks is None:
             status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
             resultPitch = [0] * (len(pitchSpec)+1)
             measuredPitch = [0] * (len(pitchSpec)+1)
             ngreason = "PART IS NOT FOUND"
-            image = draw_status_text_PIL(image, status, print_status, size="normal")
 
             return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
+        
+    combined_rmask = None
+    for rm in rightSegmentation:
+        if rm.masks is not None:
+            orig_shape = (image.shape[0] + border_width * 2 , segmentation_width + border_width * 2 )
+            segmentation_xyn = rm.masks.xyn
+            rmask = create_masks(segmentation_xyn, orig_shape)
+            if combined_rmask is None:
+                combined_rmask = np.zeros_like(rmask)
+            combined_rmask = cv2.bitwise_or(combined_rmask, rmask)
+            #remove the pad from the image (pad size is 200 around the image)
+            combined_rmask = combined_rmask[border_width:-border_width, border_width:-border_width]
+            combined_rmask = cv2.resize(combined_rmask, (segmentation_width, image.shape[0]))
+            # cv2.imwrite("rightmask.jpg", combined_rmask)
+        if rm.masks is None:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="small")
+
+            resultPitch = [0] * (len(pitchSpec)+1)
+            measuredPitch = [0] * (len(pitchSpec)+1)
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
+
+
+    combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
+
+    if combined_lmask is not None and combined_rmask is not None:
+        combined_mask[:, :segmentation_width] = combined_lmask 
+        combined_mask[:, -segmentation_width:] = combined_rmask 
+        # cv2.imwrite("combined_mask.jpg", combined_mask)
+
+
+
 
     if len(detectedid) < 5:
         print_status = print_status + " クリップ数不足 "

@@ -570,10 +570,25 @@ class InspectionThread(QThread):
                             # self.save_image(self.InspectionImages[0])
 
                             for i in range(len(self.InspectionImages)):
+
+
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1640, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1640:, :]
+                                self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 360, 360, 360, 360, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                                self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 360, 360, 360, 360, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.8, imgsz=1280, verbose=False)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.8, imgsz=1280, verbose=False)
+
+
                                 self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.3, imgsz=2500, iou=0.5, rect=True, verbose=False)
-                                self.InspectionResult_Segmentation[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages[i], conf=0.6, imgsz=1920, verbose=True, rect=True)
                                 self.InspectionResult_Hanire[i] = self.P5902A509_HANIRE_Model(source=self.InspectionImages[i], conf=0.7, imgsz=1920, iou=0.4, verbose=False)
-                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P5902A509_check(self.InspectionImages[i], self.InspectionResult_ClipDetection[i], self.InspectionResult_Segmentation[i], self.InspectionResult_Hanire[i], self.inspection_config.widget)
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P5902A509_check(self.InspectionImages[i], 
+                                                                                                                                                                                                                                                    self.InspectionResult_ClipDetection[i], 
+                                                                                                                                                                                                                                                    self.InspectionResult_EndSegmentation_Left[i],
+                                                                                                                                                                                                                                                    self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                    self.InspectionResult_Hanire[i], 
+                                                                                                                                                                                                                                                    self.inspection_config.widget)
 
 
                                 for i in range(len(self.InspectionResult_Status)):
