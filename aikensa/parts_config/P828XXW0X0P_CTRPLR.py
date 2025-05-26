@@ -202,7 +202,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
                 if class_id_marking == 1:
                     if partname in ["P82833W050P", "P82833W090P", "P82833W050PKENGEN", "P82833W090PKENGEN"]:
                         center_katabummarking = (int(x_marking - w_marking/2), int(y_marking))
-                    elif partname in ["P82832W040P", "P82832W080P", "P82832W040PKENGEN", "P82832W080PKEGEN"]:
+                    elif partname in ["P82832W040P", "P82832W080P", "P82832W040PKENGEN", "P82832W080PKENGEN"]:
                         center_katabummarking = (int(x_marking + w_marking/2), int(y_marking))
                 
                 if prev_center_katabumarking is not None:
