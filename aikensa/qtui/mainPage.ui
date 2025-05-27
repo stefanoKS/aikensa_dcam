@@ -347,7 +347,7 @@ Daily Check</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>800</x>
       <y>780</y>
       <width>211</width>
       <height>31</height>
@@ -443,8 +443,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P82833W050Pbutton">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>570</y>
+      <x>370</x>
+      <y>1050</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -467,8 +467,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82833W090Pbutton">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>660</y>
+      <x>380</x>
+      <y>1060</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -491,8 +491,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82832W040Pbutton">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>570</y>
+      <x>390</x>
+      <y>1070</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -515,8 +515,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82832W080Pbutton">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>660</y>
+      <x>400</x>
+      <y>1080</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -630,33 +630,6 @@ W/STRIP-RR DOOR, LH</string>
      <string>5A45
 82832W080P
  W/STRIP-RR DOOR, RH</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_8">
-    <property name="geometry">
-     <rect>
-      <x>750</x>
-      <y>780</y>
-      <width>311</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>22</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>三菱自動車 - 権限必要</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QPushButton" name="P82833W050PCLIPSOUNYUUKIbutton">
@@ -785,10 +758,10 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>560</y>
-      <width>481</width>
-      <height>181</height>
+      <x>360</x>
+      <y>1040</y>
+      <width>271</width>
+      <height>121</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -860,7 +833,6 @@ W/STRIP-RR DOOR, LH</string>
    <zorder>P82832W040PKENGENbutton</zorder>
    <zorder>P82833W050PKENGENbutton</zorder>
    <zorder>P82832W080PKENGENbutton</zorder>
-   <zorder>label_8</zorder>
    <zorder>P82833W050PCLIPSOUNYUUKIbutton</zorder>
    <zorder>P82833W090PCLIPSOUNYUUKIbutton</zorder>
    <zorder>P82832W080PCLIPSOUNYUUKIbutton</zorder>
@@ -873,7 +845,7 @@ W/STRIP-RR DOOR, LH</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

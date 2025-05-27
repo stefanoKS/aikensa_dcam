@@ -314,6 +314,10 @@ class AIKensa(QMainWindow):
 
             self.connect_line_edit_text_changed(widget_index=i, line_edit_name="kensain_name", inspection_param="kensainNumber")
 
+            #additional logic for ppms number
+            if i in [13, 14, 15, 16]:
+                self.connect_line_edit_text_changed(widget_index=i, line_edit_name="ppms_number", inspection_param="ppmsnumber")
+
         
 
         for i in range(self.stackedWidget.count()):

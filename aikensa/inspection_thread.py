@@ -49,6 +49,7 @@ class InspectionConfig:
     button_sensor: int = 0
 
     kensainNumber: str = None
+    ppmsnumber : str = None
     furyou_plus: bool = False
     furyou_minus: bool = False
     kansei_plus: bool = False
@@ -371,7 +372,12 @@ class InspectionThread(QThread):
             kensainName TEXT,
             detected_pitch TEXT,
             delta_pitch TEXT,
-            total_length REAL
+            total_length REAL,
+            resultpitch TEXT,
+            status TEXT,
+            NGreason TEXT,
+            ClipInsertionMachine TEXT,
+            PPMS TEXT
         )
         ''')
 
@@ -379,7 +385,8 @@ class InspectionThread(QThread):
         columns_to_add = [
             ("resultpitch", "TEXT"),
             ("status", "TEXT"),
-            ("NGreason", "TEXT")
+            ("NGreason", "TEXT"),
+            ("PPMS", "TEXT"),
         ]
 
         # Using the function to add columns
@@ -419,7 +426,9 @@ class InspectionThread(QThread):
                 total_length REAL,
                 resultpitch TEXT,
                 status TEXT,
-                NGreason TEXT
+                NGreason TEXT,
+                ClipInsertionMachine TEXT,
+                PPMS TEXT
             )
             ''')
             self.mysql_conn.commit()
@@ -801,7 +810,8 @@ class InspectionThread(QThread):
                             total_length=0,
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET")
+                            NGreason = "COUNTERRESET",
+                            )
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1240,7 +1250,8 @@ class InspectionThread(QThread):
                             total_length=0,
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET")
+                            NGreason = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1324,7 +1335,8 @@ class InspectionThread(QThread):
                                     total_length=0,
                                     resultPitch = self.InspectionResult_PitchResult[0], 
                                     status = self.InspectionResult_Status[0], 
-                                    NGreason = self.InspectionResult_NGReason[0])
+                                    NGreason = self.InspectionResult_NGReason[0],
+                                    PPMS = self.inspection_config.PPMS)
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1427,7 +1439,8 @@ class InspectionThread(QThread):
                                     total_length=0,
                                     resultPitch = self.InspectionResult_PitchResult[0], 
                                     status = self.InspectionResult_Status[0], 
-                                    NGreason = self.InspectionResult_NGReason[0])
+                                    NGreason = self.InspectionResult_NGReason[0],
+                                    PPMS="Null")
 
 
                             self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
@@ -1526,7 +1539,8 @@ class InspectionThread(QThread):
                 total_length=0,
                 resultPitch = "MANUAL",
                 status = "MANUAL",
-                NGreason = "MANUAL")
+                NGreason = "MANUAL",
+                PPMS="MANUAL")
 
         return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
     
@@ -1534,7 +1548,7 @@ class InspectionThread(QThread):
                              currentnumofPart, deltaTime, 
                              kensainName, detected_pitch_str, 
                              delta_pitch_str, total_length, 
-                             resultPitch, status, NGreason):
+                             resultPitch, status, NGreason, PPMS="Null"):
         # Ensure all inputs are strings or compatible types
 
         timestamp = datetime.now()
@@ -1555,10 +1569,16 @@ class InspectionThread(QThread):
         status = str(status)
         NGreason = str(NGreason)
 
+        if PPMS != "Null":
+            PPMS = str(PPMS)
+        else:
+            PPMS = "Null"
+
+
         self.cursor.execute('''
-        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, PPMS)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, PPMS))
         self.conn.commit()
 
         # Update the totatl part number (Maybe the day has been changed)
@@ -1567,9 +1587,9 @@ class InspectionThread(QThread):
 
         #Also save to mysql cursor
         self.mysql_cursor.execute('''
-        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason))
+        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, PPMS)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, PPMS))
         self.mysql_conn.commit()
 
     def get_last_entry_currentnumofPart(self, part_name):

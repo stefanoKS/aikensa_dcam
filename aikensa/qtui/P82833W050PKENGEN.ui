@@ -1079,35 +1079,6 @@ Counter Reset</string>
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="P5label_2">
-    <property name="geometry">
-     <rect>
-      <x>680</x>
-      <y>610</y>
-      <width>481</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>20</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(46, 52, 54);
-color: rgb(200, 0, 0);
-background-color: rgb(211, 215, 207);</string>
-    </property>
-    <property name="text">
-     <string>権限必要 関係者以外 使用しないこと</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
    <widget class="QLabel" name="P5label">
     <property name="geometry">
      <rect>
@@ -1548,6 +1519,53 @@ background-color: rgb(211, 215, 207);</string>
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QLabel" name="label_ppms">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>590</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>PPMS番号：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="ppms_number">
+    <property name="geometry">
+     <rect>
+      <x>800</x>
+      <y>590</y>
+      <width>251</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>NONUMBER</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_25</zorder>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
@@ -1587,7 +1605,6 @@ background-color: rgb(211, 215, 207);</string>
    <zorder>kansei_minus_10</zorder>
    <zorder>furyou_plus_10</zorder>
    <zorder>counterReset</zorder>
-   <zorder>P5label_2</zorder>
    <zorder>P5label</zorder>
    <zorder>P6label</zorder>
    <zorder>P7color</zorder>
@@ -1604,6 +1621,8 @@ background-color: rgb(211, 215, 207);</string>
    <zorder>P4label</zorder>
    <zorder>P2color</zorder>
    <zorder>P6color</zorder>
+   <zorder>label_ppms</zorder>
+   <zorder>ppms_number</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -1611,7 +1630,7 @@ background-color: rgb(211, 215, 207);</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
