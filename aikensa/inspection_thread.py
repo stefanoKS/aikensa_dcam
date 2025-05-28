@@ -572,13 +572,13 @@ class InspectionThread(QThread):
                             for i in range(len(self.InspectionImages)):
 
 
-                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1640, :]
-                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1640:, :]
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1024, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1024:, :]
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 360, 360, 360, 360, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 360, 360, 360, 360, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.8, imgsz=1280, verbose=False)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.8, imgsz=1280, verbose=False)
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.8, imgsz=1280, rect=True, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P5902A509_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.8, imgsz=1280, rect=True, verbose=False, retina_masks=True)
 
 
                                 self.InspectionResult_ClipDetection[i] = self.P5902A509_CLIP_Model(source=self.InspectionImages[i], conf=0.3, imgsz=2500, iou=0.5, rect=True, verbose=False)

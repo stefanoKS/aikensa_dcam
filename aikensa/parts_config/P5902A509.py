@@ -44,7 +44,7 @@ bbox_offset = 1
 pixelMultiplier = 0.1592
 
 
-segmentation_width = 1640
+segmentation_width = 1024
 border_width = 360
 
 
@@ -294,8 +294,8 @@ def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation,
         rightmostCenter = (detectedposX[-1], detectedposY[-1])
         rightmostWidth = detectedWidth[-1] # not really useful here since we use mask from inference
         adjustment_offset = 0 # not really useful here since we use mask from inference
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -100, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -100, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -60, Xoffsetval = 80)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -60, Xoffsetval = 80)
 
         detectedposX.insert(0, left_edge[0])
         detectedposY.insert(0, left_edge[1])
@@ -486,8 +486,8 @@ def dailyTenken01(image, clip_detection_result, segmentation_result, hanire_dete
         rightmostCenter = (detectedposX[-1], detectedposY[-1])
         rightmostWidth = detectedWidth[-1] # not really useful here since we use mask from inference
         adjustment_offset = 0 # not really useful here since we use mask from inference
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -100, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -100, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -100, Xoffsetval = 50)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -100, Xoffsetval = 50)
 
         detectedposX.insert(0, left_edge[0])
         detectedposY.insert(0, left_edge[1])
