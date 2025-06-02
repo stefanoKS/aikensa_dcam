@@ -909,7 +909,7 @@ background-color: rgb(211, 215, 207);</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>日産自動車</string>
+     <string>三菱自動車株式会社</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -1555,6 +1555,53 @@ background-color: rgb(38, 162, 105);</string>
      <string>-1</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_ppms">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>780</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>PPMS番号：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="ppms_number">
+    <property name="geometry">
+     <rect>
+      <x>970</x>
+      <y>780</y>
+      <width>251</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>NONUMBER</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_12</zorder>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
@@ -1592,6 +1639,8 @@ background-color: rgb(38, 162, 105);</string>
    <zorder>furyou_plus</zorder>
    <zorder>kansei_minus_10</zorder>
    <zorder>furyou_minus</zorder>
+   <zorder>label_ppms</zorder>
+   <zorder>ppms_number</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -1599,7 +1648,7 @@ background-color: rgb(38, 162, 105);</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

@@ -342,7 +342,7 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>645</y>
+      <y>690</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -366,7 +366,7 @@
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>645</y>
+      <y>690</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -469,7 +469,7 @@ COWLTOP</string>
     <property name="geometry">
      <rect>
       <x>660</x>
-      <y>540</y>
+      <y>1070</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -585,8 +585,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P808387YA0Abutton">
     <property name="geometry">
      <rect>
-      <x>660</x>
-      <y>650</y>
+      <x>670</x>
+      <y>1080</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -609,8 +609,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P828387YA1Abutton">
     <property name="geometry">
      <rect>
-      <x>660</x>
-      <y>760</y>
+      <x>690</x>
+      <y>1100</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -633,8 +633,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P658107YA0Abutton">
     <property name="geometry">
      <rect>
-      <x>1140</x>
-      <y>650</y>
+      <x>710</x>
+      <y>1120</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -657,8 +657,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P828387YA0Abutton">
     <property name="geometry">
      <rect>
-      <x>900</x>
-      <y>650</y>
+      <x>680</x>
+      <y>1090</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -681,8 +681,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P731957YA0Abutton">
     <property name="geometry">
      <rect>
-      <x>1380</x>
-      <y>650</y>
+      <x>730</x>
+      <y>1140</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -705,8 +705,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P828387YA6Abutton">
     <property name="geometry">
      <rect>
-      <x>1140</x>
-      <y>760</y>
+      <x>720</x>
+      <y>1130</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -729,8 +729,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P828397YA1Abutton">
     <property name="geometry">
      <rect>
-      <x>900</x>
-      <y>760</y>
+      <x>700</x>
+      <y>1110</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -753,8 +753,8 @@ Camera Merge</string>
    <widget class="QPushButton" name="P828397YA6Abutton">
     <property name="geometry">
      <rect>
-      <x>1380</x>
-      <y>760</y>
+      <x>740</x>
+      <y>1150</y>
       <width>231</width>
       <height>101</height>
      </rect>
@@ -774,6 +774,143 @@ Camera Merge</string>
  SEAL-RR DOOR PARTING, LH</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="P658217UA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>540</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(53, 132, 228);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65821 7UA0A
+ SEAL ASSY-HOOD, FR LH
+CCM1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658217UJ0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>690</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(78, 209, 237);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65821 7UJ0A
+ SEAL ASSY-HOOD FR LH
+CCM2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658207UA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>540</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 190, 111);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65820 7UA0A
+ SEAL ASSY-HOOD, FR RH
+CCM1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658207UJ0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>1140</x>
+      <y>690</y>
+      <width>231</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(248, 228, 92);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65820 7UJ0A
+ SEAL ASSY-HOOD FR RH
+CCM2</string>
+    </property>
+   </widget>
+   <zorder>line_1</zorder>
+   <zorder>line_2</zorder>
+   <zorder>label_1</zorder>
+   <zorder>label_2</zorder>
+   <zorder>quitbutton</zorder>
+   <zorder>line_3</zorder>
+   <zorder>line_4</zorder>
+   <zorder>line_5</zorder>
+   <zorder>line_6</zorder>
+   <zorder>label_3</zorder>
+   <zorder>label_4</zorder>
+   <zorder>label_5</zorder>
+   <zorder>status_sio</zorder>
+   <zorder>timeLabel</zorder>
+   <zorder>dailytenkenbutton</zorder>
+   <zorder>P5902A510button</zorder>
+   <zorder>P5902A509button</zorder>
+   <zorder>P66832A030Pbutton</zorder>
+   <zorder>label_6</zorder>
+   <zorder>label_7</zorder>
+   <zorder>P658207LE0Abutton</zorder>
+   <zorder>camcalibrationbutton1</zorder>
+   <zorder>camcalibrationbutton2</zorder>
+   <zorder>cameraMerge</zorder>
+   <zorder>P5819A107button</zorder>
+   <zorder>P808387YA0Abutton</zorder>
+   <zorder>P828387YA0Abutton</zorder>
+   <zorder>P828387YA1Abutton</zorder>
+   <zorder>P828397YA1Abutton</zorder>
+   <zorder>P658107YA0Abutton</zorder>
+   <zorder>P828387YA6Abutton</zorder>
+   <zorder>P731957YA0Abutton</zorder>
+   <zorder>P828397YA6Abutton</zorder>
+   <zorder>P658217UA0Abutton</zorder>
+   <zorder>P658217UJ0Abutton</zorder>
+   <zorder>P658207UA0Abutton</zorder>
+   <zorder>P658207UJ0Abutton</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -781,7 +918,7 @@ Camera Merge</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
