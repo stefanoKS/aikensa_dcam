@@ -19,8 +19,8 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
-pitchSpecLH = [15, 76, 117, 88, 15, 311]
-pitchSpecRH = [15, 117, 88, 76, 15, 311]
+pitchSpecLH = [15, 54, 88, 71, 15, 243]
+pitchSpecRH = [15, 71, 115, 27, 15, 243]
 
 idSpecLH = [0, 0, 0, 0]
 idSpecRH = [1, 1, 1, 1]
@@ -76,11 +76,11 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     combined_lmask = None
     ngreason = ""
 
-    if widgetNumber == 9:
+    if widgetNumber == 11:
         pitchSpec = pitchSpecLH
         idSpec = idSpecLH
     
-    if widgetNumber == 10:
+    if widgetNumber == 12:
         pitchSpec = pitchSpecRH
         idSpec = idSpecRH
 

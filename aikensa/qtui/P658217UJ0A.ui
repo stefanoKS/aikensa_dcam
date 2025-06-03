@@ -567,7 +567,7 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="P7color">
+    <widget class="QLabel" name="P6color">
      <property name="geometry">
       <rect>
        <x>770</x>
@@ -594,7 +594,7 @@ background-color: rgb(211, 215, 207);</string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="P7label">
+    <widget class="QLabel" name="P6label">
      <property name="geometry">
       <rect>
        <x>770</x>
@@ -639,8 +639,8 @@ background-color: rgb(211, 215, 207);</string>
     <zorder>P5color</zorder>
     <zorder>P2color</zorder>
     <zorder>P1color</zorder>
-    <zorder>P7label</zorder>
-    <zorder>P7color</zorder>
+    <zorder>P6label</zorder>
+    <zorder>P6color</zorder>
    </widget>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">
