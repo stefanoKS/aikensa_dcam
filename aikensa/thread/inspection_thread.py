@@ -29,7 +29,7 @@ from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_r
 from ultralytics import YOLO
 from aikensa.parts_config.MMC.M_5A45.P828XXW0X0P_CTRPLR import partcheck as P828XXW0X0P_check
 from aikensa.parts_config.NISSAN.M_JC2D.P808387UA1A import partcheck as P808387UA1A_check
-
+from aikensa.parts_config.NISSAN.M_JC2D.P828447UA0A import partcheck as P828447UA0A_check
 
 
 from aikensa.parts_config.dailyTenken import dailyTenken
@@ -81,6 +81,8 @@ class InspectionThread(QThread):
     P82832W040P_InspectionResult_PitchMeasured = pyqtSignal(list, list)
     P82833W090P_InspectionResult_PitchMeasured = pyqtSignal(list, list)
     P82832W080P_InspectionResult_PitchMeasured = pyqtSignal(list, list)
+    P808387UA1A_InspectionResult_PitchMeasured = pyqtSignal(list, list)
+    P828447UA0A_InspectionResult_PitchMeasured = pyqtSignal(list, list)
     
     P82833W050PKENGEN_InspectionResult_PitchMeasured = pyqtSignal(list, list)
     P82832W040PKENGEN_InspectionResult_PitchMeasured = pyqtSignal(list, list)
@@ -141,13 +143,13 @@ class InspectionThread(QThread):
 
         self.H1 = None
         self.H2 = None
-        # self.H1_high = None
-        # self.H2_high = None
+        self.H1_high = None
+        self.H2_high = None
 
         self.H1_scaled = None
         self.H2_scaled = None
-        # self.H1_high_scaled = None
-        # self.H2_high_scaled = None
+        self.H1_high_scaled = None
+        self.H2_high_scaled = None
 
         self.homography_size = None
         self.homography_size_scaled = None
@@ -248,7 +250,7 @@ class InspectionThread(QThread):
         self.InspectionResult_NGReason = [None]*30
 
         self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]
+        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]
         self.inspection_widget_indices_without_dailytenken = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
         self.ROI_top = 219
@@ -485,6 +487,13 @@ class InspectionThread(QThread):
                 self.H2 = np.array(self.homography_matrix2)
                 print(f"Loaded homography matrix for camera 2")
 
+        #for H2 high
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam2_high.yaml") as file:
+                self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
+                self.H2_high = np.array(self.homography_matrix2)
+                print(f"Loaded homography matrix for camera 2")
+
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml"):
             with open("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml") as file:
                 self.homography_matrix1_scaled = yaml.load(file, Loader=yaml.FullLoader)
@@ -496,38 +505,13 @@ class InspectionThread(QThread):
                 self.homography_matrix2_scaled = yaml.load(file, Loader=yaml.FullLoader)
                 self.H2_scaled = np.array(self.homography_matrix2_scaled)
                 print(f"Loaded scaled homography matrix for camera 2")
- 
 
-        # if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_high.yaml"):
-        #     with open("./aikensa/cameracalibration/homography_param_cam1_high.yaml") as file:
-        #         self.homography_matrix1_high = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.H1_high = np.array(self.homography_matrix1_high)
-
-        # if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high.yaml"):
-        #     with open("./aikensa/cameracalibration/homography_param_cam2_high.yaml") as file:
-        #         self.homography_matrix2_high = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.H2_high = np.array(self.homography_matrix2_high)
-
-        # if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml"):
-        #     with open("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml") as file:
-        #         self.homography_matrix1_high_scaled = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.H1_high_scaled = np.array(self.homography_matrix1_high_scaled)
-
-        # if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml"):
-        #     with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml") as file:
-        #         self.homography_matrix2_high_scaled = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.H2_high_scaled = np.array(self.homography_matrix2_high_scaled)
-
-
-        # if os.path.exists("./aikensa/cameracalibration/planarizeTransform_narrow.yaml"):
-        #     with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml") as file:
-        #         transform_list = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.planarizeTransform_narrow = np.array(transform_list)
-
-        # if os.path.exists("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml"):
-        #     with open("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml") as file:
-        #         transform_list = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.planarizeTransform_narrow_scaled = np.array(transform_list)
+        #for H2 high scaled
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml") as file:
+                self.homography_matrix2_scaled = yaml.load(file, Loader=yaml.FullLoader)
+                self.H2_high_scaled = np.array(self.homography_matrix2_scaled)
+                print(f"Loaded scaled homography matrix for camera 2 high")
         
         if os.path.exists("./aikensa/cameracalibration/planarizeTransform_wide.yaml"):
             with open("./aikensa/cameracalibration/planarizeTransform_wide.yaml") as file:
@@ -748,8 +732,10 @@ class InspectionThread(QThread):
                                 self.clip3Signal.emit(self.clipImage3)
 
                     if self.inspection_config.widget in [17, 18]: #Crop image further with ROI width
+                        # cv2.imwrite("./combined_scaled_uncropped.png", self.combinedImage_scaled)
                         self.combinedImage_scaled = self.combinedImage_scaled[self.ROI_top_scaled:self.combinedImage_scaled.shape[0]-self.ROI_bottom_scaled,
                                                                            self.ROI_left_scaled:self.combinedImage_scaled.shape[1]-self.ROI_right_scaled, :]
+                        # cv2.imwrite("./combined_scaled_cropped.png", self.combinedImage_scaled)
                         #resize to 1791 x169
 
                     self.InspectionResult_PitchMeasured = [None]*30
@@ -762,7 +748,8 @@ class InspectionThread(QThread):
                             self.combinedImage_scaled = self.downSampling(self.combinedImage_scaled, width=1791, height=169)
                         else:
                             self.combinedImage_scaled = self.downSampling(self.combinedImage_scaled, width=1791, height=428)
-                        self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
+
+                    self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
         
                     self.P82833W050P_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82832W040P_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
@@ -1382,7 +1369,7 @@ class InspectionThread(QThread):
                             if self.emit is None:
                                 self.emit = np.zeros((169, 1791, 3), dtype=np.uint8)
 
-                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -50)
+                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -80)
                             self.partCam.emit(self.convertQImage(self.emit))
 
                             self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -1391,7 +1378,7 @@ class InspectionThread(QThread):
                             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2_high)
                             self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
                             #Crop the combined image with ROI just like above
                             self.combinedImage = self.combinedImage[self.ROI_top:self.combinedImage.shape[0]-self.ROI_bottom,
@@ -1400,11 +1387,11 @@ class InspectionThread(QThread):
                             self.InspectionImages_bgr[0] =self.combinedImage.copy()
                             self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
 
-                            for i in range(len(self.InspectionImages)):
+                            for i in range(len(self.InspectionImages_bgr)):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.P808387UA1A_CLIP_Model, 
-                                            slice_height=1920, slice_width=512, 
+                                            slice_height=512, slice_width=1980, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,
@@ -1414,9 +1401,12 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
 
-
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :768, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:, :]
+
+                                self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                                self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False)
 
@@ -1463,19 +1453,10 @@ class InspectionThread(QThread):
 
                             self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
-                            self.bool_keep_measurement = True
+                            self.bool_keep_measurement = False
 
                             time.sleep(1.5)
 
-                if self.inspection_config.doInspection is True and self.bool_keep_measurement is True:
-                    self.bool_keep_measurement = False
-
-                if self.bool_keep_measurement == True:
-                    self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
 #for the P828447UA0A
             if self.inspection_config.widget in [18]:
@@ -1535,7 +1516,7 @@ class InspectionThread(QThread):
                             if self.emit is None:
                                 self.emit = np.zeros((169, 1791, 3), dtype=np.uint8)
 
-                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -50)
+                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -90)
                             self.partCam.emit(self.convertQImage(self.emit))
 
                             self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -1544,7 +1525,7 @@ class InspectionThread(QThread):
                             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2_high)
                             self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
                             #Crop the combined image with ROI just like above
                             self.combinedImage = self.combinedImage[self.ROI_top:self.combinedImage.shape[0]-self.ROI_bottom,
@@ -1557,7 +1538,7 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.P828447UA0A_CLIP_Model, 
-                                            slice_height=1920, slice_width=512, 
+                                            slice_height=256, slice_width=1980, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,
@@ -1567,9 +1548,12 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
 
-
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :768, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:, :]
+                                self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                                self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+
+
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False)
 
@@ -1616,19 +1600,9 @@ class InspectionThread(QThread):
 
                             self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
-                            self.bool_keep_measurement = True
+                            self.bool_keep_measurement = False
 
                             time.sleep(1.5)
-
-                if self.inspection_config.doInspection is True and self.bool_keep_measurement is True:
-                    self.bool_keep_measurement = False
-
-                if self.bool_keep_measurement == True:
-                    self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                    self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
             #for daily inspection
             if self.inspection_config.widget in [21, 22, 23]:
@@ -2068,7 +2042,7 @@ class InspectionThread(QThread):
 
         if os.path.exists(path_P808387UA1A_CLIP_Model):
             self.P808387UA1A_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="yolov8",
+                model_type="ultralytics",
                 model_path=path_P808387UA1A_CLIP_Model,
                 confidence_threshold=0.5,
                 device="cuda:0"
@@ -2085,7 +2059,7 @@ class InspectionThread(QThread):
 
         if os.path.exists(path_P828447UA0A_CLIP_Model):
             self.P828447UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="yolov8",
+                model_type="ultralytics",
                 model_path=path_P828447UA0A_CLIP_Model,
                 confidence_threshold=0.5,
                 device="cuda:0"
@@ -2104,7 +2078,7 @@ class InspectionThread(QThread):
             self.P828XXW0X0P_CLIPFLIP_Model = AutoDetectionModel.from_pretrained(
                 model_type="yolov8",
                 model_path=path_P828XXW0X0P_CLIPFLIP_Model,
-                confidence_threshold=0.5,
+                confidence_threshold=0.35,
                 device="cuda:0"
             )
         else:

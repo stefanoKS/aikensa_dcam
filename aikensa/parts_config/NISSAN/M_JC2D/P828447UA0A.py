@@ -12,6 +12,9 @@ import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
 
+from aikensa.scripts.scripts_img_processing import create_masks, draw_bounding_box, get_center, find_edge_point_mask, calclength, check_tolerance, check_id, draw_pitch_line
+from aikensa.scripts.scripts_img_processing import draw_status_text_PIL
+
 
 pitchSpec = [10, 121.5, 121.5, 121.5, 121.5, 121.5, 10, 627.5]
 idSpec = [0, 0, 0, 0, 0, 0]
@@ -24,7 +27,7 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.163464137 #0.1592
+pixelMultiplier = 0.161 #0.1592
 
 segmentation_pixel_start = 0
 segmentation_pixel_finish = 768
@@ -64,11 +67,6 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
     combined_lmask = None
     ngreason = ""
-
-
-    pitchSpec = pitchSpec
-    idSpec = idSpec
-    tolerance_pitch = tolerance_pitch
 
     combined_lmask = None
     for lm in leftSegmentation:
@@ -118,19 +116,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
             return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
-
-
     combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
+
     if combined_lmask is not None and combined_rmask is not None:
         combined_mask[:, segmentation_pixel_start:segmentation_pixel_finish] = combined_lmask
-        combined_mask[:, -segmentation_pixel_finish:-segmentation_pixel_start] = combined_rmask
+        combined_mask[:, -segmentation_pixel_finish:] = combined_rmask
 
     # cv2.imwrite("combined_mask.jpg", combined_mask)
 
     for i, detection in enumerate(sorted_detections):
 
         detectedid.append(detection.category.id)
-
+        # print("Detected ID: ", detection.category.id)
         bbox = detection.bbox
         x, y = get_center(bbox)
         w = bbox.maxx - bbox.minx
@@ -150,7 +147,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
             measuredPitch.append(length)
         prev_center = center
 
-    print("Detected IDs: ", detectedid)
+    # print("Detected IDs: ", detectedid)
 
 
     if len(detectedposX) > 0:
@@ -205,9 +202,9 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         ngreason = "CLIP PITCH NG"
         print_status = "クリップピッチ不良"
 
-    print("Resultpitch: ", resultPitch)
-    print("Resultid: ", resultid)
-    print("MeasuredPitch: ", measuredPitch)
+    # print("Resultpitch: ", resultPitch)
+    # print("Resultid: ", resultid)
+    # print("MeasuredPitch: ", measuredPitch)
 
     # if any(result != 1 for result in resultid):
     #     flag_clip_furyou = 1

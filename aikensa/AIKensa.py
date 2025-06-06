@@ -297,7 +297,7 @@ class AIKensa(QMainWindow):
         dailytenken03_back_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
 
         self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]
+        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]
         self.inspection_widget_indices_without_dailytenken = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 
@@ -326,11 +326,10 @@ class AIKensa(QMainWindow):
             self.connect_line_edit_text_changed(widget_index=i, line_edit_name="kensain_name", inspection_param="kensainNumber")
 
             #additional logic for ppms number
-            if i in [13, 14, 15, 16]:
+            if i in [13, 14, 15, 16, 17, 18]:
                 self.connect_line_edit_text_changed(widget_index=i, line_edit_name="ppms_number", inspection_param="ppmsnumber")
 
         
-
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
             button_quit = widget.findChild(QPushButton, "quitbutton")
@@ -1063,7 +1062,7 @@ class AIKensa(QMainWindow):
         label.setPixmap(QPixmap.fromImage(image))
 
     def _setPartFrame(self, image):
-        for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]:
+        for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "framePart")
             label.setPixmap(QPixmap.fromImage(image))

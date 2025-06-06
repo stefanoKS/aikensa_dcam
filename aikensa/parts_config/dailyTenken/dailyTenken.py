@@ -143,7 +143,7 @@ def draw_status_text_PIL(image, status, print_status, size = "normal", offset_y=
     draw.text((300, 5 + offset_y), status, font=font, fill=color)  
     draw.text((300, 100 + offset_y), print_status, font=font, fill=color)
     image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-    cv2.imwrite("test.png", image)
+    # cv2.imwrite("test.png", image)
     return image
 
 def create_masks(segmentation_result, orig_shape):

@@ -3,8 +3,6 @@ from matplotlib.pylab import f
 import numpy as np
 import cv2
 import math
-from sympy import N
-from torch import normal
 import yaml
 import os
 import pygame
@@ -68,10 +66,12 @@ bbox_offset = 10
 pixelMultiplier = 0.1598
 pixelMultiplier_katabumarking = 0.1598
 
-if os.path.exists("./../../../aikensa/models/P828XXW0X0P_detect_flip.pt"):
-    P828XXW0X0P_CLIPFLIP_DETECT = YOLO("./../../../aikensa/models/P828XXW0X0P_detect_flip.pt")
-else:
-    P828XXW0X0P_CLIPFLIP_DETECT = None
+this_dir = os.path.dirname(__file__)
+detectFlip_model = os.path.abspath(os.path.join(this_dir, "..", "..", "..", "models", "P828XXW0X0P_detect_flip.pt"))
+
+#Print the path of the model
+P828XXW0X0P_CLIPFLIP_DETECT = YOLO(detectFlip_model)
+
 
 def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detection, partname):
         
@@ -339,7 +339,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         resultPitch = [0] * len(pitchSpec)
         resultid = [0] * len(idSpec)
         image = draw_status_text_PIL(image, status, print_status, size = "normal")
-        cv2.imwrite("test.png", image)
+        # cv2.imwrite("test.png", image)
         ngreason = "CLIP COLOR MISMATCH"
         return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
     
@@ -408,7 +408,7 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
     draw.text((300, 5), status, font=font, fill=color)  
     draw.text((300, 100), print_status, font=font, fill=color)
     image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-    cv2.imwrite("test.png", image)
+    # cv2.imwrite("test.png", image)
     return image
 
 
