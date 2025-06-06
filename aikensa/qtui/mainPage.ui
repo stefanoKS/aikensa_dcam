@@ -444,7 +444,7 @@ Camera Merge</string>
     <property name="geometry">
      <rect>
       <x>370</x>
-      <y>1050</y>
+      <y>1090</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -468,7 +468,7 @@ W/STRIP-RR DOOR, LH</string>
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>1060</y>
+      <y>1100</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -492,7 +492,7 @@ W/STRIP-RR DOOR, LH</string>
     <property name="geometry">
      <rect>
       <x>390</x>
-      <y>1070</y>
+      <y>1110</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -516,7 +516,7 @@ W/STRIP-RR DOOR, LH</string>
     <property name="geometry">
      <rect>
       <x>400</x>
-      <y>1080</y>
+      <y>1120</y>
       <width>220</width>
       <height>70</height>
      </rect>
@@ -759,7 +759,7 @@ W/STRIP-RR DOOR, LH</string>
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>1040</y>
+      <y>1080</y>
       <width>271</width>
       <height>121</height>
      </rect>
@@ -845,7 +845,7 @@ W/STRIP-RR DOOR, LH</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
