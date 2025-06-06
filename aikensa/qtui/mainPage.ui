@@ -803,6 +803,99 @@ W/STRIP-RR DOOR, LH</string>
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>780</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>日産自動車</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P828447UA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 168, 80);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+82844 7UA0A
+SEAL-RR DOOR PARTING 
+LWR</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P808387UA1Abutton">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>570</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 248, 44);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+80838 7UA1A
+SEAL-FR DOOR PARTING</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>560</y>
+      <width>481</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(181, 181, 181);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <zorder>label_11</zorder>
    <zorder>label_10</zorder>
    <zorder>label_6</zorder>
    <zorder>label</zorder>
@@ -838,6 +931,9 @@ W/STRIP-RR DOOR, LH</string>
    <zorder>P82832W080PCLIPSOUNYUUKIbutton</zorder>
    <zorder>P82832W040PCLIPSOUNYUUKIbutton</zorder>
    <zorder>label_9</zorder>
+   <zorder>label_8</zorder>
+   <zorder>P828447UA0Abutton</zorder>
+   <zorder>P808387UA1Abutton</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -845,7 +941,7 @@ W/STRIP-RR DOOR, LH</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

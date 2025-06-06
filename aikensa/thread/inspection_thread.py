@@ -27,7 +27,10 @@ from typing import List
 from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_re_sound, play_mi_sound, play_alarm_sound, play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound
 
 from ultralytics import YOLO
-from aikensa.parts_config.P828XXW0X0P_CTRPLR import partcheck as P828XXW0X0P_check               #5
+from aikensa.parts_config.MMC.M_5A45.P828XXW0X0P_CTRPLR import partcheck as P828XXW0X0P_check
+from aikensa.parts_config.NISSAN.M_JC2D.P808387UA1A import partcheck as P808387UA1A_check
+
+
 
 from aikensa.parts_config.dailyTenken import dailyTenken
 
@@ -244,6 +247,19 @@ class InspectionThread(QThread):
         self.InspectionResult_DeltaPitch = [None]*30
         self.InspectionResult_NGReason = [None]*30
 
+        self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]
+        self.inspection_widget_indices_without_dailytenken = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+        self.ROI_top = 219
+        self.ROI_bottom = 700
+        self.ROI_left = 600
+        self.ROI_right = 600
+
+        self.ROI_top_scaled = int(self.ROI_top / self.scale_factor)
+        self.ROI_bottom_scaled = int(self.ROI_bottom / self.scale_factor)
+        self.ROI_left_scaled = int(self.ROI_left / self.scale_factor)
+        self.ROI_right_scaled = int(self.ROI_right / self.scale_factor)
 
         self.InspectionImages_prev = [None]*30
         self._test = [0]*30
@@ -261,6 +277,8 @@ class InspectionThread(QThread):
             14: "82832W040PCLIPSOUNYUUKI",
             15: "82833W090PCLIPSOUNYUUKI",
             16: "82832W080PCLIPSOUNYUUKI",
+            17: "808387UA1A",
+            18: "828447UA0A",
             21: "dailyTenken_01",
             22: "dailyTenken_02",
             23: "dailyTenken_03",
@@ -521,27 +539,6 @@ class InspectionThread(QThread):
                 transform_list = yaml.load(file, Loader=yaml.FullLoader)
                 self.planarizeTransform_wide_scaled = np.array(transform_list)
 
-        # if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_narrow.yaml"):
-        #     with open("./aikensa/cameracalibration/planarizeTransform_high_narrow.yaml") as file:
-        #         transform_list = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.planarizeTransform_high_narrow = np.array(transform_list)
-        
-        # if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_narrow_scaled.yaml"):
-        #     with open("./aikensa/cameracalibration/planarizeTransform_high_narrow_scaled.yaml") as file:
-        #         transform_list = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.planarizeTransform_high_narrow_scaled = np.array(transform_list)
-
-        # if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_wide.yaml"):
-        #     with open("./aikensa/cameracalibration/planarizeTransform_high_wide.yaml") as file:
-        #         transform_list = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.planarizeTransform_high_wide = np.array(transform_list)
-
-        # if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_wide_scaled.yaml"):
-        #     with open("./aikensa/cameracalibration/planarizeTransform_high_wide_scaled.yaml") as file:
-        #         transform_list = yaml.load(file, Loader=yaml.FullLoader)
-        #         self.planarizeTransform_high_wide_scaled = np.array(transform_list)
-
-
         while self.running:
 
             if self.inspection_config.widget == 0:
@@ -593,7 +590,7 @@ class InspectionThread(QThread):
                     self.mergeframe1_scaled = cv2.rotate(self.mergeframe1_scaled, cv2.ROTATE_180)
                     self.mergeframe2_scaled = cv2.rotate(self.mergeframe2_scaled, cv2.ROTATE_180)
 
-                    if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23]: # no need to emit katabu
+                    if self.inspection_config.widget in self.inspection_widget_indices: # no need to emit katabu
                         self.combinedImage_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_scaled)
                         self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
 
@@ -750,13 +747,21 @@ class InspectionThread(QThread):
                                 self.clip2Signal.emit(self.clipImage2)
                                 self.clip3Signal.emit(self.clipImage3)
 
+                    if self.inspection_config.widget in [17, 18]: #Crop image further with ROI width
+                        self.combinedImage_scaled = self.combinedImage_scaled[self.ROI_top_scaled:self.combinedImage_scaled.shape[0]-self.ROI_bottom_scaled,
+                                                                           self.ROI_left_scaled:self.combinedImage_scaled.shape[1]-self.ROI_right_scaled, :]
+                        #resize to 1791 x169
+
                     self.InspectionResult_PitchMeasured = [None]*30
                     self.InspectionResult_PitchResult = [None]*30
                     self.InspectionResult_DeltaPitch = [None]*30
 
                     if self.combinedImage_scaled is not None:
                         #resize to 1791 x 428
-                        self.combinedImage_scaled = self.downSampling(self.combinedImage_scaled, width=1791, height=428)
+                        if self.inspection_config.widget in [17, 18]:
+                            self.combinedImage_scaled = self.downSampling(self.combinedImage_scaled, width=1791, height=169)
+                        else:
+                            self.combinedImage_scaled = self.downSampling(self.combinedImage_scaled, width=1791, height=428)
                         self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
         
                     self.P82833W050P_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
@@ -773,6 +778,10 @@ class InspectionThread(QThread):
                     self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
+                    self.P808387UA1A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P828447UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
 
             #for normal inspection
             if self.inspection_config.widget in [5, 6, 7, 8]:
@@ -985,7 +994,6 @@ class InspectionThread(QThread):
                                 self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
                             
                             time.sleep(1.5)
-
             #for the kengen
             if self.inspection_config.widget in [9, 10, 11, 12]:    
 
@@ -1034,28 +1042,8 @@ class InspectionThread(QThread):
                 if self.inspection_config.doInspection is True:
                     self.inspection_config.doInspection = False
                     print("Inspection Started")
-                    # print(self.inspection_config.widget)
                     print(self.inspection_config.kensainNumber)
-                    # if self.inspection_config.kensainNumber not in ["KENGEN", "10194"]:
-                    #     print("NoKengen")
-                    #     # imgresults = cv2.cvtColor(self.combinedImage_scaled, cv2.COLOR_BGR2RGB)
-                    #     # imgresults = np.ascontiguousarray(imgresults)
-                    #     # img_pil = Image.fromarray(imgresults)
-                    #     # font = ImageFont.truetype(self.kanjiFontPath, 60)
-                    #     # draw = ImageDraw.Draw(img_pil)
-                    #     # centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                    #     # draw.text((centerpos[0]-800, centerpos[1]+20), u"管理者権限が必要", font=font, fill=(160, 200, 10, 0))
-                    #     # imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                    #     # self.combinedImage_scaled = imgResult
-                    #     # print("Image shape:", self.combinedImage_scaled.shape)
-                    #     # print("Data type:", self.combinedImage_scaled.dtype)
-                    #     # play_alarm_sound()
-                    #     self.combinedImage_scaled = self.draw_status_text_PIL(self.combinedImage_scaled, "管理者権限が必要", (50,150,10), size="large", x_offset = -500, y_offset = -100)
-                    #     # self.combinedImage_scaled = self.add_admin_warning(self.combinedImage_scaled, u"管理者権限が必要", self.kanjiFontPath)
-                    #     self.partCam.emit(self.convertQImage(self.combinedImage_scaled))
-                    #     time.sleep(2)
-                    #     continue
-                    
+
 
                     if self.InspectionTimeStart is not None:
 
@@ -1163,33 +1151,6 @@ class InspectionThread(QThread):
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0])
 
-                            # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
-                            # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
-                            # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
-
-                            # #Add custom text to the image
-                            # if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and self.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
-                            #     if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 150 == 0:
-                            #         imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
-                            #         img_pil = Image.fromarray(imgresults)
-                            #         font = ImageFont.truetype(self.kanjiFontPath, 120)
-                            #         draw = ImageDraw.Draw(img_pil)
-                            #         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                            #         draw.text((centerpos[0]-900, centerpos[1]+20), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
-                            #         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                            #         play_konpou_sound()
-                            #         self.InspectionImages[0] = imgResult
-
-                            #     else:
-                            #         imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
-                            #         img_pil = Image.fromarray(imgresults)
-                            #         font = ImageFont.truetype(self.kanjiFontPath, 120)
-                            #         draw = ImageDraw.Draw(img_pil)
-                            #         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                            #         draw.text((centerpos[0]-900, centerpos[1]+20), u"束ねてください", font=font, fill=(5, 80, 160, 0))
-                            #         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                            #         play_keisoku_sound()         
-                            #         self.InspectionImages[0] = imgResult                         
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1212,10 +1173,8 @@ class InspectionThread(QThread):
                             
 
                             time.sleep(1.5)
-
             #for clip insertion  machine
             if self.inspection_config.widget in [13, 14, 15, 16]:    
-
                 if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
                     self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
                         self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
@@ -1336,7 +1295,7 @@ class InspectionThread(QThread):
                                     resultPitch = self.InspectionResult_PitchResult[0], 
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0],
-                                    PPMS = self.inspection_config.PPMS)
+                                    PPMS = self.inspection_config.ppmsnumber)
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1346,6 +1305,312 @@ class InspectionThread(QThread):
                             self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                             self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                             self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
+                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
+
+                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
+
+                            self.bool_keep_measurement = True
+
+                            time.sleep(1.5)
+
+                if self.inspection_config.doInspection is True and self.bool_keep_measurement is True:
+                    self.bool_keep_measurement = False
+
+                if self.bool_keep_measurement == True:
+                    self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
+          
+#for the P808387UA1A
+            if self.inspection_config.widget in [17]:
+
+                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
+                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
+                        self.inspection_config.furyou_plus, 
+                        self.inspection_config.furyou_minus, 
+                        self.inspection_config.furyou_plus_10, 
+                        self.inspection_config.furyou_minus_10, 
+                        self.inspection_config.kansei_plus, 
+                        self.inspection_config.kansei_minus,
+                        self.inspection_config.kansei_plus_10,
+                        self.inspection_config.kansei_minus_10)
+                    print("Manual Adjustment Done")
+                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
+                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
+                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
+                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
+                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
+                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
+                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
+                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
+                if self.inspection_config.counterReset is True:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
+                    self.inspection_config.counterReset = False
+                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
+                            deltaTime = 0.0,
+                            kensainName = self.inspection_config.kensainNumber, 
+                            detected_pitch_str = "COUNTERRESET", 
+                            delta_pitch_str = "COUNTERRESET", 
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
+                if self.InspectionTimeStart is None:
+                    self.InspectionTimeStart = time.time()
+
+                if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
+                    self.inspection_config.doInspection = False
+
+                if self.inspection_config.doInspection is True and self.bool_keep_measurement is False:
+                    self.inspection_config.doInspection = False
+                    print("Inspection Started")
+
+                    if self.InspectionTimeStart is not None:
+
+                        if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
+                            print("Inspection Time is over")
+                            self.InspectionTimeStart = time.time()
+
+                            self.emit = self.combinedImage_scaled
+                            if self.emit is None:
+                                self.emit = np.zeros((169, 1791, 3), dtype=np.uint8)
+
+                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -50)
+                            self.partCam.emit(self.convertQImage(self.emit))
+
+                            self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
+                            self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+
+                            self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+                            #Crop the combined image with ROI just like above
+                            self.combinedImage = self.combinedImage[self.ROI_top:self.combinedImage.shape[0]-self.ROI_bottom,
+                                                                    self.ROI_left:self.combinedImage.shape[1]-self.ROI_right]
+                            self.InspectionImages[0] = self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] =self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
+
+                            for i in range(len(self.InspectionImages)):
+                                self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                            self.InspectionImages_bgr[i], 
+                                            self.P808387UA1A_CLIP_Model, 
+                                            slice_height=1920, slice_width=512, 
+                                            overlap_height_ratio=0.0, overlap_width_ratio=0.2,
+                                            postprocess_match_metric="IOS",
+                                            postprocess_match_threshold=0.2,
+                                            postprocess_class_agnostic=True,
+                                            postprocess_type="GREEDYNMM",
+                                            verbose=0,
+                                            perform_standard_pred=False
+                                        )
+
+
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :768, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:, :]
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False)
+
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P808387UA1A_check(self.InspectionImages[i], 
+                                                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list,
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+
+                                for i in range(len(self.InspectionResult_Status)):
+                                    if self.InspectionResult_Status[i] == "OK": 
+                                        # Increment the 'OK' count at the appropriate index (1)
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
+                                        play_ok_sound()
+
+                                    elif self.InspectionResult_Status[i] == "NG": 
+                                        # Increment the 'NG' count at the appropriate index (0)
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
+                                        play_ng_sound()
+
+                            self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
+
+                            self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                                    numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
+                                    currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                    deltaTime = 0.0,
+                                    kensainName = self.inspection_config.kensainNumber, 
+                                    detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
+                                    delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0],
+                                    PPMS = self.inspection_config.ppmsnumber)
+
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=169)
+
+                            self.P808387UA1A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
+                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
+
+                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
+
+                            self.bool_keep_measurement = True
+
+                            time.sleep(1.5)
+
+                if self.inspection_config.doInspection is True and self.bool_keep_measurement is True:
+                    self.bool_keep_measurement = False
+
+                if self.bool_keep_measurement == True:
+                    self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                    self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
+
+#for the P828447UA0A
+            if self.inspection_config.widget in [18]:
+
+                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
+                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
+                        self.inspection_config.furyou_plus, 
+                        self.inspection_config.furyou_minus, 
+                        self.inspection_config.furyou_plus_10, 
+                        self.inspection_config.furyou_minus_10, 
+                        self.inspection_config.kansei_plus, 
+                        self.inspection_config.kansei_minus,
+                        self.inspection_config.kansei_plus_10,
+                        self.inspection_config.kansei_minus_10)
+                    print("Manual Adjustment Done")
+                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
+                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
+                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
+                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
+                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
+                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
+                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
+                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
+                if self.inspection_config.counterReset is True:
+                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
+                    self.inspection_config.counterReset = False
+                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+                            currentnumofPart = [0, 0], 
+                            deltaTime = 0.0,
+                            kensainName = self.inspection_config.kensainNumber, 
+                            detected_pitch_str = "COUNTERRESET", 
+                            delta_pitch_str = "COUNTERRESET", 
+                            total_length=0,
+                            resultPitch = "COUNTERRESET",
+                            status = "COUNTERRESET",
+                            NGreason = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
+                if self.InspectionTimeStart is None:
+                    self.InspectionTimeStart = time.time()
+
+                if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
+                    self.inspection_config.doInspection = False
+
+                if self.inspection_config.doInspection is True and self.bool_keep_measurement is False:
+                    self.inspection_config.doInspection = False
+                    print("Inspection Started")
+
+                    if self.InspectionTimeStart is not None:
+
+                        if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
+                            print("Inspection Time is over")
+                            self.InspectionTimeStart = time.time()
+
+                            self.emit = self.combinedImage_scaled
+                            if self.emit is None:
+                                self.emit = np.zeros((169, 1791, 3), dtype=np.uint8)
+
+                            self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -50)
+                            self.partCam.emit(self.convertQImage(self.emit))
+
+                            self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                            self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
+                            self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+
+                            self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+                            #Crop the combined image with ROI just like above
+                            self.combinedImage = self.combinedImage[self.ROI_top:self.combinedImage.shape[0]-self.ROI_bottom,
+                                                                    self.ROI_left:self.combinedImage.shape[1]-self.ROI_right]
+                            self.InspectionImages[0] = self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] =self.combinedImage.copy()
+                            self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
+
+                            for i in range(len(self.InspectionImages)):
+                                self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                            self.InspectionImages_bgr[i], 
+                                            self.P828447UA0A_CLIP_Model, 
+                                            slice_height=1920, slice_width=512, 
+                                            overlap_height_ratio=0.0, overlap_width_ratio=0.2,
+                                            postprocess_match_metric="IOS",
+                                            postprocess_match_threshold=0.2,
+                                            postprocess_class_agnostic=True,
+                                            postprocess_type="GREEDYNMM",
+                                            verbose=0,
+                                            perform_standard_pred=False
+                                        )
+
+
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :768, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:, :]
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False)
+
+                                self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P828447UA0A_check(self.InspectionImages[i], 
+                                                                                                                                                                                                                                                self.InspectionResult_ClipDetection[i].object_prediction_list,
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+
+                                for i in range(len(self.InspectionResult_Status)):
+                                    if self.InspectionResult_Status[i] == "OK": 
+                                        # Increment the 'OK' count at the appropriate index (1)
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
+                                        play_ok_sound()
+
+                                    elif self.InspectionResult_Status[i] == "NG": 
+                                        # Increment the 'NG' count at the appropriate index (0)
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
+                                        play_ng_sound()
+
+                            self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
+
+                            self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+                                    numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
+                                    currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
+                                    deltaTime = 0.0,
+                                    kensainName = self.inspection_config.kensainNumber, 
+                                    detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
+                                    delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
+                                    total_length=0,
+                                    resultPitch = self.InspectionResult_PitchResult[0], 
+                                    status = self.InspectionResult_Status[0], 
+                                    NGreason = self.InspectionResult_NGReason[0],
+                                    PPMS = self.inspection_config.ppmsnumber)
+
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=169)
+
+                            self.P828447UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
                             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
 
@@ -1449,7 +1714,6 @@ class InspectionThread(QThread):
                             self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
                             time.sleep(1.5)
-
 
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1747,46 +2011,108 @@ class InspectionThread(QThread):
         return np.zeros((height, width, 3), dtype=np.uint8)
 
     def initialize_model(self):
-
         print("Model Dummy Loaded")
 
-        # #Change based on the widget
-        # For all CTR PLR AI model
-        P828XXW0X0P_CLIP_Model = None
-        P828XXW0X0P_KATABU_Model = None
-        P828XXW0X0P_SEGMENT_Model = None
-        P828XXW0X0P_HAND_DETECT = None
-
+        # Define model paths
         path_P828XXW0X0P_CLIP_Model = "./aikensa/models/P828XXW0X0P_detect.pt"
         path_P828XXW0X0P_KATABU_Model = "./aikensa/models/P828XXW0X0P_katabu.pt"
         path_P828XXW0X0P_CLIPFLIP_Model = "./aikensa/models/P828XXW0X0P_detect_flip.pt"
         path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
         path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
-
-        P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P828XXW0X0P_CLIP_Model,
-                                                                            confidence_threshold=0.35,
-                                                                            device="cuda:0")
-        
-
-        P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
-        P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
-        P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
-
-        self.P828XXW0X0P_CLIP_Model = P828XXW0X0P_CLIP_Model
-        self.P828XXW0X0P_KATABU_Model = P828XXW0X0P_KATABU_Model
-        self.P828XXW0X0P_SEGMENT_Model = P828XXW0X0P_SEGMENT_Model
-        self.P828XXW0X0P_HAND_DETECT = P828XXW0X0P_HAND_DETECT
-
-        NICHIJOU_TENKEN_Model = None
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
+        path_P808387UA1A_CLIP_Model = "./aikensa/models/P808387UA1A_detect.pt"
+        path_P808387UA1A_SEGMENT_Model = "./aikensa/models/P808387UA1A_segment.pt"
+        path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
+        path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
+
+        # Initialize each model with existence check
+        if os.path.exists(path_P828XXW0X0P_CLIP_Model):
+            self.P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(
+                model_type="yolov8",
+                model_path=path_P828XXW0X0P_CLIP_Model,
+                confidence_threshold=0.5,
+                device="cuda:0"
+            )
+        else:
+            print(f"Model file {path_P828XXW0X0P_CLIP_Model} does not exist. Initializing as None.")
+            self.P828XXW0X0P_CLIP_Model = None
+
+        if os.path.exists(path_P828XXW0X0P_KATABU_Model):
+            self.P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
+        else:
+            print(f"Model file {path_P828XXW0X0P_KATABU_Model} does not exist. Initializing as None.")
+            self.P828XXW0X0P_KATABU_Model = None
+
+        if os.path.exists(path_P828XXW0X0P_SEGMENT_Model):
+            self.P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
+        else:
+            print(f"Model file {path_P828XXW0X0P_SEGMENT_Model} does not exist. Initializing as None.")
+            self.P828XXW0X0P_SEGMENT_Model = None
+
+        if os.path.exists(path_P828XXW0X0P_HAND_DETECT):
+            self.P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
+        else:
+            print(f"Model file {path_P828XXW0X0P_HAND_DETECT} does not exist. Initializing as None.")
+            self.P828XXW0X0P_HAND_DETECT = None
 
         if os.path.exists(path_NICHIJOU_TENKEN_Model):
-            NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
-                                                                            model_path=path_NICHIJOU_TENKEN_Model,
-                                                                            confidence_threshold=0.5,
-                                                                            device="cuda:0")
-            
-        self.NICHIJOU_TENKEN_Model = NICHIJOU_TENKEN_Model
+            self.NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(
+                model_type="yolov8",
+                model_path=path_NICHIJOU_TENKEN_Model,
+                confidence_threshold=0.5,
+                device="cuda:0"
+            )
+        else:
+            print(f"Model file {path_NICHIJOU_TENKEN_Model} does not exist. Initializing as None.")
+            self.NICHIJOU_TENKEN_Model = None
+
+        if os.path.exists(path_P808387UA1A_CLIP_Model):
+            self.P808387UA1A_CLIP_Model = AutoDetectionModel.from_pretrained(
+                model_type="yolov8",
+                model_path=path_P808387UA1A_CLIP_Model,
+                confidence_threshold=0.5,
+                device="cuda:0"
+            )
+        else:
+            print(f"Model file {path_P808387UA1A_CLIP_Model} does not exist. Initializing as None.")
+            self.P808387UA1A_CLIP_Model = None
+
+        if os.path.exists(path_P808387UA1A_SEGMENT_Model):
+            self.P808387UA1A_SEGMENT_Model = YOLO(path_P808387UA1A_SEGMENT_Model)
+        else:
+            print(f"Model file {path_P808387UA1A_SEGMENT_Model} does not exist. Initializing as None.")
+            self.P808387UA1A_SEGMENT_Model = None
+
+        if os.path.exists(path_P828447UA0A_CLIP_Model):
+            self.P828447UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
+                model_type="yolov8",
+                model_path=path_P828447UA0A_CLIP_Model,
+                confidence_threshold=0.5,
+                device="cuda:0"
+            )
+        else:
+            print(f"Model file {path_P828447UA0A_CLIP_Model} does not exist. Initializing as None.")
+            self.P828447UA0A_CLIP_Model = None
+
+        if os.path.exists(path_P828447UA0A_SEGMENT_Model):
+            self.P828447UA0A_SEGMENT_Model = YOLO(path_P828447UA0A_SEGMENT_Model)
+        else:
+            print(f"Model file {path_P828447UA0A_SEGMENT_Model} does not exist. Initializing as None.")
+            self.P828447UA0A_SEGMENT_Model = None
+
+        if os.path.exists(path_P828XXW0X0P_CLIPFLIP_Model):
+            self.P828XXW0X0P_CLIPFLIP_Model = AutoDetectionModel.from_pretrained(
+                model_type="yolov8",
+                model_path=path_P828XXW0X0P_CLIPFLIP_Model,
+                confidence_threshold=0.5,
+                device="cuda:0"
+            )
+        else:
+            print(f"Model file {path_P828XXW0X0P_CLIPFLIP_Model} does not exist. Initializing as None.")
+            self.P828XXW0X0P_CLIPFLIP_Model = None
+        # Check if all models are loaded
+        
+
 
 
         print("Model Loaded")
@@ -1798,7 +2124,6 @@ class InspectionThread(QThread):
         self.release_all_camera()
         print("Inspection thread stopped.")
 
-    
     def add_columns(self, cursor, table_name, columns):
         for column_name, column_type in columns:
             try:

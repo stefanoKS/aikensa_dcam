@@ -159,7 +159,11 @@ class CalibrationThread(QThread):
         self.planarizeTransform_high_wide = None
         self.planarizeTransform_high_wide_scaled = None
 
-        self.cam_config_file = "aikensa/camscripts/cam_config.yaml"
+
+        this_dir = os.path.dirname(__file__)
+        cam_config_path = os.path.abspath(os.path.join(this_dir, '..', 'camscripts'))
+
+        self.cam_config_file = os.path.join(cam_config_path, 'cam_config.yaml')
         
         with open(self.cam_config_file, 'r') as file:
             self.cam_map = yaml.safe_load(file)

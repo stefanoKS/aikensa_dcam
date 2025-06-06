@@ -3,6 +3,7 @@ from matplotlib.pylab import f
 import numpy as np
 import cv2
 import math
+from sympy import N
 from torch import normal
 import yaml
 import os
@@ -67,7 +68,10 @@ bbox_offset = 10
 pixelMultiplier = 0.1598
 pixelMultiplier_katabumarking = 0.1598
 
-P828XXW0X0P_CLIPFLIP_DETECT = YOLO("./../aikensa/models/P828XXW0X0P_detect_flip.pt")
+if os.path.exists("./../../../aikensa/models/P828XXW0X0P_detect_flip.pt"):
+    P828XXW0X0P_CLIPFLIP_DETECT = YOLO("./../../../aikensa/models/P828XXW0X0P_detect_flip.pt")
+else:
+    P828XXW0X0P_CLIPFLIP_DETECT = None
 
 def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detection, partname):
         
