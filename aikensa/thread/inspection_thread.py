@@ -32,7 +32,7 @@ from aikensa.parts_config.NISSAN.M_JC2D.P808387UA1A import partcheck as P808387U
 from aikensa.parts_config.NISSAN.M_JC2D.P828447UA0A import partcheck as P828447UA0A_check
 
 
-from aikensa.parts_config.dailyTenken import dailyTenken
+from aikensa.parts_config.dailyTenken.dailyTenken import dailyTenken
 
 from PIL import ImageFont, ImageDraw, Image
 
@@ -1636,7 +1636,7 @@ class InspectionThread(QThread):
                             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2_high)
                             self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
 
                             self.InspectionImages[0] = self.combinedImage.copy()
