@@ -265,26 +265,10 @@ RT Pers.Warp</string>
       <string>Quit</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="label_9">
      <property name="geometry">
       <rect>
-       <x>620</x>
-       <y>110</y>
-       <width>441</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(237, 51, 59);</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>620</x>
+       <x>690</x>
        <y>120</y>
        <width>20</width>
        <height>121</height>
@@ -297,10 +281,26 @@ RT Pers.Warp</string>
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>1040</x>
+       <x>690</x>
+       <y>110</y>
+       <width>291</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(237, 51, 59);</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_6">
+     <property name="geometry">
+      <rect>
+       <x>960</x>
        <y>120</y>
        <width>21</width>
        <height>121</height>
@@ -313,13 +313,13 @@ RT Pers.Warp</string>
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="label_8">
      <property name="geometry">
       <rect>
-       <x>620</x>
+       <x>690</x>
        <y>230</y>
-       <width>441</width>
-       <height>16</height>
+       <width>291</width>
+       <height>20</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -336,10 +336,10 @@ RT Pers.Warp</string>
     <zorder>savewarpbutton</zorder>
     <zorder>rekensaButton</zorder>
     <zorder>framePart</zorder>
-    <zorder>label_3</zorder>
-    <zorder>label</zorder>
-    <zorder>label_2</zorder>
-    <zorder>label_4</zorder>
+    <zorder>label_9</zorder>
+    <zorder>label_7</zorder>
+    <zorder>label_6</zorder>
+    <zorder>label_8</zorder>
    </widget>
    <widget class="QPushButton" name="mainmenubutton">
     <property name="geometry">
