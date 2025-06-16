@@ -161,8 +161,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         # right_edge = find_edge_point(cannydetection_image, rightmostCenter, direction="right", Yoffsetval = 0, Xoffsetval = rightmostWidth + adjustment_offset)
 
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = +80, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = +80, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = +40, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = +40, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
@@ -359,27 +359,62 @@ def yolo_to_pixel(yolo_coords, img_shape):
     y_pixel = int(y * img_shape[0])
     return x_pixel, y_pixel
 
-def find_edge_point_mask(image, mask, center, direction="None", Xoffsetval = 0, Yoffsetval = 0):
+# def find_edge_point_mask(image, mask, center, direction="None", Xoffsetval = 0, Yoffsetval = 0):
+#     x, y = center[0], center[1]
+
+#     min_x = 0
+#     max_x = image.shape[1] - 1
+
+#     if direction == "left":
+#         while x - Xoffsetval >= 0:
+#             if mask[int(y + Yoffsetval), int(x - Xoffsetval)] == 0:  # Found an edge
+#                 return x - Xoffsetval, y
+#             x -= 1
+#         return min_x, y
+
+#     if direction == "right":
+#         while x + Xoffsetval < image.shape[1]:
+#             if mask[int(y + Yoffsetval), int(x + Xoffsetval)] == 0:  # Found an edge
+#                 return x + Xoffsetval, y
+#             x += 1
+#         return max_x, y
+
+#     return None  # If an invalid direction is provided
+
+
+def find_edge_point_mask(image, mask, center, direction="None", Xoffsetval=0, Yoffsetval=0):
     x, y = center[0], center[1]
 
-    min_x = 0
-    max_x = image.shape[1] - 1
+    height, width = mask.shape[:2]
+
+    def is_within_bounds(x, y):
+        return 0 <= x < width and 0 <= y < height
 
     if direction == "left":
         while x - Xoffsetval >= 0:
-            if mask[int(y + Yoffsetval), int(x - Xoffsetval)] == 0:  # Found an edge
-                return x - Xoffsetval, y
+            check_x = int(x - Xoffsetval)
+            check_y = int(y + Yoffsetval)
+            if is_within_bounds(check_x, check_y):
+                if mask[check_y, check_x] == 0:
+                    return check_x, y
+            else:
+                break
             x -= 1
-        return min_x, y
+        return 0, y
 
     if direction == "right":
-        while x + Xoffsetval < image.shape[1]:
-            if mask[int(y + Yoffsetval), int(x + Xoffsetval)] == 0:  # Found an edge
-                return x + Xoffsetval, y
+        while x + Xoffsetval < width:
+            check_x = int(x + Xoffsetval)
+            check_y = int(y + Yoffsetval)
+            if is_within_bounds(check_x, check_y):
+                if mask[check_y, check_x] == 0:
+                    return check_x, y
+            else:
+                break
             x += 1
-        return max_x, y
+        return width - 1, y
 
-    return None  # If an invalid direction is provided
+    return None
 
 def find_edge_point(image, center, direction="None", Xoffsetval = 0, Yoffsetval = 0):
     x, y = center[0], center[1]
