@@ -1741,6 +1741,53 @@ background-color: rgb(38, 162, 105);</string>
      </property>
     </item>
    </widget>
+   <widget class="QLineEdit" name="ppms_number">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>760</y>
+      <width>251</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>NONUMBER</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_ppms">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>760</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>PPMS番号：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_12</zorder>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
@@ -1779,6 +1826,8 @@ background-color: rgb(38, 162, 105);</string>
    <zorder>kansei_minus_10</zorder>
    <zorder>furyou_minus</zorder>
    <zorder>ClipSounyuuSelection</zorder>
+   <zorder>ppms_number</zorder>
+   <zorder>label_ppms</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -1786,7 +1835,7 @@ background-color: rgb(38, 162, 105);</string>
      <x>0</x>
      <y>0</y>
      <width>1927</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

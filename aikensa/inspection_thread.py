@@ -63,6 +63,7 @@ class InspectionConfig:
     button_sensor: int = 0
 
     kensainNumber: str = None
+    ppmsnumber : str = None
     furyou_plus: bool = False
     furyou_minus: bool = False
     kansei_plus: bool = False
@@ -673,7 +674,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -845,7 +847,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1017,7 +1020,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1189,7 +1193,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1370,7 +1375,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1550,7 +1556,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")  
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")  
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1721,7 +1728,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1892,7 +1900,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -2065,7 +2074,8 @@ class InspectionThread(QThread):
                             resultPitch = "COUNTERRESET",
                             status = "COUNTERRESET",
                             NGreason = "COUNTERRESET",
-                            ClipInsertionMachine = "COUNTERRESET")
+                            ClipInsertionMachine = "COUNTERRESET",
+                            PPMS = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -2202,7 +2212,8 @@ class InspectionThread(QThread):
                                     resultPitch = self.InspectionResult_PitchResult[0], 
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0],
-                                    ClipInsertionMachine = self.inspection_config.clipSounyuuNumber)
+                                    ClipInsertionMachine = self.inspection_config.clipSounyuuNumber,
+                                    PPMS = self.inspection_config.PPMS)
                                 
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
@@ -2424,7 +2435,7 @@ class InspectionThread(QThread):
                              currentnumofPart, deltaTime, 
                              kensainName, detected_pitch_str, 
                              delta_pitch_str, total_length, 
-                             resultPitch, status, NGreason, ClipInsertionMachine):
+                             resultPitch, status, NGreason, ClipInsertionMachine="Null", PPMS="Null"):
         # Ensure all inputs are strings or compatible types
 
         timestamp = datetime.now()
@@ -2444,12 +2455,21 @@ class InspectionThread(QThread):
         resultPitch = str(resultPitch)
         status = str(status)
         NGreason = str(NGreason)
-        ClipInsertionMachine = str(ClipInsertionMachine)
+        
+        if ClipInsertionMachine != "Null":
+            ClipInsertionMachine = str(ClipInsertionMachine)
+        else:
+            ClipInsertionMachine = "Null"
+
+        if PPMS != "Null":
+            PPMS = str(PPMS)
+        else:
+            PPMS = "Null"
 
         self.cursor.execute('''
-        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, ClipInsertionMachine)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, ClipInsertionMachine))
+        INSERT INTO inspection_results (partname, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, ClipInsertionMachine, PPMS)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, ClipInsertionMachine, PPMS))
         self.conn.commit()
 
         # Update the totatl part number (Maybe the day has been changed)
@@ -2458,9 +2478,9 @@ class InspectionThread(QThread):
 
         #Also save to mysql cursor
         self.mysql_cursor.execute('''
-        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, ClipInsertionMachine)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, ClipInsertionMachine))
+        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, ClipInsertionMachine, PPMS)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, ClipInsertionMachine, PPMS))
         self.mysql_conn.commit()
 
     def get_last_entry_currentnumofPart(self, part_name):

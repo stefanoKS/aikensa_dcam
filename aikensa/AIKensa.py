@@ -344,6 +344,8 @@ class AIKensa(QMainWindow):
             #extra logic to handle the clipsounyuu selection
             if i in [13]:
                 self.connect_QComboBox_changed(widget_index=i, comboBox_name="ClipSounyuuSelection", inspection_param="clipSounyuuNumber")
+                self.connect_line_edit_text_changed(widget_index=i, line_edit_name="ppms_number", inspection_param="ppmsnumber")
+
 
 
         for i in range(self.stackedWidget.count()):
