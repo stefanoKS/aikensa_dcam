@@ -370,6 +370,7 @@ class InspectionThread(QThread):
             ("status", "TEXT"),
             ("NGreason", "TEXT"),
             ("ClipInsertionMachine", "TEXT"),
+            ("PPMS", "TEXT"),
         ]
 
         # Using the function to add columns
@@ -410,7 +411,8 @@ class InspectionThread(QThread):
                 resultpitch TEXT,
                 status TEXT,
                 NGreason TEXT,
-                ClipInsertionMachine TEXT
+                ClipInsertionMachine TEXT,
+                PPMS TEXT
             )
             ''')
             self.mysql_conn.commit()
@@ -2213,7 +2215,7 @@ class InspectionThread(QThread):
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0],
                                     ClipInsertionMachine = self.inspection_config.clipSounyuuNumber,
-                                    PPMS = self.inspection_config.PPMS)
+                                    PPMS = self.inspection_config.ppmsnumber)
                                 
                             # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
                             # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
