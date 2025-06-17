@@ -1,7 +1,6 @@
 import cv2
 import sys
 
-
 def initialize_camera(camNum): #Init 4k cam
 
     # cap = cv2.VideoCapture(camNum, cv2.CAP_V4L2) #for ubuntu. It's DSHOW for windows
@@ -28,7 +27,7 @@ def initialize_camera(camNum): #Init 4k cam
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2048)
     # 4k res
 
-    cap.set(cv2.CAP_PROP_FPS, 30) # Set the desired FPS
+    cap.set(cv2.CAP_PROP_FPS, 24) # Set the desired FPS
 
     return cap
 

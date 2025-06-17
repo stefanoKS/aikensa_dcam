@@ -13,6 +13,11 @@
     <height>1080</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>9</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -23,67 +28,7 @@
    <property name="enabled">
     <bool>true</bool>
    </property>
-   <widget class="QPushButton" name="calibrationbutton">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>240</y>
-      <width>231</width>
-      <height>91</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string extracomment="Generate intrinsic camera parameter">カメラ校正 
-Camera Calib.</string>
-    </property>
-   </widget>
    <widget class="Line" name="line_1">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>460</y>
-      <width>1901</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="P5755A491button">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>540</y>
-      <width>231</width>
-      <height>101</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>15</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(238, 238, 236);
-background-color: rgb(114, 159, 207);</string>
-    </property>
-    <property name="text">
-     <string>82833W050P
-W/STRIP-RR DOOR, LH</string>
-    </property>
-   </widget>
-   <widget class="Line" name="line_2">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -96,11 +41,24 @@ W/STRIP-RR DOOR, LH</string>
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>480</y>
+      <width>1901</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
    <widget class="QLabel" name="label_1">
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>500</y>
+      <y>510</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -127,7 +85,7 @@ W/STRIP-RR DOOR, LH</string>
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>190</y>
+      <y>170</y>
       <width>361</width>
       <height>31</height>
      </rect>
@@ -148,29 +106,6 @@ W/STRIP-RR DOOR, LH</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="edgedetectbutton">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>240</y>
-      <width>231</width>
-      <height>91</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string extracomment="param for canny">エッジ検出パラメータ
-Edge Params</string>
     </property>
    </widget>
    <widget class="QPushButton" name="quitbutton">
@@ -250,9 +185,9 @@ Edge Params</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>800</x>
+      <x>470</x>
       <y>10</y>
-      <width>321</width>
+      <width>651</width>
       <height>91</height>
      </rect>
     </property>
@@ -269,7 +204,7 @@ Edge Params</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>AI 検査</string>
+     <string>協働ロボットAI 検査</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -294,7 +229,7 @@ Edge Params</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
+     <string notr="true">color: rgb(255, 247, 21);</string>
     </property>
     <property name="text">
      <string>by 設計課</string>
@@ -303,91 +238,12 @@ Edge Params</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>1360</x>
-      <y>970</y>
-      <width>141</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>17</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
-      <underline>false</underline>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>SiO Status:</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="status_sio">
-    <property name="geometry">
-     <rect>
-      <x>1510</x>
-      <y>970</y>
-      <width>61</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>17</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-      <underline>false</underline>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(238, 15, 15);</string>
-    </property>
-    <property name="text">
-     <string>OFF</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="P5755A492button">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>540</y>
-      <width>231</width>
-      <height>101</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>15</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(173, 127, 168);</string>
-    </property>
-    <property name="text">
-     <string>82833W040P
- W/STRIP-RR DOOR, RH</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="timeLabel">
     <property name="geometry">
      <rect>
-      <x>1590</x>
+      <x>1435</x>
       <y>10</y>
-      <width>311</width>
+      <width>466</width>
       <height>51</height>
      </rect>
     </property>
@@ -409,11 +265,11 @@ Edge Params</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="dailytenkenbutton">
+   <widget class="QPushButton" name="dailytenken_button">
     <property name="geometry">
      <rect>
       <x>60</x>
-      <y>350</y>
+      <y>370</y>
       <width>231</width>
       <height>91</height>
      </rect>
@@ -432,57 +288,192 @@ Edge Params</string>
 Daily Check</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="P82832W080Pbutton">
+   <widget class="QPushButton" name="camcalibration_left_1_button">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>670</y>
-      <width>231</width>
-      <height>101</height>
+      <x>60</x>
+      <y>255</y>
+      <width>161</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>15</pointsize>
+      <pointsize>14</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 146, 240);</string>
+     <string notr="true">background-color: rgb(255, 153, 185);</string>
     </property>
     <property name="text">
-     <string>82832W080P
- W/STRIP-RR DOOR, RH</string>
+     <string extracomment="Generate intrinsic camera parameter">左カメラ①校正 
+Camera①Calib.</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="camcalibration_left_2_button">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>255</y>
+      <width>161</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 153, 185);</string>
+    </property>
+    <property name="text">
+     <string extracomment="Generate intrinsic camera parameter">左カメラ②校正 
+Camera②Calib.</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="camera_left_merge_button">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>255</y>
+      <width>161</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(233, 255, 133);</string>
+    </property>
+    <property name="text">
+     <string extracomment="Generate intrinsic camera parameter">左カメラマージ 
+Camera Merge</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82833W050Pbutton">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>1090</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(124, 227, 255);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82833W050P
+W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
    <widget class="QPushButton" name="P82833W090Pbutton">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>670</y>
-      <width>231</width>
-      <height>101</height>
+      <x>380</x>
+      <y>1100</y>
+      <width>220</width>
+      <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>15</pointsize>
+      <pointsize>12</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(0, 170, 255);</string>
+     <string notr="true">background-color: rgb(15, 190, 224);</string>
     </property>
     <property name="text">
-     <string>82833W090P
+     <string>5A45
+82833W090P
 W/STRIP-RR DOOR, LH</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_7">
+   <widget class="QPushButton" name="P82832W040Pbutton">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>790</y>
+      <x>390</x>
+      <y>1110</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(165, 177, 255);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82832W040P
+ W/STRIP-RR DOOR, RH</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P82832W080Pbutton">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>1120</y>
+      <width>220</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(53, 132, 228);</string>
+    </property>
+    <property name="text">
+     <string>5A45
+82832W080P
+ W/STRIP-RR DOOR, RH</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>1080</y>
+      <width>271</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(181, 181, 181);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>780</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -505,6 +496,225 @@ W/STRIP-RR DOOR, LH</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
+   <widget class="QPushButton" name="P808387UA1Abutton">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>570</y>
+      <width>261</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(88, 210, 221);</string>
+    </property>
+    <property name="text">
+     <string>80838/9 7UA0A
+SEAL-FR DOOR PARTING, RH/LH</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>560</y>
+      <width>281</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(181, 181, 181);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>220</y>
+      <width>361</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>左カメラ用</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="camcalibration_right_1_button">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>260</y>
+      <width>161</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(178, 183, 255);</string>
+    </property>
+    <property name="text">
+     <string extracomment="Generate intrinsic camera parameter">右カメラ①校正 
+Camera①Calib.</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="camera_right_merge_button">
+    <property name="geometry">
+     <rect>
+      <x>1070</x>
+      <y>260</y>
+      <width>161</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(233, 255, 133);</string>
+    </property>
+    <property name="text">
+     <string extracomment="Generate intrinsic camera parameter">右カメラマージ 
+Camera Merge</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="camcalibration_right_2_button">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>260</y>
+      <width>161</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(178, 183, 255);</string>
+    </property>
+    <property name="text">
+     <string extracomment="Generate intrinsic camera parameter">右カメラ②校正 
+Camera②Calib.</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>220</y>
+      <width>361</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>右カメラ用</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="Line" name="line_7">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>340</y>
+      <width>1901</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_8">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>330</y>
+      <width>1901</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <zorder>label_11</zorder>
+   <zorder>label</zorder>
+   <zorder>line_1</zorder>
+   <zorder>line_2</zorder>
+   <zorder>label_1</zorder>
+   <zorder>label_2</zorder>
+   <zorder>quitbutton</zorder>
+   <zorder>line_3</zorder>
+   <zorder>line_4</zorder>
+   <zorder>line_5</zorder>
+   <zorder>line_6</zorder>
+   <zorder>label_3</zorder>
+   <zorder>label_4</zorder>
+   <zorder>timeLabel</zorder>
+   <zorder>dailytenken_button</zorder>
+   <zorder>camcalibration_left_1_button</zorder>
+   <zorder>camcalibration_left_2_button</zorder>
+   <zorder>camera_left_merge_button</zorder>
+   <zorder>P82833W050Pbutton</zorder>
+   <zorder>P82833W090Pbutton</zorder>
+   <zorder>P82832W040Pbutton</zorder>
+   <zorder>P82832W080Pbutton</zorder>
+   <zorder>label_8</zorder>
+   <zorder>P808387UA1Abutton</zorder>
+   <zorder>label_5</zorder>
+   <zorder>camcalibration_right_1_button</zorder>
+   <zorder>camera_right_merge_button</zorder>
+   <zorder>camcalibration_right_2_button</zorder>
+   <zorder>label_6</zorder>
+   <zorder>line_7</zorder>
+   <zorder>line_8</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
