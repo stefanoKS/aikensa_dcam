@@ -24,12 +24,9 @@ from aikensa.opencv_imgprocessing.arucoplanarize import planarize, planarize_ima
 from dataclasses import dataclass, field
 from typing import List
 
-from aikensa.parts_config.sound import play_do_sound, play_picking_sound, play_re_sound, play_mi_sound, play_alarm_sound, play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound
+from aikensa.parts_config.sound import play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound
 
 from ultralytics import YOLO
-from aikensa.parts_config.MMC.M_5A45.P828XXW0X0P_CTRPLR import partcheck as P828XXW0X0P_check
-from aikensa.parts_config.NISSAN.M_JC2D.P808387UA1A import partcheck as P808387UA1A_check
-from aikensa.parts_config.NISSAN.M_JC2D.P828447UA0A import partcheck as P828447UA0A_check
 
 
 from aikensa.parts_config.dailyTenken.dailyTenken import dailyTenken
@@ -305,19 +302,30 @@ class InspectionThread(QThread):
 
         self.bool_keep_measurement = False
         
-        self.cam_config_file = "aikensa/camscripts/cam_config.yaml"
+        this_dir = os.path.dirname(__file__)
+        cam_config_path = os.path.abspath(os.path.join(this_dir, '..', 'config'))
+        self.cam_config_file = os.path.join(cam_config_path, 'camera_config.yaml')
         
         with open(self.cam_config_file, 'r') as file:
             self.cam_map = yaml.safe_load(file)
 
+        mysql_credentials_path = os.path.abspath(os.path.join(this_dir, '..', 'mysql'))
+        self.mysql_credentials_file = os.path.join(mysql_credentials_path, 'id.yaml')
 
-        # "Read mysql id and password from yaml file"
-        with open("aikensa/mysql/id.yaml") as file:
-            credentials = yaml.load(file, Loader=yaml.FullLoader)
-            self.mysqlID = credentials["id"]
-            self.mysqlPassword = credentials["pass"]
-            self.mysqlHost = credentials["host"]
-            self.mysqlHostPort = credentials["port"]
+        if not os.path.exists(self.mysql_credentials_file):
+            print(f"Error: MySQL credentials file {self.mysql_credentials_file} does not exist.")
+            self.mysqlID = None
+            self.mysqlPassword = None
+            self.mysqlHost = None
+            self.mysqlHostPort = None
+            # Load MySQL credentials from the YAML file
+        else:
+            with open(self.mysql_credentials_file) as file:
+                credentials = yaml.load(file, Loader=yaml.FullLoader)
+                self.mysqlID = credentials["id"]
+                self.mysqlPassword = credentials["pass"]
+                self.mysqlHost = credentials["host"]
+                self.mysqlHostPort = credentials["port"]
 
 
     def release_all_camera(self):
@@ -1890,19 +1898,6 @@ class InspectionThread(QThread):
 
         return image
 
-    def save_image(self, image):
-        dir = "aikensa/inspection/" + self.widget_dir_map[self.inspection_config.widget]
-        os.makedirs(dir, exist_ok=True)
-        filename = dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png"
-        
-        # Check if the file already exists and add an identifier if it does
-        counter = 1
-        while os.path.exists(filename):
-            filename = dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{counter}.png"
-            counter += 1
-        
-        cv2.imwrite(filename, image)
-
     def save_image_result(self, image_initial, image_result, result):
         raw_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" +  str(result) + "/nama/"
         result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
@@ -1911,38 +1906,12 @@ class InspectionThread(QThread):
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
 
-    def save_image_result_withKatabu(self, image_initial, image_result, katabu_initial, katabu_result, result):
-        raw_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" +  str(result) + "/nama/"
-        result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
-        os.makedirs(raw_dir, exist_ok=True)
-        os.makedirs(result_dir, exist_ok=True)
-        cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
-        cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_katabu.png", katabu_initial)
-        cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
-        cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_katabu.png", katabu_result)
-
-    def minitimerStart(self):
-        self.timerStart_mini = time.time()
-    
-    def minitimerFinish(self, message = "OperationName"):
-        self.timerFinish_mini = time.time()
-        # self.fps_mini = 1/(self.timerFinish_mini - self.timerStart_mini)
-        print(f"Time to {message} : {(self.timerFinish_mini - self.timerStart_mini) * 1000} ms")
-        # print(f"FPS of {message} : {self.fps_mini}")
-
     def convertQImage(self, image):
         h, w, ch = image.shape
         bytesPerLine = ch * w
         processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_BGR888)
         return processed_image
     
-    def convertQImageKatabu(self, image):
-        h, w, ch = image.shape
-        bytesPerLine = ch * w
-        # Ensure image data is converted to bytes
-        processed_image = QImage(image.data.tobytes(), w, h, bytesPerLine, QImage.Format_BGR888)
-        return processed_image
-
     def converQImageRGB(self, image):
         h, w, ch = image.shape
         bytesPerLine = ch * w
@@ -1981,53 +1950,28 @@ class InspectionThread(QThread):
             print("An error occurred while cropping the image:", str(e))
         return img
 
-    def createBlackImage(self, width, height): #create a black image with width and height
-        return np.zeros((height, width, 3), dtype=np.uint8)
+    def createBlankGreenImage (self, width=1791, height=169):
+        blank_image = np.zeros((height, width, 3), dtype=np.uint8)
+        blank_image[:] = (0, 255, 0)
+        return blank_image
 
     def initialize_model(self):
-        print("Model Dummy Loaded")
-
         # Define model paths
-        path_P828XXW0X0P_CLIP_Model = "./aikensa/models/P828XXW0X0P_detect.pt"
-        path_P828XXW0X0P_KATABU_Model = "./aikensa/models/P828XXW0X0P_katabu.pt"
-        path_P828XXW0X0P_CLIPFLIP_Model = "./aikensa/models/P828XXW0X0P_detect_flip.pt"
-        path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
-        path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
+        path_P8083X7UA0A_CLIP_Model = "./aikensa/models/P8083X7UA0A_detect.pt"
+        path_P8083X7UA0A_SEGMENT_Model = "./aikensa/models/P8083X7UA0A_segment.pt"
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
-        path_P808387UA1A_CLIP_Model = "./aikensa/models/P808387UA1A_detect.pt"
-        path_P808387UA1A_SEGMENT_Model = "./aikensa/models/P808387UA1A_segment.pt"
-        path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
-        path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
 
         # Initialize each model with existence check
-        if os.path.exists(path_P828XXW0X0P_CLIP_Model):
-            self.P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(
+        if os.path.exists(path_P8083X7UA0A_CLIP_Model):
+            self.P8083X7UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
                 model_type="yolov8",
-                model_path=path_P828XXW0X0P_CLIP_Model,
+                model_path=path_P8083X7UA0A_CLIP_Model,
                 confidence_threshold=0.5,
                 device="cuda:0"
             )
         else:
-            print(f"Model file {path_P828XXW0X0P_CLIP_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_CLIP_Model = None
-
-        if os.path.exists(path_P828XXW0X0P_KATABU_Model):
-            self.P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
-        else:
-            print(f"Model file {path_P828XXW0X0P_KATABU_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_KATABU_Model = None
-
-        if os.path.exists(path_P828XXW0X0P_SEGMENT_Model):
-            self.P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
-        else:
-            print(f"Model file {path_P828XXW0X0P_SEGMENT_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_SEGMENT_Model = None
-
-        if os.path.exists(path_P828XXW0X0P_HAND_DETECT):
-            self.P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
-        else:
-            print(f"Model file {path_P828XXW0X0P_HAND_DETECT} does not exist. Initializing as None.")
-            self.P828XXW0X0P_HAND_DETECT = None
+            print(f"Model file {path_P8083X7UA0A_CLIP_Model} does not exist. Initializing as None.")
+            self.P8083X7UA0A_CLIP_Model = None
 
         if os.path.exists(path_NICHIJOU_TENKEN_Model):
             self.NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(
@@ -2039,55 +1983,6 @@ class InspectionThread(QThread):
         else:
             print(f"Model file {path_NICHIJOU_TENKEN_Model} does not exist. Initializing as None.")
             self.NICHIJOU_TENKEN_Model = None
-
-        if os.path.exists(path_P808387UA1A_CLIP_Model):
-            self.P808387UA1A_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="ultralytics",
-                model_path=path_P808387UA1A_CLIP_Model,
-                confidence_threshold=0.5,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P808387UA1A_CLIP_Model} does not exist. Initializing as None.")
-            self.P808387UA1A_CLIP_Model = None
-
-        if os.path.exists(path_P808387UA1A_SEGMENT_Model):
-            self.P808387UA1A_SEGMENT_Model = YOLO(path_P808387UA1A_SEGMENT_Model)
-        else:
-            print(f"Model file {path_P808387UA1A_SEGMENT_Model} does not exist. Initializing as None.")
-            self.P808387UA1A_SEGMENT_Model = None
-
-        if os.path.exists(path_P828447UA0A_CLIP_Model):
-            self.P828447UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="ultralytics",
-                model_path=path_P828447UA0A_CLIP_Model,
-                confidence_threshold=0.5,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P828447UA0A_CLIP_Model} does not exist. Initializing as None.")
-            self.P828447UA0A_CLIP_Model = None
-
-        if os.path.exists(path_P828447UA0A_SEGMENT_Model):
-            self.P828447UA0A_SEGMENT_Model = YOLO(path_P828447UA0A_SEGMENT_Model)
-        else:
-            print(f"Model file {path_P828447UA0A_SEGMENT_Model} does not exist. Initializing as None.")
-            self.P828447UA0A_SEGMENT_Model = None
-
-        if os.path.exists(path_P828XXW0X0P_CLIPFLIP_Model):
-            self.P828XXW0X0P_CLIPFLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="yolov8",
-                model_path=path_P828XXW0X0P_CLIPFLIP_Model,
-                confidence_threshold=0.35,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P828XXW0X0P_CLIPFLIP_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_CLIPFLIP_Model = None
-        # Check if all models are loaded
-        
-
-
 
         print("Model Loaded")
         
