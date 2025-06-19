@@ -8,11 +8,12 @@ import yaml
 import time
 import logging
 
-from PyQt5.QtCore import QThread, pyqtSignal, Qt, QTimer
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
 
 from aikensa.camscripts.cam_init import initialize_camera
 from aikensa.opencv_imgprocessing.cameracalibrate import detectCharucoBoard, detectCharucoBoard_scaledImage, calculatecameramatrix, calculatecameramatrix_scaledImage, warpTwoImages, calculateHomography_template, warpTwoImages_template
+from aikensa.scripts.scripts_img_processing import resize_image
 from aikensa.opencv_imgprocessing.arucoplanarize import planarize_image_wide, planarize_image_narrow
 from dataclasses import dataclass, field
 from typing import List, Tuple
@@ -63,27 +64,27 @@ class CalibrationThread(QThread):
     def __init__(self, calib_config: CalibrationConfig = None):
         super(CalibrationThread, self).__init__()
         self.running = True
-
+        self.frames = {}  # logical_id → np.ndarray
+        
+        
+        
         if calib_config is None:
             self.calib_config = CalibrationConfig()    
         else:
             self.calib_config = calib_config
 
-        self.widget_dir_map={
-            1: "CamCalibration1",
-            2: "CamCalibration2"
-        }
-
         self.cameraMatrix = None
         self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
         self.cap_cam = None
         self.frame  = None
-        self.frame_downsampled = None
+        self.frame_resized = None
         self.frame_scaled = None
 
         self.multiCam_stream = False
         self.cap_cam1 = None
         self.cap_cam2 = None
+        self.cap_cam3 = None
+        self.cap_cam4 = None
 
         self.mergeframe1 = None
         self.mergeframe2 = None
@@ -162,6 +163,8 @@ class CalibrationThread(QThread):
         with open(self.cam_config_file, 'r') as file:
             self.cam_map = yaml.safe_load(file)
 
+        self.widget_to_cam_map = {1: 0, 2: 1, 4: 2, 5: 3}  
+
     def initialize_single_camera(self, camID):
 
         if self.cap_cam is not None:
@@ -171,10 +174,10 @@ class CalibrationThread(QThread):
         if camID == -1:
             print("No valid camera selected, displaying placeholder.")
             self.cap_cam = None  # No camera initialized
-            # self.frame = self.create_placeholder_image()
         else:
-            print(camID)
+            print(f"Requested Camera ID: {camID}")
             actual_camID = self.cam_map.get(camID, -1)
+            print("Actual Camera ID from map:", actual_camID)
             print(f"Initialized Camera on ID {actual_camID}")
             self.cap_cam = initialize_camera(actual_camID)
 
@@ -185,8 +188,15 @@ class CalibrationThread(QThread):
         if self.cap_cam2 is not None:
             self.cap_cam2.release()
             print(f"Camera 2 released.")
+        if self.cap_cam3 is not None:
+            self.cap_cam3.release()
+            print(f"Camera 3 released.")
+        if self.cap_cam4 is not None:
+            self.cap_cam4.release()
+            print(f"Camera 4 released.")
+        
 
-    def initialize_all_camera(self):
+    def initialize_all_left_camera(self):
         if self.cap_cam1 is not None:
             self.cap_cam1.release()
             print(f"Camera 1 released.")
@@ -211,6 +221,32 @@ class CalibrationThread(QThread):
             self.cap_cam2 = None
         else:
             print(f"Initialized Camera on ID 2")
+
+    def initialize_all_right_camera(self):
+        if self.cap_cam3 is not None:
+            self.cap_cam3.release()
+            print(f"Camera 3 released.")
+        if self.cap_cam4 is not None:
+            self.cap_cam4.release()
+            print(f"Camera 4 released.")
+
+        actual_camID = self.cam_map.get(2, -1)
+        self.cap_cam3 = initialize_camera(actual_camID)
+
+        actual_camID = self.cam_map.get(3, -1)
+        self.cap_cam4 = initialize_camera(actual_camID)
+
+        if not self.cap_cam3.isOpened():
+            print(f"Failed to open camera with ID 3")
+            self.cap_cam3 = None
+        else:
+            print(f"Initialized Camera on ID 3")
+
+        if not self.cap_cam4.isOpened():
+            print(f"Failed to open camera with ID 4")
+            self.cap_cam4 = None
+        else:
+            print(f"Initialized Camera on ID 4")
 
             
     def run(self):
@@ -246,102 +282,49 @@ class CalibrationThread(QThread):
                 self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
                 self.H2 = np.array(self.homography_matrix2)
 
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_high.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam1_high.yaml") as file:
-                self.homography_matrix1_high = yaml.load(file, Loader=yaml.FullLoader)
-                self.H1_high = np.array(self.homography_matrix1_high)
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam3.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam1.yaml") as file:
+                self.homography_matrix1 = yaml.load(file, Loader=yaml.FullLoader)
+                self.H1 = np.array(self.homography_matrix1)
 
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam2_high.yaml") as file:
-                self.homography_matrix2_high = yaml.load(file, Loader=yaml.FullLoader)
-                self.H2_high = np.array(self.homography_matrix2_high)
-
-
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml") as file:
-                self.homography_matrix1_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H1_scaled = np.array(self.homography_matrix1_scaled)
-
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml") as file:
-                self.homography_matrix2_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H2_scaled = np.array(self.homography_matrix2_scaled)
-
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml") as file:
-                self.homography_matrix1_high_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H1_high_scaled = np.array(self.homography_matrix1_high_scaled)
-
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml") as file:
-                self.homography_matrix2_high_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H2_high_scaled = np.array(self.homography_matrix2_high_scaled)
-
-
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam4.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam2.yaml") as file:
+                self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
+                self.H2 = np.array(self.homography_matrix2)
 
         if os.path.exists("./aikensa/cameracalibration/planarizeTransform_narrow.yaml"):
             with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml") as file:
                 transform_list = yaml.load(file, Loader=yaml.FullLoader)
                 self.planarizeTransform_narrow = np.array(transform_list)
 
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_narrow_scaled = np.array(transform_list)
-        
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_wide.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_wide.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_wide = np.array(transform_list)
-
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_wide_scaled.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_wide_scaled.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_wide_scaled = np.array(transform_list)
-
-
-
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_narrow.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_high_narrow.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_high_narrow = np.array(transform_list)
-        
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_narrow_scaled.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_high_narrow_scaled.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_high_narrow_scaled = np.array(transform_list)
-
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_wide.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_high_wide.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_high_wide = np.array(transform_list)
-
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_high_wide_scaled.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_high_wide_scaled.yaml") as file:
-                transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_high_wide_scaled = np.array(transform_list)
-
-
         while self.running:
 
             if self.calib_config.widget == 0:
                 self.calib_config.cameraID = -1
 
-            if self.calib_config.widget in [1, 2]:
-                
+            self.calib_config.cameraID = self.widget_to_cam_map.get(self.calib_config.widget, -1)
+
+
+            if self.calib_config.widget in [1, 2, 4, 5]:
                 if self.calib_config.cameraID != self.current_cameraID:
                     # Camera ID has changed, reinitialize the camera
                     if self.current_cameraID != -1:
                         self.cap_cam.release()
                         print(f"Camera {self.current_cameraID} released.")
                     self.current_cameraID = self.calib_config.cameraID
-                    # self.initialize_single_camera(self.current_cameraID)
+
                     if self.calib_config.widget == 1:
                         self.initialize_single_camera(0)
-                        print("Initializing Camera 2")
+                        print("Initializing Camera 0")
                     if self.calib_config.widget == 2:
                         self.initialize_single_camera(1)
-                        print("Initializing Camera 0")
+                        print("Initializing Camera 1")
+                    if self.calib_config.widget == 4:
+                        self.initialize_single_camera(2)
+                        print("Initializing Camera 2")
+                    if self.calib_config.widget == 5:
+                        self.initialize_single_camera(3)
+                        print("Initializing Camera 3")
                   
                 if self.cap_cam is not None:
                     try:
@@ -349,28 +332,12 @@ class CalibrationThread(QThread):
                         self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
                         self.frame = cv2.rotate(self.frame, cv2.ROTATE_180)
 
-                        self.frame_scaled = cv2.resize(self.frame, (self.scaled_width, self.scaled_height), interpolation=cv2.INTER_LINEAR)
-
                         if not ret:
                             print("Failed to capture frame")
                             continue
                     except cv2.error as e:
                         print("An error occurred while reading frames from the cameras:", str(e))
 
-                # self.calib_config.cameraID = self.calib_config.widget
-                self.calib_config.cameraID = self.calib_config.widget - 1 #Don't forget to clean this up in deployment !!
-            
-                # if self.calib_config.mapCalculated[self.calib_config.cameraID] is False and self.frame is not None:
-                #     if os.path.exists(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml"):
-                #         camera_matrix, dist_coeffs = self.load_matrix_from_yaml(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml")
-                #         # Precompute the undistort and rectify map for faster processing
-                #         h, w = self.frame.shape[:2]
-                #         self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID] = cv2.initUndistortRectifyMap(camera_matrix, dist_coeffs, None, camera_matrix, (w, h), cv2.CV_16SC2)
-                #         print(f"map1 and map2 value is calculated for camera {self.calib_config.cameraID}")
-                #         self.calib_config.mapCalculated[self.calib_config.cameraID] = True
-                
-                # if self.calib_config.mapCalculated[self.calib_config.cameraID] is True:
-                    # self.frame = cv2.remap(self.frame, self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
                 if self.calib_config.calculateSingeFrameMatrix:
                     self.frame, _, _ = detectCharucoBoard(self.frame)
@@ -390,10 +357,9 @@ class CalibrationThread(QThread):
                     self.calib_config.calculateCamMatrix = False
 
                 if self.frame is not None:
-                    self.frame_downsampled = self.downSampling(self.frame, 1229, 819)
-
-                if self.frame is not None:
-                    self.CalibCamStream.emit(self.convertQImage(self.frame_downsampled))
+                    self.frame_resized = resize_image(self.frame.copy(), width=1024, height=683)
+                    self.CalibCamStream.emit(self.convertQImage(self.frame_resized))
+                    # print("Frame emitted to CalibCamStream")
             
             if self.calib_config.widget == 3:
                 if self.multiCam_stream is False:
@@ -427,8 +393,8 @@ class CalibrationThread(QThread):
                 self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                 #original res
-                self.mergeframe1_scaled = self.downSampling(self.mergeframe1, self.scaled_width, self.scaled_height)
-                self.mergeframe2_scaled = self.downSampling(self.mergeframe2, self.scaled_width, self.scaled_height)
+                self.mergeframe1_scaled = resize_image(self.mergeframe1, self.scaled_width, self.scaled_height)
+                self.mergeframe2_scaled = resize_image(self.mergeframe2, self.scaled_width, self.scaled_height)
 
                 #Calculate Homography matrix
                 if self.calib_config.calculateHomo_cam1 is True:
@@ -685,15 +651,15 @@ class CalibrationThread(QThread):
                 self.combinedImage_high_scaled = cv2.resize(self.combinedImage_high_scaled, (int(self.homography_size[1]/(self.scale_factor*1.5)), int(self.homography_size[0]/(self.scale_factor*1.5))))
                 
 
-                self.mergeframe1_downsampled = self.downSampling(self.mergeframe1, 246, 163)
-                self.mergeframe2_downsampled = self.downSampling(self.mergeframe2, 246, 163)
+                # self.mergeframe1_downsampled = self.resize_image(self.mergeframe1, 246, 163)
+                # self.mergeframe2_downsampled = self.resize_image(self.mergeframe2, 246, 163)
 
-                if self.mergeframe1_downsampled is not None:
-                    self.CamMerge1.emit(self.convertQImage(self.mergeframe1_downsampled))
-                if self.mergeframe2_downsampled is not None:
-                    self.CamMerge2.emit(self.convertQImage(self.mergeframe2_downsampled))
-                if self.combinedImage_scaled is not None:
-                    self.CamMergeAll.emit(self.convertQImage(self.combinedImage_scaled))
+                # if self.mergeframe1_downsampled is not None:
+                #     self.CamMerge1.emit(self.convertQImage(self.mergeframe1_downsampled))
+                # if self.mergeframe2_downsampled is not None:
+                #     self.CamMerge2.emit(self.convertQImage(self.mergeframe2_downsampled))
+                # if self.combinedImage_scaled is not None:
+                #     self.CamMergeAll.emit(self.convertQImage(self.combinedImage_scaled))
 
             #wait for 5ms
             # self.msleep(2)
@@ -724,9 +690,7 @@ class CalibrationThread(QThread):
         self.release_all_camera()
         print("Calibration thread stopped.")
     
-    def downSampling(self, image, width=384, height=256):
-        resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
-        return resized_image
+
 
     def save_calibration_to_yaml(self, calibrationMatrix, filename):
         with open(filename, 'w') as file:

@@ -23,12 +23,16 @@ def initialize_camera(camNum): #Init 4k cam
 
     cap.set(cv2.CAP_PROP_FOURCC, fourcc)
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3072)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2048)
+    success = cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3072)
+    print("Setting width worked?", success)
+    success = cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2048)
+    print("Setting height worked?", success)
     # 4k res
 
-    cap.set(cv2.CAP_PROP_FPS, 24) # Set the desired FPS
+    cap.set(cv2.CAP_PROP_FPS, 10) # Set the desired FPS
 
+    #print all cap info
+    
     return cap
 
 def initialize_gaikan_camera(camNum): #Init 480p_gaikan cam

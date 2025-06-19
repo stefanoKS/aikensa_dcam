@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>dailytenken1_clippitch</class>
- <widget class="QMainWindow" name="dailytenken1_clippitch">
+ <class>dailytenken2</class>
+ <widget class="QMainWindow" name="dailytenken2">
   <property name="enabled">
    <bool>true</bool>
   </property>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>P808387UA1AWindow</class>
- <widget class="QMainWindow" name="P808387UA1AWindow">
+ <class>P808387UA0AWindow</class>
+ <widget class="QMainWindow" name="P808387UA0AWindow">
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -19,7 +19,7 @@
   <property name="styleSheet">
    <string notr="true">background-color: rgb(85, 87, 83);</string>
   </property>
-  <widget class="QWidget" name="P808387UA1AWidget">
+  <widget class="QWidget" name="P808387UA0AWidget">
    <property name="enabled">
     <bool>true</bool>
    </property>

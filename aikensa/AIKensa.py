@@ -6,6 +6,7 @@ import os
 from enum import Enum
 import time
 import datetime
+import imagingcontrol4 as ic4
 
 from PyQt5 import QtCore
 
@@ -18,6 +19,7 @@ from aikensa.thread.calibration_thread import CalibrationThread, CalibrationConf
 from aikensa.thread.inspection_thread import InspectionThread, InspectionConfig
 from aikensa.thread.time_thread import TimeMonitorThread
 from aikensa.thread.modbus_thread import ModbusServerThread
+from aikensa.thread.camera_thread import CameraThread
 
 
 # List of UI files to be loaded
@@ -31,16 +33,16 @@ UI_FILES = [
     'aikensa/qtui/CALIBRATION/camera_right_merge.ui',     #index 6
     "aikensa/qtui/NISSAN/M_JC2D/P808397UA0A.ui",      #index 7
     "aikensa/qtui/NISSAN/M_JC2D/P808387UA0A.ui",      #index 8
-    "aikensa/qtui/empty.ui", #empty 19
-    "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/empty.ui", #empty 19
-    "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/empty.ui", #empty 19
-    "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/empty.ui", #empty 19
-    "aikensa/qtui/empty.ui", #empty 20
-    "aikensa/qtui/empty.ui", #empty 19
-    "aikensa/qtui/empty.ui", #empty 20
+    "aikensa/qtui/empty.ui", #empty 9
+    "aikensa/qtui/empty.ui", #empty 10
+    "aikensa/qtui/empty.ui", #empty 11
+    "aikensa/qtui/empty.ui", #empty 12
+    "aikensa/qtui/empty.ui", #empty 13
+    "aikensa/qtui/empty.ui", #empty 14
+    "aikensa/qtui/empty.ui", #empty 15
+    "aikensa/qtui/empty.ui", #empty 16
+    "aikensa/qtui/empty.ui", #empty 17
+    "aikensa/qtui/empty.ui", #empty 18
     "aikensa/qtui/empty.ui", #empty 19
     "aikensa/qtui/empty.ui", #empty 20
     "aikensa/qtui/dailyTenken/dailyTenken_01.ui",  # index 21
@@ -52,25 +54,26 @@ class AIKensa(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        
         self.calibration_thread = CalibrationThread(CalibrationConfig())
-        self.inspection_thread = InspectionThread(InspectionConfig())   
+        self.inspection_thread = InspectionThread(InspectionConfig()) 
 
         self._detect_screens()
 
         self.secondary = QMainWindow()
-        loadUi("aikensa/qtui/empty.ui", self.secondary)
-        self.secondary.move(self.right_geo.topLeft())
-        self.secondary.showFullScreen()    # <<— here
+        self.secondary_stack = QStackedWidget()
 
-        # 3) build main UI
         self._setup_ui()
-        self.setCentralWidget(self.stackedWidget)
+        self._show_left_fullscreen()
 
-        # 4) show main full-screen on the left
-        self.move(self.left_geo.topLeft())
-        self.showFullScreen()
+        empty_right = self._load_ui(UI_FILES[9])  # ← empty.ui
+        self.secondary_stack.addWidget(empty_right)
 
+        right_page = self._load_ui(UI_FILES[8])   # ← P808387UA0A.ui
+        self.secondary_stack.addWidget(right_page)
+
+        self.secondary.setCentralWidget(self.secondary_stack)
+        self.secondary.move(self.right_geo.topLeft())
+        self.secondary.showFullScreen()
 
         self.timeMonitorThread = TimeMonitorThread(check_interval=1)
         self.timeMonitorThread.time_signal.connect(self.timeUpdate)
@@ -97,7 +100,7 @@ class AIKensa(QMainWindow):
 
     def _setup_ui(self):
 
-        # self.calibration_thread.CalibCamStream.connect(self._setCalibFrame)
+        self.calibration_thread.CalibCamStream.connect(self._setCalibFrame)
 
         # self.calibration_thread.CamMerge1.connect(self._setMergeFrame1)
         # self.calibration_thread.CamMerge2.connect(self._setMergeFrame2)
@@ -180,17 +183,17 @@ class AIKensa(QMainWindow):
         calcHomoCam2_left_button = camera_left_merge_widget.findChild(QPushButton, "calcH_cam2_button")
         planarize_combined_camera_left = camera_left_merge_widget.findChild(QPushButton, "planarize_button")
 
-        calcHomoCam1_left_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam1_left", True))
-        calcHomoCam2_left_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam2_left", True))
-        planarize_combined_camera_left.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize", True))
+        calcHomoCam1_left_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam1", True))
+        calcHomoCam2_left_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam2", True))
+        planarize_combined_camera_left.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize_left", True))
 
         calcHomoCam1_right_button = camera_right_merge_widget.findChild(QPushButton, "calcH_cam1_button")
         calcHomoCam2_right_button = camera_right_merge_widget.findChild(QPushButton, "calcH_cam2_button")
         planarize_combined_camera_right = camera_right_merge_widget.findChild(QPushButton, "planarize_button")
 
-        calcHomoCam1_right_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam1_right", True))
-        calcHomoCam2_right_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam2_right", True))
-        planarize_combined_camera_right.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize", True))
+        calcHomoCam1_right_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam3", True))
+        calcHomoCam2_right_button.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "calculateHomo_cam4", True))
+        planarize_combined_camera_right.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, "savePlanarize_right", True))
 
 
         inspection_button_config = {
@@ -223,9 +226,9 @@ class AIKensa(QMainWindow):
         dailytenken03_back_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(22))
         dailytenken03_back_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 22))
 
-        self.widget_indices_list = [0, 1, 2, 3, 4, 5, 7]
-        self.inspection_widget_indices = [7, 21, 22, 23]
-        self.inspection_widget_indices_without_dailytenken = [7]
+        self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        self.inspection_widget_indices = [7, 8, 21, 22, 23]
+        self.inspection_widget_indices_without_dailytenken = [7, 8]
 
         self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in self.widget_indices_list]
 
@@ -266,8 +269,8 @@ class AIKensa(QMainWindow):
                 button_main_menu.clicked.connect(lambda: self._set_calib_params(self.calibration_thread, 'widget', 0))
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
-        # self.setCentralWidget(self.stackedWidget)
-        # self.showFullScreen()
+        self.setCentralWidget(self.stackedWidget)
+        self.showFullScreen()
 
     def connect_button_font_color_change(self, widget_index, qtbutton, cam_param):
         widget = self.stackedWidget.widget(widget_index)
@@ -318,9 +321,12 @@ class AIKensa(QMainWindow):
             # print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
     def _close_app(self):
-        # self.cam_thread.stop()
         self.calibration_thread.stop()
         self.inspection_thread.stop()
+        self.calibration_thread.quit()
+        self.inspection_thread.quit()
+        self.calibration_thread.wait(1000)
+        self.inspection_thread.wait(1000)
         time.sleep(1.0)
         QCoreApplication.instance().quit()
 
@@ -452,7 +458,7 @@ class AIKensa(QMainWindow):
             labels[i].setStyleSheet(f"QLabel {{ background-color: {color}; }}")
 
     def _setCalibFrame(self, image):
-        for i in [1, 2 ]:
+        for i in [1, 2, 4, 5]:
             widget = self.stackedWidget.widget(i)
             label = widget.findChild(QLabel, "camFrame")
             label.setPixmap(QPixmap.fromImage(image))
@@ -492,17 +498,14 @@ class AIKensa(QMainWindow):
         self.right_geo = screens[1].geometry()
 
     def _on_page_changed(self, idx):
-        if idx == 7:  
-            ui_to_load = UI_FILES[8]        # your “other” page
+        print("Left page changed to", idx)
+        if idx == 7:
+            print(" → showing RIGHT page")
+            self.secondary_stack.setCurrentIndex(1)
         else:
-            ui_to_load = "aikensa/qtui/empty.ui"
+            print(" → showing EMPTY page")
+            self.secondary_stack.setCurrentIndex(0)
 
-        new_right = QMainWindow()
-        loadUi(ui_to_load, new_right)
-        self.secondary.setCentralWidget(new_right)
-        self.secondary.move(self.right_geo.topLeft())
-        if not self.secondary.isVisible():
-            self.secondary.showFullScreen()
 
     def _show_left_fullscreen(self):
         self.move(self.left_geo.topLeft())

@@ -66,8 +66,6 @@ def draw_pitch_line(image, xy_pairs, pitchresult, thickness=2):
                 cv2.line(image, xy_pairs[i], xy_pairs[i+1], lineColor, thickness)
     return None
 
-
-#add "OK" and "NG"
 def draw_status_text(image, status, size = "normal"):
     center_x = image.shape[1] // 2
     if size == "normal":
@@ -99,7 +97,6 @@ def draw_status_text(image, status, size = "normal"):
 
     return image
 
-    
 def draw_status_text_PIL(image, status, print_status, size = "normal"):
 
     if size == "large":
@@ -126,7 +123,6 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
 
     return image
 
-
 def check_tolerance(checkedPitchResult, pitchSpec, pitchTolerance):
     result = [0] * len(pitchSpec)
     for i, (spec, detected) in enumerate(zip(pitchSpec, checkedPitchResult)):
@@ -139,7 +135,6 @@ def yolo_to_pixel(yolo_coords, img_shape):
     x_pixel = int(x * img_shape[1])
     y_pixel = int(y * img_shape[0])
     return x_pixel, y_pixel
-
 
 def find_edge_point_mask(image, mask, center, direction="None", Xoffsetval = 0, Yoffsetval = 0):
     x, y = center[0], center[1]
@@ -162,7 +157,6 @@ def find_edge_point_mask(image, mask, center, direction="None", Xoffsetval = 0, 
         return max_x, y
 
     return None  # If an invalid direction is provided
-
 
 def find_edge_point(image, center, direction="None", Xoffsetval = 0, Yoffsetval = 0):
     x, y = center[0], center[1]
@@ -258,7 +252,6 @@ def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=
     center_x, center_y = x, y
     return (center_x, center_y)
 
-
 def extend_line(p1, p2):
     """Calculate the slope and intercept for a line that goes through p1 and p2"""
     x1, y1 = p1
@@ -306,3 +299,6 @@ def play_sound(status):
         # ng_sound.play()
         ng_sound_v2.play()
 
+def resize_image(image, width=384, height=256):
+    resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
+    return resized_image
