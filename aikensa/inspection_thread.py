@@ -130,6 +130,7 @@ class InspectionThread(QThread):
         self.homography_matrix2_scaled = None
         self.H1 = None
         self.H2 = None
+        self.H2_tenken = None
         self.H1_scaled = None
         self.H2_scaled = None
 
@@ -397,6 +398,12 @@ class InspectionThread(QThread):
             with open("./aikensa/cameracalibration/homography_param_cam2.yaml") as file:
                 self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
                 self.H2 = np.array(self.homography_matrix2)
+                print(f"Loaded homography matrix for camera 2")
+
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_tenken.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam2_tenken.yaml") as file:
+                self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
+                self.H2_tenken = np.array(self.homography_matrix2)
                 print(f"Loaded homography matrix for camera 2")
 
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml"):
@@ -1347,7 +1354,7 @@ class InspectionThread(QThread):
                             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2_tenken)
                             self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
 
                             self.InspectionImages[0] = self.combinedImage.copy()
