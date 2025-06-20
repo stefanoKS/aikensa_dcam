@@ -70,7 +70,7 @@
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>SEAL-FR DOOR PARTING, RH</string>
+     <string>SEAL-FR DOOR PARTING, LH</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -91,13 +91,13 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="framePart">
+    <widget class="QLabel" name="FramePart6">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>50</y>
        <width>1791</width>
-       <height>61</height>
+       <height>71</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -110,7 +110,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="framePart_2">
+    <widget class="QLabel" name="FramePart7">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -129,7 +129,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="framePart_3">
+    <widget class="QLabel" name="FramePart8">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -148,7 +148,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="framePart_7">
+    <widget class="QLabel" name="FramePart9">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -167,7 +167,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="framePart_8">
+    <widget class="QLabel" name="FramePart10">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1404,7 +1404,7 @@ border-color: rgb(36, 36, 36);</string>
      <string notr="true">color: rgb(238, 238, 236);</string>
     </property>
     <property name="text">
-     <string>80838 7UA0A</string>
+     <string>80839 7UA0A</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>

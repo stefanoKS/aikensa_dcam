@@ -1,6 +1,7 @@
 import re
 import cv2
 import sys
+from matplotlib.pylab import f
 import yaml
 import os
 from enum import Enum
@@ -82,8 +83,8 @@ class AIKensa(QMainWindow):
         self.initial_colors = {}#store initial colors of the labels
 
         self.widget_dir_map = {
-            5: "808397UA0A",
-            6: "808387UA0A",
+            7: "808397UA0A",
+            8: "808387UA0A",
             21: "dailyTenken_01",
             22: "dailyTenken_02",
             23: "dailyTenken_03",
@@ -102,9 +103,9 @@ class AIKensa(QMainWindow):
 
         self.calibration_thread.CalibCamStream.connect(self._setCalibFrame)
 
-        # self.calibration_thread.CamMerge1.connect(self._setMergeFrame1)
-        # self.calibration_thread.CamMerge2.connect(self._setMergeFrame2)
-        # self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
+        self.calibration_thread.CamMerge1.connect(self._setMergeFrame1)
+        self.calibration_thread.CamMerge2.connect(self._setMergeFrame2)
+        self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
 
         # self.inspection_thread.partCam.connect(self._setPartFrame)
         # self.inspection_thread.partKatabuL.connect(self._setFrameKatabuL)
@@ -204,10 +205,10 @@ class AIKensa(QMainWindow):
             button = main_widget.findChild(QPushButton, button_name)
             
             if button:
+                button.clicked.connect(self.calibration_thread.stop)
                 button.clicked.connect(lambda _, idx=config["widget_index"]: self.stackedWidget.setCurrentIndex(idx))
                 button.clicked.connect(lambda _, param=config["inspection_param"]: self._set_inspection_params(self.inspection_thread, 'widget', param))
                 button.clicked.connect(lambda: self.inspection_thread.start() if not self.inspection_thread.isRunning() else None)
-                button.clicked.connect(self.calibration_thread.stop)
 
         dailytenken01_button.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(21))
         dailytenken01_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, 'widget', 21))
@@ -464,19 +465,22 @@ class AIKensa(QMainWindow):
             label.setPixmap(QPixmap.fromImage(image))
 
     def _setMergeFrame1(self, image):
-        widget = self.stackedWidget.widget(3)
-        label = widget.findChild(QLabel, "camMerge1")
-        label.setPixmap(QPixmap.fromImage(image))
+        for i in [3, 6]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "camMerge1")
+            label.setPixmap(QPixmap.fromImage(image))
 
     def _setMergeFrame2(self, image):
-        widget = self.stackedWidget.widget(3)
-        label = widget.findChild(QLabel, "camMerge2")
-        label.setPixmap(QPixmap.fromImage(image))
+        for i in [3, 6]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "camMerge2")
+            label.setPixmap(QPixmap.fromImage(image))
 
     def _setMergeFrameAll(self, image):
-        widget = self.stackedWidget.widget(3)
-        label = widget.findChild(QLabel, "camMergeAll")
-        label.setPixmap(QPixmap.fromImage(image))
+        for i in [3, 6]:
+            widget = self.stackedWidget.widget(i)
+            label = widget.findChild(QLabel, "camMergeAll")
+            label.setPixmap(QPixmap.fromImage(image))
 
     def _setPartFrame(self, image):
         for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]:

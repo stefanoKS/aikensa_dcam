@@ -14,7 +14,7 @@ from PyQt5.QtGui import QImage, QPixmap
 from aikensa.camscripts.cam_init import initialize_camera
 from aikensa.opencv_imgprocessing.cameracalibrate import detectCharucoBoard, detectCharucoBoard_scaledImage, calculatecameramatrix, calculatecameramatrix_scaledImage, warpTwoImages, calculateHomography_template, warpTwoImages_template
 from aikensa.scripts.scripts_img_processing import resize_image
-from aikensa.opencv_imgprocessing.arucoplanarize import planarize_image_wide, planarize_image_narrow
+from aikensa.opencv_imgprocessing.arucoplanarize import planarize_image, planarize_image_4567
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
@@ -40,17 +40,18 @@ class CalibrationConfig:
 
     calculateHomo_cam1: bool = False
     calculateHomo_cam2: bool = False
+    calculateHomo_cam3: bool = False
+    calculateHomo_cam4: bool = False
 
-    calculateHomo_cam1_high: bool = False
-    calculateHomo_cam2_high: bool = False
+
     
     deleteHomo: bool = False
 
     mergeCam: bool = False
     saveImage: bool = False
 
-    savePlanarize: bool = False
-    savePlanarizeHigh: bool = False
+    savePlanarize_left: bool = False
+    savePlanarize_right: bool = False
 
     delPlanarize: bool = False
 
@@ -59,14 +60,14 @@ class CalibrationThread(QThread):
     CalibCamStream = pyqtSignal(QImage)
     CamMerge1 = pyqtSignal(QImage)
     CamMerge2 = pyqtSignal(QImage)
+    CamMerge3 = pyqtSignal(QImage)
+    CamMerge4 = pyqtSignal(QImage)
     CamMergeAll = pyqtSignal(QImage)
 
     def __init__(self, calib_config: CalibrationConfig = None):
         super(CalibrationThread, self).__init__()
         self.running = True
         self.frames = {}  # logical_id → np.ndarray
-        
-        
         
         if calib_config is None:
             self.calib_config = CalibrationConfig()    
@@ -76,9 +77,8 @@ class CalibrationThread(QThread):
         self.cameraMatrix = None
         self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
         self.cap_cam = None
-        self.frame  = None
+        self.frame = None
         self.frame_resized = None
-        self.frame_scaled = None
 
         self.multiCam_stream = False
         self.cap_cam1 = None
@@ -89,72 +89,38 @@ class CalibrationThread(QThread):
         self.mergeframe1 = None
         self.mergeframe2 = None
 
-        self.mergeframe1_scaled = None
-        self.mergeframe2_scaled = None
-
-        self.mergeframe1_downsampled = None
-        self.mergeframe2_downsampled = None
+        self.mergeframe1_resized = None
+        self.mergeframe2_resized = None
 
         self.homography_template = None
         self.homography_matrix1 = None
         self.homography_matrix2 = None
-        self.homography_matrix1_high = None
-        self.homography_matrix2_high = None
-
-        self.homography_template_scaled = None
-        self.homography_matrix1_scaled = None
-        self.homography_matrix2_scaled = None
-        self.homography_matrix1_high_scaled= None
-        self.homography_matrix2_high_scaled = None
+        self.homography_matrix3 = None
+        self.homography_matrix4 = None
 
         self.H1 = None
         self.H2 = None
-        self.H1_high = None
-        self.H2_high = None
-
-        self.H1_scaled = None
-        self.H2_scaled = None
-        self.H1_high_scaled = None
-        self.H2_high_scaled = None
+        self.H3 = None
+        self.H4 = None
 
         self.homography_size = None
         self.homography_blank_canvas = None
-        self.homography_blank_canvas_scaled = None
 
-        self.narrow_planarize = (531, 2646)
-        self.wide_planarize = (1342, 5672)
+        self.planarize = (1300, 3500)
 
         self.combinedImage = None
-        self.combinedImage_scaled = None
-
-        self.combinedImage_high = None
-        self.combinedImage_high_scaled = None
-
-        self.combinedImage_narrow = None
-        self.combinedImage_narrow_scaled = None
-        self.combinedImage_wide = None
-        self.combinedImage_wide_scaled = None
-
-        self.combinedImage_high_narrow = None
-        self.combinedImage_high_narrow_scaled = None
-        self.combinedImage_high_wide = None
-        self.combinedImage_high_wide_scaled = None
+        self.combinedImage_left = None
+        self.combinedImage_right = None
+        self.combinedImage_left_resized = None
+        self.combinedImage_right_resized = None
 
         self.scale_factor = 5.0
+        
         self.frame_width = 3072
         self.frame_height = 2048
-        self.scaled_width = None
-        self.scaled_height = None
 
-        self.planarizeTransform_narrow = None
-        self.planarizeTransform_narrow_scaled = None
-        self.planarizeTransform_high_narrow = None
-        self.planarizeTransform_high_narrow_scaled = None
-
-        self.planarizeTransform_wide = None
-        self.planarizeTransform_wide_scaled = None
-        self.planarizeTransform_high_wide = None
-        self.planarizeTransform_high_wide_scaled = None
+        self.planarizeTransform_left = None
+        self.planarizeTransform_right = None
 
         this_dir = os.path.dirname(__file__)
         cam_config_path = os.path.abspath(os.path.join(this_dir, '..', 'config'))
@@ -182,6 +148,9 @@ class CalibrationThread(QThread):
             self.cap_cam = initialize_camera(actual_camID)
 
     def release_all_camera(self):
+        if self.cap_cam is not None:
+            self.cap_cam.release()
+            print(f"Camera {self.calib_config.cameraID} released.")
         if self.cap_cam1 is not None:
             self.cap_cam1.release()
             print(f"Camera 1 released.")
@@ -194,7 +163,6 @@ class CalibrationThread(QThread):
         if self.cap_cam4 is not None:
             self.cap_cam4.release()
             print(f"Camera 4 released.")
-        
 
     def initialize_all_left_camera(self):
         if self.cap_cam1 is not None:
@@ -248,7 +216,6 @@ class CalibrationThread(QThread):
         else:
             print(f"Initialized Camera on ID 4")
 
-            
     def run(self):
 
         #print thread started
@@ -265,12 +232,6 @@ class CalibrationThread(QThread):
         self.homography_blank_canvas = np.zeros(self.homography_size, dtype=np.uint8)
         self.homography_blank_canvas = cv2.cvtColor(self.homography_blank_canvas, cv2.COLOR_GRAY2RGB)
         
-        self.homography_template_scaled = cv2.resize(self.homography_template, (self.homography_template.shape[1]//5, self.homography_template.shape[0]//5), interpolation=cv2.INTER_LINEAR)
-        self.homography_blank_canvas_scaled = cv2.resize(self.homography_blank_canvas, (self.homography_blank_canvas.shape[1]//5, self.homography_blank_canvas.shape[0]//5), interpolation=cv2.INTER_LINEAR)
-
-        self.scaled_height  = int(self.frame_height / self.scale_factor)
-        self.scaled_width = int(self.frame_width / self.scale_factor)
-
         #INIT all variables
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam1.yaml"):
             with open("./aikensa/cameracalibration/homography_param_cam1.yaml") as file:
@@ -292,10 +253,15 @@ class CalibrationThread(QThread):
                 self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
                 self.H2 = np.array(self.homography_matrix2)
 
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_narrow.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml") as file:
+        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_left.yaml"):
+            with open("./aikensa/cameracalibration/planarizeTransform_left.yaml") as file:
                 transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_narrow = np.array(transform_list)
+                self.planarizeTransform_left = np.array(transform_list)
+
+        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_right.yaml"):
+            with open("./aikensa/cameracalibration/planarizeTransform_right.yaml") as file:
+                transform_list = yaml.load(file, Loader=yaml.FullLoader)
+                self.planarizeTransform_right = np.array(transform_list)
 
         while self.running:
 
@@ -303,7 +269,6 @@ class CalibrationThread(QThread):
                 self.calib_config.cameraID = -1
 
             self.calib_config.cameraID = self.widget_to_cam_map.get(self.calib_config.widget, -1)
-
 
             if self.calib_config.widget in [1, 2, 4, 5]:
                 if self.calib_config.cameraID != self.current_cameraID:
@@ -341,19 +306,15 @@ class CalibrationThread(QThread):
 
                 if self.calib_config.calculateSingeFrameMatrix:
                     self.frame, _, _ = detectCharucoBoard(self.frame)
-                    self.frame_scaled, _, _ = detectCharucoBoard_scaledImage(self.frame_scaled)
                     self.calib_config.calculateSingeFrameMatrix = False
 
                 if self.calib_config.calculateCamMatrix:
                     self.calib_config.calibrationMatrix = calculatecameramatrix()
-                    self.calib_config.calibrationMatrix_scaled = calculatecameramatrix_scaledImage()
 
                     print(f"Calibration Matrix Value: {self.calib_config.calibrationMatrix}")
-                    print(f"Calibration Matrix Scaled Value: {self.calib_config.calibrationMatrix_scaled}")
                     
                     os.makedirs(self._save_dir, exist_ok=True)
                     self.save_calibration_to_yaml(self.calib_config.calibrationMatrix, self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml")
-                    self.save_calibration_to_yaml(self.calib_config.calibrationMatrix_scaled, self._save_dir + f"Calibration_camera_scaled_{self.calib_config.cameraID}.yaml")
                     self.calib_config.calculateCamMatrix = False
 
                 if self.frame is not None:
@@ -364,7 +325,7 @@ class CalibrationThread(QThread):
             if self.calib_config.widget == 3:
                 if self.multiCam_stream is False:
                     self.multiCam_stream = True
-                    self.initialize_all_camera()
+                    self.initialize_all_left_camera()
                     
                 _, self.mergeframe1 = self.cap_cam1.read()
                 _, self.mergeframe2 = self.cap_cam2.read()
@@ -381,26 +342,24 @@ class CalibrationThread(QThread):
                             self.calib_config.mapCalculated[i] = True
                             print(f"Calibration map is calculated for Camera {i}")
 
-                if all(self.calib_config.mapCalculated[i] for i in range(0, 2)):
-                    # print("All calibration maps are calculated.")
-                    self.mergeframe1 = cv2.remap(self.mergeframe1, self.calib_config.map1[0], self.calib_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-                    self.mergeframe2 = cv2.remap(self.mergeframe2, self.calib_config.map1[1], self.calib_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-
                 self.mergeframe1 = cv2.cvtColor(self.mergeframe1, cv2.COLOR_BGR2RGB)
                 self.mergeframe2 = cv2.cvtColor(self.mergeframe2, cv2.COLOR_BGR2RGB)
 
                 self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
                 self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
-                #original res
-                self.mergeframe1_scaled = resize_image(self.mergeframe1, self.scaled_width, self.scaled_height)
-                self.mergeframe2_scaled = resize_image(self.mergeframe2, self.scaled_width, self.scaled_height)
+
+                if all(self.calib_config.mapCalculated[i] for i in range(0, 2)):
+                    # print("All calibration maps are calculated.")
+                    self.mergeframe1 = cv2.remap(self.mergeframe1, self.calib_config.map1[0], self.calib_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                    self.mergeframe2 = cv2.remap(self.mergeframe2, self.calib_config.map1[1], self.calib_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
                 #Calculate Homography matrix
                 if self.calib_config.calculateHomo_cam1 is True:
 
                     self.calib_config.calculateHomo_cam1 = False
                     if self.mergeframe1 is not None:
+                        cv2.imwrite("mergeframe1.png", self.mergeframe1)
                         _, self.homography_matrix1 = calculateHomography_template(self.homography_template, self.mergeframe1)
                         #save _
                         cv2.imwrite("resultmergeframe1.png", _)
@@ -412,257 +371,200 @@ class CalibrationThread(QThread):
                     else:
                         ("mergeframe1 is empty")
 
-                    if self.mergeframe1_scaled is not None:
-                        _, self.homography_matrix1_scaled = calculateHomography_template(self.homography_template_scaled, self.mergeframe1_scaled)
-                        self.H1_scaled = np.array(self.homography_matrix1_scaled)
-                        print(f"Homography scaled matrix is calculated for Camera 1 with value {self.homography_matrix1_scaled}")
-                        with open("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml", "w") as file:
-                            yaml.dump(self.homography_matrix1_scaled.tolist(), file)
-                    else:
-                        ("mergeframe1 scaled is empty")
-
                 if self.calib_config.calculateHomo_cam2 is True:
 
                     self.calib_config.calculateHomo_cam2 = False
-                    _, self.homography_matrix2 = calculateHomography_template(self.homography_template, self.mergeframe2)
-                    cv2.imwrite("resultmergeframe2.png", _)
-                    self.H2 = np.array(self.homography_matrix2)
-                    print(f"Homography matrix is calculated for Camera 2 with value {self.homography_matrix2}")
-                    os.makedirs(self._save_dir, exist_ok=True)
-                    with open("./aikensa/cameracalibration/homography_param_cam2.yaml", "w") as file:
-                        yaml.dump(self.homography_matrix2.tolist(), file)
-                    _, self.homography_matrix2_scaled = calculateHomography_template(self.homography_template_scaled, self.mergeframe2_scaled)
-                    self.H2_scaled = np.array(self.homography_matrix2_scaled)
-                    print(f"Homography scaled matrix is calculated for Camera 2 with value {self.homography_matrix2_scaled}")
-                    with open("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml", "w") as file:
-                        yaml.dump(self.homography_matrix2_scaled.tolist(), file) 
-
-                if self.calib_config.calculateHomo_cam1_high is True:
-
-                    self.calib_config.calculateHomo_cam1_high = False
-                    _, self.homography_matrix1_high = calculateHomography_template(self.homography_template, self.mergeframe1)
-                    self.H1_high = np.array(self.homography_matrix1_high)
-                    print(f"Homography matrix is calculated for Camera 1 with value {self.homography_matrix1_high}")
-                    os.makedirs(self._save_dir, exist_ok=True)
-                    with open("./aikensa/cameracalibration/homography_param_cam1_high.yaml", "w") as file:
-                        yaml.dump(self.homography_matrix1_high.tolist(), file)
-                    _, self.homography_matrix1_high_scaled = calculateHomography_template(self.homography_template_scaled, self.mergeframe1_scaled)
-                    self.H1_high_scaled = np.array(self.homography_matrix1_high_scaled)
-                    print(f"Homography scaled matrix is calculated for Camera 1 with value {self.homography_matrix1_high_scaled}")
-                    with open("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml", "w") as file:
-                        yaml.dump(self.homography_matrix1_high_scaled.tolist(), file)
-
-                if self.calib_config.calculateHomo_cam2_high is True:
-                        
-                        self.calib_config.calculateHomo_cam2_high = False
-                        _, self.homography_matrix2_high = calculateHomography_template(self.homography_template, self.mergeframe2)
-                        self.H2_high = np.array(self.homography_matrix2_high)
-                        print(f"Homography matrix is calculated for Camera 2 with value {self.homography_matrix2_high}")
+                    if self.mergeframe2 is not None:
+                            
+                        _, self.homography_matrix2 = calculateHomography_template(self.homography_template, self.mergeframe2)
+                        cv2.imwrite("resultmergeframe2.png", _)
+                        self.H2 = np.array(self.homography_matrix2)
+                        print(f"Homography matrix is calculated for Camera 2 with value {self.homography_matrix2}")
                         os.makedirs(self._save_dir, exist_ok=True)
-                        with open("./aikensa/cameracalibration/homography_param_cam2_high.yaml", "w") as file:
-                            yaml.dump(self.homography_matrix2_high.tolist(), file)
-                        _, self.homography_matrix2_high_scaled = calculateHomography_template(self.homography_template_scaled, self.mergeframe2_scaled)
-                        self.H2_high_scaled = np.array(self.homography_matrix2_high_scaled)
-                        print(f"Homography scaled matrix is calculated for Camera 2 with value {self.homography_matrix2_high_scaled}")
-                        with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml", "w") as file:
-                            yaml.dump(self.homography_matrix2_high_scaled.tolist(), file)
+                        with open("./aikensa/cameracalibration/homography_param_cam2.yaml", "w") as file:
+                            yaml.dump(self.homography_matrix2.tolist(), file)
+                    else:
+                        print("mergeframe2 is empty")
 
                 if self.H1 is None:
-                    print("H1 is None")
+                    # print("H1 is None")
                     if os.path.exists("./aikensa/cameracalibration/homography_param_cam1.yaml"):
                         with open("./aikensa/cameracalibration/homography_param_cam1.yaml") as file:
+                            print("Loading H1 from file")
                             self.homography_matrix1 = yaml.load(file, Loader=yaml.FullLoader)
                             self.H1 = np.array(self.homography_matrix1)
 
                 if self.H2 is None:
-                    print("H2 is None")  
+                    # print("H2 is None")  
                     if os.path.exists("./aikensa/cameracalibration/homography_param_cam2.yaml"):
                         with open("./aikensa/cameracalibration/homography_param_cam2.yaml") as file:
+                            print("Loading H2 from file")
                             self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
                             self.H2 = np.array(self.homography_matrix2)
 
-                if self.H1_scaled is None:
-                    print("H1_scaled is None")
-                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml"):
-                        with open("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml") as file:
-                            self.homography_matrix1_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                            self.H1_scaled = np.array(self.homography_matrix1_scaled)
-
-                if self.H2_scaled is None:
-                    print("H2_scaled is None")  
-                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml"):
-                        with open("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml") as file:
-                            self.homography_matrix2_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                            self.H2_scaled = np.array(self.homography_matrix2_scaled)
-
-                if self.H1_high is None:
-                    print("H1_high is None")
-                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_high.yaml"):
-                        with open("./aikensa/cameracalibration/homography_param_cam1_high.yaml") as file:
-                            self.homography_matrix1_high = yaml.load(file, Loader=yaml.FullLoader)
-                            self.H1_high = np.array(self.homography_matrix1_high)
-
-                if self.H2_high is None:
-                    print("H2_high is None")  
-                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high.yaml"):
-                        with open("./aikensa/cameracalibration/homography_param_cam2_high.yaml") as file:
-                            self.homography_matrix2_high = yaml.load(file, Loader=yaml.FullLoader)
-                            self.H2_high = np.array(self.homography_matrix2_high)
-
-                if self.H1_high_scaled is None:
-                    print("H1_high_scaled is None")
-                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml"):
-                        with open("./aikensa/cameracalibration/homography_param_cam1_high_scaled.yaml") as file:
-                            self.homography_matrix1_high_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                            self.H1_high_scaled = np.array(self.homography_matrix1_high_scaled)
-
-                if self.H2_high_scaled is None:
-                    print("H2_high_scaled is None")  
-                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml"):
-                        with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml") as file:
-                            self.homography_matrix2_high_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                            self.H2_high_scaled = np.array(self.homography_matrix2_high_scaled)
-
-                #check whether all values are calculated
-                # print(f"H1: {self.H1}")
-                # print(f"H2: {self.H2}")
-                # print(f"H1_scaled: {self.H1_scaled}")
-                # print(f"H2_scaled: {self.H2_scaled}")
-                # print(f"H1_high: {self.H1_high}")
-                # print(f"H2_high: {self.H2_high}")
-                # print(f"H1_high_scaled: {self.H1_high_scaled}")
-                # print(f"H2_high_scaled: {self.H2_high_scaled}")
-
                 if self.H1 is not None and self.H2 is not None:
+                    print("Both H1 and H2 are not None, warping images")
                     self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
                     self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
                 else:
                     self.combinedImage = self.homography_blank_canvas
 
-                if self.H1_scaled is not None and self.H2_scaled is not None:
-                    self.combinedImage_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_scaled)
-                    self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
-                else:
-                    self.combinedImage_scaled = self.homography_blank_canvas_scaled
-
-                if self.H1_high is not None and self.H2_high is not None:
-                    self.combinedImage_high = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1_high)
-                    self.combinedImage_high = warpTwoImages_template(self.combinedImage_high, self.mergeframe2, self.H2_high)
-                else:
-                    self.combinedImage_high = self.homography_blank_canvas
-
-                if self.H1_high_scaled is not None and self.H2_high_scaled is not None:
-                    self.combinedImage_high_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_high_scaled)
-                    self.combinedImage_high_scaled = warpTwoImages_template(self.combinedImage_high_scaled, self.mergeframe2_scaled, self.H2_high_scaled)
-                else:
-                    self.combinedImage_high_scaled = self.homography_blank_canvas_scaled
-
-                # cv2.imwrite("combinedImagelatest.png", self.combinedImage)
-                # cv2.imwrite("combinedImage_scaled.png", self.combinedImage_scaled)
-                # combined_image_copy = self.combinedImage.copy()
-                # #bgr to rgb
-                # combined_image_copy = cv2.cvtColor(combined_image_copy, cv2.COLOR_BGR2RGB)
-                # cv2.imwrite("combinedImage.png", combined_image_copy)
-
-                if self.calib_config.savePlanarize is True:
+                if self.calib_config.savePlanarize_left is True:
                     self.calib_config.savePlanarize = False
                     print("Saving planarize")
-                    # self.combinedImage_narrow, self.planarizeTransform_narrow = planarize_image_narrow(self.combinedImage, 
-                    #                                                               target_width=self.narrow_planarize[1], target_height=self.narrow_planarize[0], 
-                    #                                                               top_offset=0, bottom_offset=0, side_offset=0)
+
+                    cv2.imwrite("beforePlanarized.png", self.combinedImage)
+                    self.combinedImage_left, self.planarizeTransform_left = planarize_image(self.combinedImage, 
+                                                                                  target_width=self.planarize[1], target_height=self.planarize[0], 
+                                                                                  top_offset=0, bottom_offset=0)
+                    cv2.imwrite("afterPlanarized.png", self.combinedImage_left)
                     
-                    # self.combinedImage_narrow_scaled, self.planarizeTransform_narrow_scaled = planarize_image_narrow(self.combinedImage_scaled,
-                    #                                                                               target_width=int(self.narrow_planarize[1]/self.scale_factor), target_height=int(self.narrow_planarize[0]/self.scale_factor),
-                    #                                                                               top_offset=0, bottom_offset=0, side_offset=0)
-                    cv2.imwrite("combinedImagelatest2.png", self.combinedImage)
-                    self.combinedImage_wide, self.planarizeTransform_wide = planarize_image_wide(self.combinedImage, 
-                                                                                  target_width=self.wide_planarize[1], target_height=self.wide_planarize[0], 
-                                                                                  top_offset=0, bottom_offset=0, side_offset=0)
-                    cv2.imwrite("combinedImage_wide_latest.png", self.combinedImage_wide)
-                    
-                    self.combinedImage_wide_scaled, self.planarizeTransform_wide_scaled = planarize_image_wide(self.combinedImage_scaled,
-                                                                                                  target_width=int(self.wide_planarize[1]/self.scale_factor), target_height=int(self.wide_planarize[0]/self.scale_factor),
-                                                                                                  top_offset=0, bottom_offset=0, side_offset=int(0/self.scale_factor))
                     os.makedirs(self._save_dir, exist_ok=True)
-                    # with open("./aikensa/cameracalibration/planarizeTransform_narrow.yaml", "w") as file:  
-                    #     yaml.dump(self.planarizeTransform_narrow.tolist(), file)
-                    # with open("./aikensa/cameracalibration/planarizeTransform_narrow_scaled.yaml", "w") as file:
-                    #     yaml.dump(self.planarizeTransform_narrow_scaled.tolist(), file)
-                    with open("./aikensa/cameracalibration/planarizeTransform_wide.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_wide.tolist(), file)
-                    with open("./aikensa/cameracalibration/planarizeTransform_wide_scaled.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_wide_scaled.tolist(), file)
+                    with open("./aikensa/cameracalibration/planarizeTransform_left.yaml", "w") as file:
+                        yaml.dump(self.planarizeTransform_left.tolist(), file)
 
-                    # print(f"Image size after narrow warping is {self.combinedImage_narrow.shape}")
-                    # print(f"Image size after narrow scaled warping is {self.combinedImage_narrow_scaled.shape}")
-                    # print(f"Image size after wide warping is {self.combinedImage_wide.shape}")
-                    # print(f"Image size after wide scaled warping is {self.combinedImage_wide_scaled.shape}")
+                    
+                if self.planarizeTransform_left is not None:
+                    self.combinedImage_left = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_left, (self.planarize[1],self.planarize[0]))
 
-                    # cv2.imwrite("combinedImage_narrow.png", self.combinedImage_narrow)
-                    # cv2.imwrite("combinedImage_narrow_scaled.png", self.combinedImage_narrow_scaled)
-                    # cv2.imwrite("combinedImage_wide.png", self.combinedImage_wide)
-                    # cv2.imwrite("combinedImage_wide_scaled.png", self.combinedImage_wide_scaled)
+                if self.mergeframe1 is not None:
+                    self.mergeframe1_resized = resize_image(self.mergeframe1, 246, 163)
+                    # print("Emitting mergeframe1 resized")
+                    self.CamMerge1.emit(self.convertQImage(self.mergeframe1_resized))
+                if self.mergeframe2 is not None:
+                    self.mergeframe2_resized = resize_image(self.mergeframe2, 246, 163)
+                    # print("Emitting mergeframe2 resized")
+                    self.CamMerge2.emit(self.convertQImage(self.mergeframe2_resized))
+                if self.combinedImage is not None:
+                    self.combinedImage_resized = resize_image(self.combinedImage, 1167, 433)
+                    # print("Emitting combinedImage resized")
+                    self.CamMergeAll.emit(self.convertQImage(self.combinedImage_resized))
+                if self.combinedImage_left is not None:
+                    self.combinedImage_left_resized = resize_image(self.combinedImage_left, 1167, 433)
+                    # print("Emitting combinedImage_left resized")
+                    self.CamMergeAll.emit(self.convertQImage(self.combinedImage_left_resized))
 
-                if self.calib_config.savePlanarizeHigh is True:
-                    self.calib_config.savePlanarizeHigh = False
-                    print("Saving planarize high")
-                    self.combinedImage_high_narrow, self.planarizeTransform_high_narrow = planarize_image_narrow(self.combinedImage_high,
-                                                                                                    target_width=self.narrow_planarize[1], target_height=self.narrow_planarize[0],
-                                                                                                    top_offset=0, bottom_offset=0, side_offset=0)       
-                    self.combinedImage_high_narrow_scaled, self.planarizeTransform_high_narrow_scaled = planarize_image_narrow(self.combinedImage_high_scaled,
-                                                                                                    target_width=int(self.narrow_planarize[1]/self.scale_factor), target_height=int(self.narrow_planarize[0]/self.scale_factor),
-                                                                                                    top_offset=0, bottom_offset=0, side_offset=0)
-                    self.combinedImage_high_wide, self.planarizeTransform_high_wide = planarize_image_wide(self.combinedImage_high,
-                                                                                                    target_width=self.wide_planarize[1], target_height=self.wide_planarize[0],
-                                                                                                    top_offset=0, bottom_offset=0, side_offset=0)             
-                    self.combinedImage_high_wide_scaled, self.planarizeTransform_high_wide_scaled = planarize_image_wide(self.combinedImage_high_scaled,
-                                                                                                    target_width=int(self.wide_planarize[1]/self.scale_factor), target_height=int(self.wide_planarize[0]/self.scale_factor),
-                                                                                                    top_offset=0, bottom_offset=0, side_offset=int(0/self.scale_factor))
+            if self.calib_config.widget == 6:
+                if self.multiCam_stream is False:
+                    self.multiCam_stream = True
+                    self.initialize_all_right_camera()  
+
+                _, self.mergeframe3 = self.cap_cam3.read()
+                _, self.mergeframe4 = self.cap_cam4.read()
+
+                #Calculate all map from calibration matrix for 5 cameras, thus i in range(1, 6)
+                for i in range(2, 4):
+                    if self.calib_config.mapCalculated[i] is False:
+                        if os.path.exists(self._save_dir + f"Calibration_camera_{i}.yaml"):
+                            camera_matrix, dist_coeffs = self.load_matrix_from_yaml(self._save_dir + f"Calibration_camera_{i}.yaml")
+                            # Precompute the undistort and rectify map for faster processing
+                            h, w = self.mergeframe3.shape[:2] #use mergeframe3 as reference
+                            self.calib_config.map1[i], self.calib_config.map2[i] = cv2.initUndistortRectifyMap(camera_matrix, dist_coeffs, None, camera_matrix, (w, h), cv2.CV_16SC2)
+                            print(f"map1 and map2 value is calculated")
+                            self.calib_config.mapCalculated[i] = True
+                            print(f"Calibration map is calculated for Camera {i}")
+
+                self.mergeframe3 = cv2.cvtColor(self.mergeframe3, cv2.COLOR_BGR2RGB)
+                self.mergeframe4 = cv2.cvtColor(self.mergeframe4, cv2.COLOR_BGR2RGB)
+
+                self.mergeframe3 = cv2.rotate(self.mergeframe3, cv2.ROTATE_180)
+                self.mergeframe4 = cv2.rotate(self.mergeframe4, cv2.ROTATE_180)
+
+                if all(self.calib_config.mapCalculated[i] for i in range(2, 4)):
+                    # print("All calibration maps are calculated.")
+                    self.mergeframe3 = cv2.remap(self.mergeframe3, self.calib_config.map1[2], self.calib_config.map2[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                    self.mergeframe4 = cv2.remap(self.mergeframe4, self.calib_config.map1[3], self.calib_config.map2[3], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+
+                #Calculate Homography matrix
+                if self.calib_config.calculateHomo_cam3 is True:
+
+                    self.calib_config.calculateHomo_cam3 = False
+                    if self.mergeframe3 is not None:
+                        cv2.imwrite("mergeframe3.png", self.mergeframe3)
+                        _, self.homography_matrix3 = calculateHomography_template(self.homography_template, self.mergeframe3)
+                        #save _
+                        cv2.imwrite("resultmergeframe3.png", _)
+                        self.H3 = np.array(self.homography_matrix3)
+                        print(f"Homography matrix is calculated for Camera 3 with value {self.homography_matrix3}")
+                        os.makedirs(self._save_dir, exist_ok=True)
+                        with open("./aikensa/cameracalibration/homography_param_cam3.yaml", "w") as file:
+                            yaml.dump(self.homography_matrix3.tolist(), file)
+                    else:
+                        print("mergeframe3 is empty")
+
+                if self.calib_config.calculateHomo_cam4 is True:
+
+                    self.calib_config.calculateHomo_cam4 = False
+                    if self.mergeframe4 is not None:
+
+                        _, self.homography_matrix4 = calculateHomography_template(self.homography_template, self.mergeframe4)
+                        cv2.imwrite("resultmergeframe4.png", _)
+                        self.H4 = np.array(self.homography_matrix4)
+                        print(f"Homography matrix is calculated for Camera 4 with value {self.homography_matrix4}")
+                        os.makedirs(self._save_dir, exist_ok=True)
+                        with open("./aikensa/cameracalibration/homography_param_cam4.yaml", "w") as file:
+                            yaml.dump(self.homography_matrix4.tolist(), file)
+                    else:
+                        print("mergeframe4 is empty")
+
+                if self.H3 is None:
+                    # print("H1 is None")
+                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam3.yaml"):
+                        with open("./aikensa/cameracalibration/homography_param_cam3.yaml") as file:
+                            print("Loading H3 from file")
+                            self.homography_matrix3 = yaml.load(file, Loader=yaml.FullLoader)
+                            self.H3 = np.array(self.homography_matrix3)
+
+                if self.H4 is None:
+                    # print("H2 is None")
+                    if os.path.exists("./aikensa/cameracalibration/homography_param_cam4.yaml"):
+                        with open("./aikensa/cameracalibration/homography_param_cam4.yaml") as file:
+                            print("Loading H4 from file")
+                            self.homography_matrix4 = yaml.load(file, Loader=yaml.FullLoader)
+                            self.H4 = np.array(self.homography_matrix4)
+
+                if self.H3 is not None and self.H4 is not None:
+                    print("Both H3 and H4 are not None, warping images")
+                    self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe3, self.H3)
+                    self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe4, self.H4)
+                else:
+                    self.combinedImage = self.homography_blank_canvas
+
+                if self.calib_config.savePlanarize_right is True:
+                    self.calib_config.savePlanarize_right = False
+                    print("Saving planarize")
+
+                    cv2.imwrite("beforePlanarized.png", self.combinedImage)
+                    self.combinedImage_right, self.planarizeTransform_right = planarize_image_4567(self.combinedImage, 
+                                                                                  target_width=self.planarize[1], target_height=self.planarize[0], 
+                                                                                  top_offset=0, bottom_offset=0)
+                    cv2.imwrite("afterPlanarized.png", self.combinedImage_right)
+
                     os.makedirs(self._save_dir, exist_ok=True)
-                    with open("./aikensa/cameracalibration/planarizeTransform_high_narrow.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_high_narrow.tolist(), file)
-                    with open("./aikensa/cameracalibration/planarizeTransform_high_narrow_scaled.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_high_narrow_scaled.tolist(), file)
-                    with open("./aikensa/cameracalibration/planarizeTransform_high_wide.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_high_wide.tolist(), file)
-                    with open("./aikensa/cameracalibration/planarizeTransform_high_wide_scaled.yaml", "w") as file:
-                        yaml.dump(self.planarizeTransform_high_wide_scaled.tolist(), file)
-                    
-                    print(f"Image size after narrow warping is {self.combinedImage_high_narrow.shape}")
-                    print(f"Image size after narrow scaled warping is {self.combinedImage_high_narrow_scaled.shape}")
-                    print(f"Image size after wide warping is {self.combinedImage_high_wide.shape}")
-                    print(f"Image size after wide scaled warping is {self.combinedImage_high_wide_scaled.shape}")
+                    with open("./aikensa/cameracalibration/planarizeTransform_right.yaml", "w") as file:
+                        yaml.dump(self.planarizeTransform_right.tolist(), file)
 
-                    cv2.imwrite("combinedImage_high_narrow.png", self.combinedImage_high_narrow)
-                    cv2.imwrite("combinedImage_high_narrow_scaled.png", self.combinedImage_high_narrow_scaled)
-                    cv2.imwrite("combinedImage_high_wide.png", self.combinedImage_high_wide)
-                    cv2.imwrite("combinedImage_high_wide_scaled.png", self.combinedImage_high_wide_scaled)
+                if self.planarizeTransform_right is not None:
+                    self.combinedImage_right = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_right, (self.planarize[1],self.planarize[0]))
 
-                    
-                # if self.planarizeTransform is not None:
-                #     self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform, (self.homography_size[1],self.homography_size[0]))
+                if self.mergeframe3 is not None:
+                    self.mergeframe3_resized = resize_image(self.mergeframe3, 246, 163)
+                    # print("Emitting mergeframe3 resized")
+                    self.CamMerge1.emit(self.convertQImage(self.mergeframe3_resized))
+                if self.mergeframe4 is not None:
+                    self.mergeframe4_resized = resize_image(self.mergeframe4, 246, 163)
+                    # print("Emitting mergeframe4 resized")
+                    self.CamMerge2.emit(self.convertQImage(self.mergeframe4_resized))
+                if self.combinedImage is not None:
+                    self.combinedImage_resized = resize_image(self.combinedImage, 1167, 433)
+                    # print("Emitting combinedImage resized")
+                    self.CamMergeAll.emit(self.convertQImage(self.combinedImage_resized))
+                if self.combinedImage_right is not None:
+                    self.combinedImage_right_resized = resize_image(self.combinedImage_right, 1167, 433)
+                    # print("Emitting combinedImage_right resized")
+                    self.CamMergeAll.emit(self.convertQImage(self.combinedImage_right_resized))
 
-                # if self.planarizeTransform_scaled is not None:
-                #     self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_scaled, (int(self.homography_size[1]/self.scale_factor), int(self.homography_size[0]/self.scale_factor)))
-
-
-                # self.combinedImage = cv2.resize(self.combinedImage, (self.homography_size[1], int(self.homography_size[0]/1.26)))
-                self.combinedImage_scaled = cv2.resize(self.combinedImage_scaled, (int(self.homography_size[1]/(self.scale_factor*1.5)), int(self.homography_size[0]/(self.scale_factor*1.5))))
-                self.combinedImage_high_scaled = cv2.resize(self.combinedImage_high_scaled, (int(self.homography_size[1]/(self.scale_factor*1.5)), int(self.homography_size[0]/(self.scale_factor*1.5))))
-                
-
-                # self.mergeframe1_downsampled = self.resize_image(self.mergeframe1, 246, 163)
-                # self.mergeframe2_downsampled = self.resize_image(self.mergeframe2, 246, 163)
-
-                # if self.mergeframe1_downsampled is not None:
-                #     self.CamMerge1.emit(self.convertQImage(self.mergeframe1_downsampled))
-                # if self.mergeframe2_downsampled is not None:
-                #     self.CamMerge2.emit(self.convertQImage(self.mergeframe2_downsampled))
-                # if self.combinedImage_scaled is not None:
-                #     self.CamMergeAll.emit(self.convertQImage(self.combinedImage_scaled))
-
-            #wait for 5ms
-            # self.msleep(2)
+            self.msleep(10)
             
         print(f"Camera {self.calib_config.cameraID} released.")
 
@@ -690,8 +592,6 @@ class CalibrationThread(QThread):
         self.release_all_camera()
         print("Calibration thread stopped.")
     
-
-
     def save_calibration_to_yaml(self, calibrationMatrix, filename):
         with open(filename, 'w') as file:
             yaml.dump(calibrationMatrix, file)

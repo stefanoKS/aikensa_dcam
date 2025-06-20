@@ -180,7 +180,7 @@
     <property name="text">
      <string>計測
 H
-カメラ①</string>
+カメラ③</string>
     </property>
    </widget>
    <widget class="QPushButton" name="calcH_cam2_button">
@@ -203,16 +203,16 @@ H
     <property name="text">
      <string>計測
 H
-右カメラ②</string>
+右カメラ④</string>
     </property>
    </widget>
    <widget class="QLabel" name="camMergeAll">
     <property name="geometry">
      <rect>
       <x>200</x>
-      <y>445</y>
-      <width>733</width>
-      <height>485</height>
+      <y>440</y>
+      <width>1167</width>
+      <height>433</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -284,8 +284,8 @@ H
    <widget class="QPushButton" name="planarize_button">
     <property name="geometry">
      <rect>
-      <x>960</x>
-      <y>690</y>
+      <x>200</x>
+      <y>890</y>
       <width>161</width>
       <height>81</height>
      </rect>

@@ -114,39 +114,47 @@ class InspectionThread(QThread):
         self.cap_cam = None
         self.cap_cam1 = None
         self.cap_cam2 = None
+        self.cap_cam3 = None
+        self.cap_hole_cam = None
 
         self.emit = None
 
         self.mergeframe1 = None
         self.mergeframe2 = None
+        self.mergeframe3 = None
+        self.mergeframe4 = None
 
         self.mergeframe1_scaled = None
         self.mergeframe2_scaled = None
+        self.mergeframe3_scaled = None
+        self.mergeframe4_scaled = None
 
         self.mergeframe1_downsampled = None
         self.mergeframe2_downsampled = None
+        self.mergeframe3_downsampled = None
+        self.mergeframe4_downsampled = None
 
         self.homography_template = None
         self.homography_matrix1 = None
         self.homography_matrix2 = None
-        # self.homography_matrix1_high = None
-        # self.homography_matrix2_high = None
+        self.homography_matrix3 = None
+        self.homography_matrix4 = None
 
         self.homography_template_scaled = None
         self.homography_matrix1_scaled = None
         self.homography_matrix2_scaled = None
-        # self.homography_matrix1_high_scaled= None
-        # self.homography_matrix2_high_scaled = None
+        self.homography_matrix3_scaled = None
+        self.homography_matrix4_scaled = None
 
         self.H1 = None
         self.H2 = None
-        self.H1_high = None
-        self.H2_high = None
+        self.H3 = None
+        self.H4 = None
 
         self.H1_scaled = None
         self.H2_scaled = None
-        self.H1_high_scaled = None
-        self.H2_high_scaled = None
+        self.H3_scaled = None
+        self.H4_scaled = None
 
         self.homography_size = None
         self.homography_size_scaled = None
@@ -156,39 +164,6 @@ class InspectionThread(QThread):
         self.combinedImage = None
         self.combinedImage_scaled = None
 
-        self.katabuImageL = None
-        self.katabuImageR = None
-        self.katabuImageL_scaled = None
-        self.katabuImageR_scaled = None
-        
-        self.katabuImage = None
-        self.katabuImage_init = None
-
-        #Crop format: X Y W H OUTW OUTH
-        self.katabuImageL_Crop = np.array([620, 360, 320, 160, 320, 160])
-        self.katabuImageR_Crop = np.array([4800, 360, 320, 160, 320, 160])
-
-        self.clipImage1 = None
-        self.clipImage2 = None
-        self.clipImage3 = None
-
-        self.clipImage1_Crop = np.array([1750, 1600, 600, 600, 128, 128])
-        self.clipImage2_Crop = np.array([600, 1600, 600, 600, 128, 128])
-        self.clipImage3_Crop = np.array([1880, 1600, 600, 600, 128, 128])
-
-        self.HandinFrame1 = None
-        self.HandinFrame2 = None
-        self.HandinFrame3 = None
-
-        # self.combinedImage_narrow = None
-        # self.combinedImage_narrow_scaled = None
-        # self.combinedImage_wide = None
-        # self.combinedImage_wide_scaled = None
-
-        # self.combinedImage_high_narrow = None
-        # self.combinedImage_high_narrow_scaled = None
-        # self.combinedImage_high_wide = None
-        # self.combinedImage_high_wide_scaled = None
 
         self.scale_factor = 5.0 #Scale Factor, might increase this later
         self.frame_width = 3072
@@ -196,21 +171,13 @@ class InspectionThread(QThread):
         self.scaled_width = None
         self.scaled_height = None
 
-        self.narrow_planarize = (531, 2646)
-        self.wide_planarize = (1342, 5672)
+        self.planarize = (1300, 3500)
 
-        self.planarizeTransform_narrow = None
-        self.planarizeTransform_narrow_scaled = None
-        self.planarizeTransform_high_narrow = None
-        self.planarizeTransform_high_narrow_scaled = None
+        self.planarizeTransform_left = None
+        self.planarizeTransform_right = None
 
-        self.planarizeTransform_wide = None
-        self.planarizeTransform_wide_scaled = None
-        self.planarizeTransform_high_wide = None
-        self.planarizeTransform_high_wide_scaled = None
-
-        self.scaled_height  = int(self.frame_height / self.scale_factor)
-        self.scaled_width = int(self.frame_width / self.scale_factor)
+        self.planarizeTransform_left_scaled = None
+        self.planarizeTransform_right_scaled = None
 
         self.timerStart = None
         self.timerFinish = None
@@ -220,24 +187,14 @@ class InspectionThread(QThread):
         self.timerFinish_mini = None
         self.fps_mini = None
 
-        self.pickingTimerStart = time.time()
-        self.pickingWaitTime = 3.0
-
         self.InspectionImages = [None]*1
         self.InspectionImages_bgr = [None]*1
-
-        self.InspectionImagesKatabu = [None]*1
 
         self.InspectionImages_endSegmentation_Left = [None]*1
         self.InspectionImages_endSegmentation_Right = [None]*1
 
         self.InspectionResult_EndSegmentation_Left = [None]*5
         self.InspectionResult_EndSegmentation_Right = [None]*5
-
-        self.InspectionResult_ClipDetection = [None]*30
-        self.InspectionResult_KatabuDetection = [None]*30
-        self.InspectionResult_Segmentation = [None]*30
-        self.InspectionResult_Hanire = [None]*30
 
         self.InspectionResult_PitchMeasured = [None]*30
         self.InspectionResult_PitchResult = [None]*30
@@ -246,38 +203,13 @@ class InspectionThread(QThread):
         self.InspectionResult_DeltaPitch = [None]*30
         self.InspectionResult_NGReason = [None]*30
 
-        self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]
-        self.inspection_widget_indices_without_dailytenken = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-
-        self.ROI_top = 219
-        self.ROI_bottom = 700
-        self.ROI_left = 600
-        self.ROI_right = 600
-
-        self.ROI_top_scaled = int(self.ROI_top / self.scale_factor)
-        self.ROI_bottom_scaled = int(self.ROI_bottom / self.scale_factor)
-        self.ROI_left_scaled = int(self.ROI_left / self.scale_factor)
-        self.ROI_right_scaled = int(self.ROI_right / self.scale_factor)
-
-        self.InspectionImages_prev = [None]*30
-        self._test = [0]*30
+        self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        self.inspection_widget_indices = [7, 8, 21, 22, 23]
+        self.inspection_widget_indices_without_dailytenken = [7, 8]
 
         self.widget_dir_map = {
-            5: "82833W050P",
-            6: "82832W040P",
-            7: "82833W090P",
-            8: "82832W080P",
-            9: "82833W050PKENGEN",
-            10: "82832W040PKENGEN",
-            11: "82833W090PKENGEN",
-            12: "82832W080PKENGEN",
-            13: "82833W050PCLIPSOUNYUUKI",
-            14: "82832W040PCLIPSOUNYUUKI",
-            15: "82833W090PCLIPSOUNYUUKI",
-            16: "82832W080PCLIPSOUNYUUKI",
-            17: "808387UA1A",
-            18: "828447UA0A",
+            7: "808397UA0A",
+            8: "808387UA0A",
             21: "dailyTenken_01",
             22: "dailyTenken_02",
             23: "dailyTenken_03",
@@ -291,16 +223,6 @@ class InspectionThread(QThread):
 
         self.ethernetTrigger = [0]*5
 
-        self.clipPickingOrder = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] for _ in range(30)]
-
-        self.OrderTargetMore = [1, 1, 1, 1, 1, 1]
-        self.OrderTargetLess = [1, 1, 1, 1, 1]
-
-        self.InspectionResult_PitchResult_sounyuuki = [None]*30
-        self.InspectionResult_PitchMeasured_sounyuuki = [None]*30
-        self.InspectionImages_sounyuuki = [None]*1
-
-        self.bool_keep_measurement = False
         
         this_dir = os.path.dirname(__file__)
         cam_config_path = os.path.abspath(os.path.join(this_dir, '..', 'config'))
@@ -335,6 +257,12 @@ class InspectionThread(QThread):
         if self.cap_cam2 is not None:
             self.cap_cam2.release()
             print(f"Camera 2 released.")
+        if self.cap_cam3 is not None:
+            self.cap_cam3.release()
+            print(f"Camera 3 released.")
+        if self.cap_cam4 is not None:
+            self.cap_cam4.release()
+            print(f"Camera 4 released.")
 
     def initialize_single_camera(self, camID):
         if self.cap_cam is not None:
@@ -359,12 +287,24 @@ class InspectionThread(QThread):
         if self.cap_cam2 is not None:
             self.cap_cam2.release()
             print(f"Camera 2 released.")
+        if self.cap_cam3 is not None:
+            self.cap_cam3.release()
+            print(f"Camera 3 released.")
+        if self.cap_cam4 is not None:
+            self.cap_cam4.release()
+            print(f"Camera 4 released.")
 
         actual_camID = self.cam_map.get(0, -1)
         self.cap_cam1 = initialize_camera(actual_camID)
 
         actual_camID = self.cam_map.get(1, -1)
         self.cap_cam2 = initialize_camera(actual_camID)
+
+        actual_camID = self.cam_map.get(2, -1)
+        self.cap_cam3 = initialize_camera(actual_camID)
+
+        actual_camID = self.cam_map.get(3, -1)
+        self.cap_cam4 = initialize_camera(actual_camID)
 
         if not self.cap_cam1.isOpened():
             print(f"Failed to open camera with ID 1")
@@ -377,6 +317,18 @@ class InspectionThread(QThread):
             self.cap_cam2 = None
         else:
             print(f"Initialized Camera on ID 2")
+
+        if not self.cap_cam3.isOpened():
+            print(f"Failed to open camera with ID 3")
+            self.cap_cam3 = None
+        else:
+            print(f"Initialized Camera on ID 3")
+
+        if not self.cap_cam4.isOpened():
+            print(f"Failed to open camera with ID 4")
+            self.cap_cam4 = None
+        else:
+            print(f"Initialized Camera on ID 4")
 
 
     def run(self):
@@ -408,17 +360,6 @@ class InspectionThread(QThread):
             PPMS TEXT
         )
         ''')
-
-        # List of columns to add
-        columns_to_add = [
-            ("resultpitch", "TEXT"),
-            ("status", "TEXT"),
-            ("NGreason", "TEXT"),
-            ("PPMS", "TEXT"),
-        ]
-
-        # Using the function to add columns
-        self.add_columns(self.cursor, "inspection_results", columns_to_add)
 
         self.conn.commit()
 
@@ -495,41 +436,27 @@ class InspectionThread(QThread):
                 self.H2 = np.array(self.homography_matrix2)
                 print(f"Loaded homography matrix for camera 2")
 
-        #for H2 high
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam2_high.yaml") as file:
-                self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
-                self.H2_high = np.array(self.homography_matrix2)
-                print(f"Loaded homography matrix for camera 2")
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam3.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam3.yaml") as file:
+                self.homography_matrix3 = yaml.load(file, Loader=yaml.FullLoader)
+                self.H3 = np.array(self.homography_matrix3)
+                print(f"Loaded homography matrix for camera 3")
 
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam1_scaled.yaml") as file:
-                self.homography_matrix1_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H1_scaled = np.array(self.homography_matrix1_scaled)
-                print(f"Loaded scaled homography matrix for camera 1")
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam4.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam4.yaml") as file:
+                self.homography_matrix4 = yaml.load(file, Loader=yaml.FullLoader)
+                self.H4 = np.array(self.homography_matrix4)
+                print(f"Loaded homography matrix for camera 4")
 
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam2_scaled.yaml") as file:
-                self.homography_matrix2_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H2_scaled = np.array(self.homography_matrix2_scaled)
-                print(f"Loaded scaled homography matrix for camera 2")
-
-        #for H2 high scaled
-        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml"):
-            with open("./aikensa/cameracalibration/homography_param_cam2_high_scaled.yaml") as file:
-                self.homography_matrix2_scaled = yaml.load(file, Loader=yaml.FullLoader)
-                self.H2_high_scaled = np.array(self.homography_matrix2_scaled)
-                print(f"Loaded scaled homography matrix for camera 2 high")
-        
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_wide.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_wide.yaml") as file:
+        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_left.yaml"):
+            with open("./aikensa/cameracalibration/planarizeTransform_left.yaml") as file:
                 transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_wide = np.array(transform_list)
+                self.planarizeTransform_left = np.array(transform_list)
 
-        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_wide_scaled.yaml"):
-            with open("./aikensa/cameracalibration/planarizeTransform_wide_scaled.yaml") as file:
+        if os.path.exists("./aikensa/cameracalibration/planarizeTransform_right.yaml"):
+            with open("./aikensa/cameracalibration/planarizeTransform_right.yaml") as file:
                 transform_list = yaml.load(file, Loader=yaml.FullLoader)
-                self.planarizeTransform_wide_scaled = np.array(transform_list)
+                self.planarizeTransform_right = np.array(transform_list)
 
         while self.running:
 
@@ -541,7 +468,6 @@ class InspectionThread(QThread):
                 if self.multiCam_stream is False:
                     self.multiCam_stream = True
                     self.initialize_all_camera()
-                    # print("initialize all camera")    
 
                 _, self.mergeframe1 = self.cap_cam1.read()
                 _, self.mergeframe2 = self.cap_cam2.read()

@@ -69,7 +69,7 @@ def detectCharucoBoard(image):
     #Lets draw the markers
     image = cv2.aruco.drawDetectedMarkers(image, markerCorners, markersIds)
 
-    # print (allCharucoIds)
+    print (allCharucoIds)
 
     return image, charucoCorners, charucoIds
 
