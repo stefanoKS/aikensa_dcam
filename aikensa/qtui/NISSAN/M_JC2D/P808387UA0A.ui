@@ -91,7 +91,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="FramePart1">
+    <widget class="QLabel" name="FramePart6">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -110,7 +110,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart2">
+    <widget class="QLabel" name="FramePart7">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -129,7 +129,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart3">
+    <widget class="QLabel" name="FramePart8">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -148,7 +148,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart4">
+    <widget class="QLabel" name="FramePart9">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -167,7 +167,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart5">
+    <widget class="QLabel" name="FramePart10">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1307,28 +1307,6 @@ border-color: rgb(36, 36, 36);</string>
      </property>
     </widget>
    </widget>
-   <widget class="QPushButton" name="mainmenubutton">
-    <property name="geometry">
-     <rect>
-      <x>1620</x>
-      <y>970</y>
-      <width>211</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>&lt;&lt;&lt; Main Menu</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="partlabel_2">
     <property name="geometry">
      <rect>
@@ -1580,7 +1558,7 @@ OK Parts:</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="current_kansei">
+   <widget class="QLabel" name="current_kansei_right">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -1638,7 +1616,7 @@ NG Parts:</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="current_furyou">
+   <widget class="QLabel" name="current_furyou_right">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -1667,82 +1645,7 @@ background-color: rgb(238, 238, 236);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLineEdit" name="kensain_name">
-    <property name="geometry">
-     <rect>
-      <x>1610</x>
-      <y>30</y>
-      <width>251</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);</string>
-    </property>
-    <property name="text">
-     <string>NONUMBER</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_8">
-    <property name="geometry">
-     <rect>
-      <x>1420</x>
-      <y>30</y>
-      <width>181</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>17</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
-      <underline>false</underline>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>検査員番号
-(Worker No)：</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="timeLabel">
-    <property name="geometry">
-     <rect>
-      <x>1060</x>
-      <y>20</y>
-      <width>320</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>20</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>Time</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="status_furyou">
+   <widget class="QLabel" name="status_furyou_right">
     <property name="geometry">
      <rect>
       <x>790</x>
@@ -1855,7 +1758,7 @@ background-color: rgb(38, 162, 105);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="status_kansei">
+   <widget class="QLabel" name="status_kansei_right">
     <property name="geometry">
      <rect>
       <x>790</x>
@@ -1944,7 +1847,7 @@ Counter Reset</string>
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_plus_10">
+   <widget class="QPushButton" name="furyou_plus_10_right">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -1965,7 +1868,7 @@ Counter Reset</string>
      <string>+10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_plus_10">
+   <widget class="QPushButton" name="kansei_plus_10_right">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -1986,7 +1889,7 @@ Counter Reset</string>
      <string>+10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_plus">
+   <widget class="QPushButton" name="kansei_plus_right">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -2007,7 +1910,7 @@ Counter Reset</string>
      <string>+1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_minus_10">
+   <widget class="QPushButton" name="furyou_minus_10_right">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2028,7 +1931,7 @@ Counter Reset</string>
      <string>-10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_minus">
+   <widget class="QPushButton" name="kansei_minus_right">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2049,7 +1952,7 @@ Counter Reset</string>
      <string>-1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_minus_10">
+   <widget class="QPushButton" name="kansei_minus_10_right">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2070,7 +1973,7 @@ Counter Reset</string>
      <string>-10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_minus">
+   <widget class="QPushButton" name="furyou_minus_right">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2091,7 +1994,7 @@ Counter Reset</string>
      <string>-1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_plus">
+   <widget class="QPushButton" name="furyou_plus_right">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -2328,7 +2231,7 @@ Counter Reset</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_ppms">
+   <widget class="QLabel" name="label_ppms_LH">
     <property name="geometry">
      <rect>
       <x>330</x>
@@ -2379,7 +2282,6 @@ Counter Reset</string>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
    <zorder>frame</zorder>
-   <zorder>mainmenubutton</zorder>
    <zorder>partlabel_2</zorder>
    <zorder>partlabel_3</zorder>
    <zorder>partlabel_4</zorder>
@@ -2389,27 +2291,24 @@ Counter Reset</string>
    <zorder>partlabel_7</zorder>
    <zorder>partlabel_8</zorder>
    <zorder>label_6</zorder>
-   <zorder>current_kansei</zorder>
+   <zorder>current_kansei_right</zorder>
    <zorder>label_7</zorder>
-   <zorder>current_furyou</zorder>
-   <zorder>kensain_name</zorder>
-   <zorder>label_8</zorder>
+   <zorder>current_furyou_right</zorder>
    <zorder>partlabel</zorder>
-   <zorder>timeLabel</zorder>
-   <zorder>status_furyou</zorder>
+   <zorder>status_furyou_right</zorder>
    <zorder>label_26</zorder>
    <zorder>label_24</zorder>
-   <zorder>status_kansei</zorder>
+   <zorder>status_kansei_right</zorder>
    <zorder>label_9</zorder>
    <zorder>counterReset</zorder>
-   <zorder>furyou_plus_10</zorder>
-   <zorder>kansei_plus_10</zorder>
-   <zorder>kansei_plus</zorder>
-   <zorder>furyou_minus_10</zorder>
-   <zorder>kansei_minus</zorder>
-   <zorder>kansei_minus_10</zorder>
-   <zorder>furyou_minus</zorder>
-   <zorder>furyou_plus</zorder>
+   <zorder>furyou_plus_10_right</zorder>
+   <zorder>kansei_plus_10_right</zorder>
+   <zorder>kansei_plus_right</zorder>
+   <zorder>furyou_minus_10_right</zorder>
+   <zorder>kansei_minus_right</zorder>
+   <zorder>kansei_minus_10_right</zorder>
+   <zorder>furyou_minus_right</zorder>
+   <zorder>furyou_plus_right</zorder>
    <zorder>P6color</zorder>
    <zorder>P5color</zorder>
    <zorder>P4color</zorder>
@@ -2418,7 +2317,7 @@ Counter Reset</string>
    <zorder>P3color</zorder>
    <zorder>P1color</zorder>
    <zorder>P2color</zorder>
-   <zorder>label_ppms</zorder>
+   <zorder>label_ppms_LH</zorder>
    <zorder>ppms_number</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">

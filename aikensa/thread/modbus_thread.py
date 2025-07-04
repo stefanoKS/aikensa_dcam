@@ -23,6 +23,7 @@ class ModbusServerThread(QThread):
     - port: the TCP port (default 502)
     """
     holdingUpdated = pyqtSignal(dict)
+    inputUpdated   = pyqtSignal(dict)
 
     def __init__(self, host: str = "0.0.0.0", port: int = 502, parent=None):
         super().__init__(parent)
@@ -33,7 +34,7 @@ class ModbusServerThread(QThread):
         
         # You can change these to control which registers get polled:
         self._poll_start = 0    # starting address of HR to poll
-        self._poll_count = 200   # how many registers to read each time
+        self._poll_count = 500   # how many registers to read each time
         self._poll_interval = 0.5  # seconds between polls
 
     def setup_context(self):
@@ -111,6 +112,24 @@ class ModbusServerThread(QThread):
             # Print all values for debugging
             # _logger.debug(f"Polled HR[{self._poll_start}..{self._poll_start + self._poll_count - 1}] = {raw}")
 
+    async def _poll_input_registers(self):
+        prev_ir = None
+        while True:
+            await asyncio.sleep(self._poll_interval)
+            if not self.context:
+                continue
+            try:
+                raw = self.context[0].getValues(4, self._poll_start, self._poll_count)
+            except Exception as e:
+                _logger.error(f"Error reading IR: {e}")
+                continue
+
+            new_ir = {self._poll_start + i: raw[i] for i in range(len(raw))}
+
+            if new_ir != prev_ir:
+                prev_ir = new_ir
+                self.inputUpdated.emit(new_ir)
+
     def write_holding_registers(self, start_addr: int, values: list[int]):
         """
         Thread‐safe way to write into holding registers from outside this thread.
@@ -133,21 +152,13 @@ class ModbusServerThread(QThread):
             _logger.warning("Cannot write: Modbus server loop is not running")
 
     def run(self):
-        """
-        Called when .start() is invoked. Creates an asyncio loop,
-        schedules the Modbus TCP server and the poller as tasks, then run_forever.
-        """
-        # 1) Create a fresh asyncio event loop for this QThread.
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
-        # 2) Build datastore context
         self.setup_context()
-
-        # 3) Build device identity
         identity = self.setup_identity()
 
-        # 4) Schedule the StartAsyncTcpServer coroutine as a task
+        # start the server
         server_coro = StartAsyncTcpServer(
             context=self.context,
             identity=identity,
@@ -155,10 +166,10 @@ class ModbusServerThread(QThread):
         )
         self.loop.create_task(server_coro)
 
-        # 5) Schedule the polling coroutine
+        # poll both HR and IR
         self.loop.create_task(self._poll_holding_registers())
+        self.loop.create_task(self._poll_input_registers())
 
-        # 6) Run the event loop until stop() is called
         self.loop.run_forever()
 
     def stop(self):
@@ -167,3 +178,5 @@ class ModbusServerThread(QThread):
         """
         if self.loop and self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
+
+

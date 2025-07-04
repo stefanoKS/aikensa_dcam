@@ -302,3 +302,96 @@ def play_sound(status):
 def resize_image(image, width=384, height=256):
     resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
     return resized_image
+
+def rescaled_image(image, scale_factor=1.0):
+    """
+    Rescale the image by a given scale factor, can go from 0.1 to unlimited.
+    """
+    if scale_factor < 0.1:
+        raise ValueError("Scale factor must be at least 0.1")
+    new_width = int(image.shape[1] * scale_factor)
+    new_height = int(image.shape[0] * scale_factor)
+    resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    return resized_image
+
+def make_undistort_maps(camera_matrix: np.ndarray,
+                        dist_coeffs:   np.ndarray,
+                        size:          tuple[int, int],
+                        scale:         float
+                       ) -> tuple[
+                             tuple[np.ndarray, np.ndarray],
+                             tuple[np.ndarray, np.ndarray]
+                           ]:
+    """
+    Return ((map1_full, map2_full), (map1_ds, map2_ds)), where:
+      - map?_full are for the original image of `size`
+      - map?_ds   are for an ALREADY-RESIZED image of size (w*scale, h*scale)
+
+    dist_coeffs stay unchanged.
+    """
+    w, h = size
+
+    # 1) full-resolution maps (unchanged)
+    map1_full, map2_full = cv2.initUndistortRectifyMap(
+        camera_matrix,
+        dist_coeffs,
+        R=None,
+        newCameraMatrix=camera_matrix,
+        size=(w, h),
+        m1type=cv2.CV_16SC2
+    )
+
+    # 2) build a “scaled” intrinsics matrix K_s
+    K_s = camera_matrix.copy()
+    K_s[0, 0] *= scale   # fx_scaled
+    K_s[1, 1] *= scale   # fy_scaled
+    K_s[0, 2] *= scale   # cx_scaled
+    K_s[1, 2] *= scale   # cy_scaled
+
+    # 3) down-sampled size
+    w_ds, h_ds = int(w * scale), int(h * scale)
+
+    # 4) down-scaled maps for a (w_ds,h_ds) image
+    #    → use K_s as BOTH the “input” and “new” cameraMatrix
+    map1_ds, map2_ds = cv2.initUndistortRectifyMap(
+        K_s,                # treat this as cameraMatrix for undistort
+        dist_coeffs,
+        R=None,
+        newCameraMatrix=K_s,  # and as newCameraMatrix for reprojection
+        size=(w_ds, h_ds),
+        m1type=cv2.CV_16SC2
+    )
+
+    return (map1_full, map2_full), (map1_ds, map2_ds)
+
+def image_cropping(img: np.ndarray, crop: list[int]) -> np.ndarray:
+    """
+    Crop the image using [x_min, y_min, x_max, y_max].
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Input image array (H×W×C or H×W).
+    crop : list or tuple of four ints
+        [x_min, y_min, x_max, y_max] in pixel coordinates.
+
+    Returns
+    -------
+    np.ndarray
+        The cropped image.
+    """
+    if len(crop) != 4:
+        raise ValueError(f"crop must be [x_min, y_min, x_max, y_max], got {crop}")
+    x_min, y_min, x_max, y_max = crop
+
+    # clamp to image bounds
+    h, w = img.shape[:2]
+    x_min = max(0, min(x_min, w))
+    x_max = max(0, min(x_max, w))
+    y_min = max(0, min(y_min, h))
+    y_max = max(0, min(y_max, h))
+
+    if x_max <= x_min or y_max <= y_min:
+        raise ValueError(f"Invalid crop coords: {crop} for image shape {(h,w)}")
+
+    return img[y_min:y_max, x_min:x_max]

@@ -91,7 +91,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="FramePart6">
+    <widget class="QLabel" name="FramePart1">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -110,7 +110,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart7">
+    <widget class="QLabel" name="FramePart2">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -129,7 +129,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart8">
+    <widget class="QLabel" name="FramePart3">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -148,7 +148,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart9">
+    <widget class="QLabel" name="FramePart4">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -167,7 +167,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="FramePart10">
+    <widget class="QLabel" name="FramePart5">
      <property name="geometry">
       <rect>
        <x>10</x>

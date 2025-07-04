@@ -19,7 +19,7 @@ from PyQt5.QtGui import QImage, QPixmap, QKeySequence, QColor
 from aikensa.thread.calibration_thread import CalibrationThread, CalibrationConfig
 from aikensa.thread.inspection_thread import InspectionThread, InspectionConfig
 from aikensa.thread.time_thread import TimeMonitorThread
-from aikensa.thread.modbus_thread import ModbusServerThread
+from aikensa.thread.modbus_client_thread import ModbusClientThread
 from aikensa.thread.camera_thread import CameraThread
 
 
@@ -55,8 +55,15 @@ class AIKensa(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
+        JAKA_ip_address = "192.168.5.120" 
+        JAKA_port = 6502
+
+        self.modbusClientThread = ModbusClientThread(host=JAKA_ip_address, port=JAKA_port, slave_id=1, start_addr=0, count=124, poll_interval=0.5)
         self.calibration_thread = CalibrationThread(CalibrationConfig())
-        self.inspection_thread = InspectionThread(InspectionConfig()) 
+        self.inspection_thread = InspectionThread(InspectionConfig(),  modbus_client_thread = self.modbusClientThread)  
+
+        self.modbusClientThread.inputRead.connect(self.inspection_thread.on_input_update)
+        self.modbusClientThread.start()
 
         self._detect_screens()
 
@@ -106,6 +113,18 @@ class AIKensa(QMainWindow):
         self.calibration_thread.CamMerge1.connect(self._setMergeFrame1)
         self.calibration_thread.CamMerge2.connect(self._setMergeFrame2)
         self.calibration_thread.CamMergeAll.connect(self._setMergeFrameAll)
+
+        self.inspection_thread.P1_LH_Signal.connect(self._setP1_LH_Frame)
+        self.inspection_thread.P2_LH_Signal.connect(self._setP2_LH_Frame)
+        self.inspection_thread.P3_LH_Signal.connect(self._setP3_LH_Frame)
+        self.inspection_thread.P4_LH_Signal.connect(self._setP4_LH_Frame)
+        self.inspection_thread.P5_LH_Signal.connect(self._setP5_LH_Frame)
+
+        self.inspection_thread.P1_RH_Signal.connect(self._setP1_RH_Frame)
+        self.inspection_thread.P2_RH_Signal.connect(self._setP2_RH_Frame)
+        self.inspection_thread.P3_RH_Signal.connect(self._setP3_RH_Frame)
+        self.inspection_thread.P4_RH_Signal.connect(self._setP4_RH_Frame)
+        self.inspection_thread.P5_RH_Signal.connect(self._setP5_RH_Frame)
 
         # self.inspection_thread.partCam.connect(self._setPartFrame)
         # self.inspection_thread.partKatabuL.connect(self._setFrameKatabuL)
@@ -324,10 +343,13 @@ class AIKensa(QMainWindow):
     def _close_app(self):
         self.calibration_thread.stop()
         self.inspection_thread.stop()
+        self.modbusClientThread.stop()
         self.calibration_thread.quit()
         self.inspection_thread.quit()
-        self.calibration_thread.wait(1000)
-        self.inspection_thread.wait(1000)
+        self.modbusClientThread.quit()
+        self.calibration_thread.wait(500)
+        self.inspection_thread.wait(500)
+        self.modbusClientThread.wait(500)
         time.sleep(1.0)
         QCoreApplication.instance().quit()
 
@@ -482,11 +504,55 @@ class AIKensa(QMainWindow):
             label = widget.findChild(QLabel, "camMergeAll")
             label.setPixmap(QPixmap.fromImage(image))
 
-    def _setPartFrame(self, image):
-        for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]:
-            widget = self.stackedWidget.widget(i)
-            label = widget.findChild(QLabel, "framePart")
-            label.setPixmap(QPixmap.fromImage(image))
+    def _setP1_LH_Frame(self, image):
+        widget = self.stackedWidget.widget(7)
+        label = widget.findChild(QLabel, "FramePart1")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP2_LH_Frame(self, image):
+        widget = self.stackedWidget.widget(7)
+        label = widget.findChild(QLabel, "FramePart2")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP3_LH_Frame(self, image):
+        widget = self.stackedWidget.widget(7)
+        label = widget.findChild(QLabel, "FramePart3")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP4_LH_Frame(self, image):
+        widget = self.stackedWidget.widget(7)
+        label = widget.findChild(QLabel, "FramePart4")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP5_LH_Frame(self, image):
+        widget = self.stackedWidget.widget(7)
+        label = widget.findChild(QLabel, "FramePart5")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP1_RH_Frame(self, image):
+        widget = self.secondary_stack.widget(1)
+        label = widget.findChild(QLabel, "FramePart6")
+        label.setPixmap(QPixmap.fromImage(image))
+    
+    def _setP2_RH_Frame(self, image):
+        widget = self.secondary_stack.widget(1)
+        label = widget.findChild(QLabel, "FramePart7")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP3_RH_Frame(self, image):
+        widget = self.secondary_stack.widget(1)
+        label = widget.findChild(QLabel, "FramePart8")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP4_RH_Frame(self, image):
+        widget = self.secondary_stack.widget(1)
+        label = widget.findChild(QLabel, "FramePart9")
+        label.setPixmap(QPixmap.fromImage(image))
+
+    def _setP5_RH_Frame(self, image):
+        widget = self.secondary_stack.widget(1)
+        label = widget.findChild(QLabel, "FramePart10")
+        label.setPixmap(QPixmap.fromImage(image))
 
     def _set_calib_params(self, thread, key, value):
         setattr(thread.calib_config, key, value)
