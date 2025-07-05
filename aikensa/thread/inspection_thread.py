@@ -738,6 +738,7 @@ class InspectionThread(QThread):
                     if self.TRAYPOSITION == 0:
                         #This means that the tray is in the wrong position
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
+                        #Need to print in the status bar so user can see and notice it clearly
 
 
                 # if self.inspection_config.doInspection is True:
