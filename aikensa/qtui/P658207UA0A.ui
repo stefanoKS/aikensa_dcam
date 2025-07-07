@@ -341,7 +341,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P4: 76±2.0</string>
+      <string> P4: 117±2.0</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -424,7 +424,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P2: 117±2.0</string>
+      <string> P2: 76±2.0</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

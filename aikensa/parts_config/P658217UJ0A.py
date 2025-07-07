@@ -19,8 +19,8 @@ ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav"
 ng_sound_v2 = pygame.mixer.Sound("aikensa/sound/mixkit-system-beep-buzzer-fail-2964.wav")
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 
-pitchSpecLH = [15, 54, 88, 71, 15, 243]
-pitchSpecRH = [15, 71, 115, 27, 15, 243]
+pitchSpecLH = [15, 71, 88, 54, 15, 243]
+pitchSpecRH = [15, 27, 115, 71, 15, 243]
 
 idSpecLH = [0, 0, 0, 0]
 idSpecRH = [1, 1, 1, 1]
@@ -215,13 +215,20 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
         image = draw_status_text_PIL(image, status, print_status, size="normal")
 
         return image, measuredPitch, resultPitch, resultid, status, ngreason
-
+   
+    if any(result != 1 for result in resultid):
+        flag_clip_furyou = 1
+        status = "NG"
+        ngreason = "CLIP ID NG"
+        print_status = "クリップ類不良"
 
     if any(result != 1 for result in resultPitch):
         flag_pitch_furyou = 1
         status = "NG"
         ngreason = "CLIP PITCH NG"
         print_status = "クリップピッチ不良"
+
+
 
     print("Resultpitch: ", resultPitch)
     print("Resultid: ", resultid)
