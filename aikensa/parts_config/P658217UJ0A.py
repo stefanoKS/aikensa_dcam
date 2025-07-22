@@ -228,7 +228,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
         return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     if len(measuredPitch) != len(pitchSpec):
-        resultPitch = [0] * len(pitchSpec)
+        resultPitch = [0] * len (pitchSpec)
         resultid = [0] * len(idSpec)
         measuredPitch = [0] * (len(pitchSpec))
         ngreason = "NUMBER OF CLIP MISMATCH"
