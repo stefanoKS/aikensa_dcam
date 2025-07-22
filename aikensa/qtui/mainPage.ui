@@ -790,7 +790,7 @@ Camera Merge</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(53, 132, 228);</string>
+     <string notr="true">background-color: rgb(245, 121, 0);</string>
     </property>
     <property name="text">
      <string>JC2D
@@ -815,7 +815,7 @@ CCM1</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(78, 209, 237);</string>
+     <string notr="true">background-color: rgb(245, 121, 0);</string>
     </property>
     <property name="text">
      <string>JC2D
@@ -840,7 +840,7 @@ CCM2</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 190, 111);</string>
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
     </property>
     <property name="text">
      <string>JC2D
@@ -865,7 +865,7 @@ CCM1</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(248, 228, 92);</string>
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
     </property>
     <property name="text">
      <string>JC2D

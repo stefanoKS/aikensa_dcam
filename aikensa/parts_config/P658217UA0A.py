@@ -70,6 +70,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     leftmostPitch = 0
     rightmostPitch = 0
 
+    flag_muki = 0 #whether the hole is facing the right direction
+
     status = "OK"
     print_status = ""
 
@@ -147,26 +149,31 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
 
     for i, detection in enumerate(sorted_detections):
 
-        detectedid.append(detection.category.id)
+        if detection.category.id != 2:
 
-        bbox = detection.bbox
-        x, y = get_center(bbox)
-        w = bbox.maxx - bbox.minx
-        h = bbox.maxy - bbox.miny
+            detectedid.append(detection.category.id)
 
-        detectedposX.append(x)
-        detectedposY.append(y)
-        detectedWidth.append(w)
+            bbox = detection.bbox
+            x, y = get_center(bbox)
+            w = bbox.maxx - bbox.minx
+            h = bbox.maxy - bbox.miny
+
+            detectedposX.append(x)
+            detectedposY.append(y)
+            detectedWidth.append(w)
 
 
-        center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
-      
-        print (center)
+            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+        
+            print (center)
 
-        if prev_center is not None:
-            length = calclength(prev_center, center)*pixelMultiplier
-            measuredPitch.append(length)
-        prev_center = center
+            if prev_center is not None:
+                length = calclength(prev_center, center)*pixelMultiplier
+                measuredPitch.append(length)
+            prev_center = center
+
+        if detection.category.id == 2:
+            flag_muki = 1
 
     print("Detected IDs: ", detectedid)
 
@@ -203,6 +210,19 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         resultid = check_id(detectedid, idSpec)
+
+    if flag_muki == 0:
+        status = "NG"
+        ngreason = "HOLE NOT FACING RIGHT DIRECTION"
+        print_status = "エアー穴の向き不良"
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        measuredPitch = [0] * (len(pitchSpec))
+
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
+
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)

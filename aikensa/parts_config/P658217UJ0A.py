@@ -33,10 +33,10 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.163464137
+pixelMultiplier = 0.1592
 
-segmentation_pixel_start = 1024
-segmentation_pixel_finish = 1980
+segmentation_pixel_start = 256
+segmentation_pixel_finish = 768
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
 
 
@@ -62,6 +62,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     detectedWidth = []
 
     prev_center = None
+    
 
     flag_pitch_furyou = 0
     flag_clip_furyou = 0
@@ -69,6 +70,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     flag_hole_notfound = 0
     leftmostPitch = 0
     rightmostPitch = 0
+
+    flag_muki = 0 #whether the hole is facing the right direction
 
     status = "OK"
     print_status = ""
@@ -147,28 +150,36 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
 
     for i, detection in enumerate(sorted_detections):
 
-        detectedid.append(detection.category.id)
+        if detection.category.id != 2:
 
-        bbox = detection.bbox
-        x, y = get_center(bbox)
-        w = bbox.maxx - bbox.minx
-        h = bbox.maxy - bbox.miny
+            detectedid.append(detection.category.id)
 
-        detectedposX.append(x)
-        detectedposY.append(y)
-        detectedWidth.append(w)
+            bbox = detection.bbox
+            x, y = get_center(bbox)
+            w = bbox.maxx - bbox.minx
+            h = bbox.maxy - bbox.miny
+
+            detectedposX.append(x)
+            detectedposY.append(y)
+            detectedWidth.append(w)
 
 
-        center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
-      
-        print (center)
+            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
+        
+            print (center)
 
-        if prev_center is not None:
-            length = calclength(prev_center, center)*pixelMultiplier
-            measuredPitch.append(length)
-        prev_center = center
+            if prev_center is not None:
+                length = calclength(prev_center, center)*pixelMultiplier
+                measuredPitch.append(length)
+            prev_center = center
+
+        
+        if detection.category.id == 2:
+            flag_muki = 1
+
 
     print("Detected IDs: ", detectedid)
+    print("Flag Muki: ", flag_muki)
 
 
     if len(detectedposX) > 0:
@@ -178,8 +189,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
         rightmostWidth = detectedWidth[-1]
       
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -80, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -80, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -0, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -0, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
@@ -203,6 +214,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         resultid = check_id(detectedid, idSpec)
+
+    if flag_muki == 0:
+        status = "NG"
+        ngreason = "HOLE NOT FACING RIGHT DIRECTION"
+        print_status = "エアー穴の向き不良"
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        measuredPitch = [0] * (len(pitchSpec))
+
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     if len(measuredPitch) != len(pitchSpec):
         resultPitch = [0] * len(pitchSpec)

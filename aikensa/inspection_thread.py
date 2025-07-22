@@ -133,6 +133,9 @@ class InspectionThread(QThread):
         self.H2_tenken = None
         self.H1_scaled = None
         self.H2_scaled = None
+        self.H2_NISSAN_7UJ0A = None
+        self.H2_NISSAN_7UA0A = None
+
 
         self.part1Crop = None
         self.part2Crop = None
@@ -400,6 +403,18 @@ class InspectionThread(QThread):
                 self.H2 = np.array(self.homography_matrix2)
                 print(f"Loaded homography matrix for camera 2")
 
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_NISSAN_7UJ0A.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam2_NISSAN_7UJ0A.yaml") as file:
+                self.homography_matrix2_NISSAN_7UJ0A = yaml.load(file, Loader=yaml.FullLoader)
+                self.H2_NISSAN_7UJ0A = np.array(self.homography_matrix2_NISSAN_7UJ0A)
+                print(f"Loaded homography matrix for camera 2 NISSAN 7UJ0A")
+
+        if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_NISSAN_7UA0A.yaml"):
+            with open("./aikensa/cameracalibration/homography_param_cam2_NISSAN_7UA0A.yaml") as file:
+                self.homography_matrix2_NISSAN_7UA0A = yaml.load(file, Loader=yaml.FullLoader)
+                self.H2_NISSAN_7UA0A = np.array(self.homography_matrix2_NISSAN_7UA0A)
+                print(f"Loaded homography matrix for camera 2 NISSAN 7UA0A")
+
         if os.path.exists("./aikensa/cameracalibration/homography_param_cam2_tenken.yaml"):
             with open("./aikensa/cameracalibration/homography_param_cam2_tenken.yaml") as file:
                 self.homography_matrix2 = yaml.load(file, Loader=yaml.FullLoader)
@@ -492,11 +507,11 @@ class InspectionThread(QThread):
                     self.combinedImage_scaled = warpTwoImages_template(self.homography_blank_canvas_scaled, self.mergeframe1_scaled, self.H1_scaled)
                     self.combinedImage_scaled = warpTwoImages_template(self.combinedImage_scaled, self.mergeframe2_scaled, self.H2_scaled)
 
-                    if self.inspection_config.widget in [5, 6, 7]:
+                    if self.inspection_config.widget in [5, 6, 7, 9, 10, 11, 12]:
                         self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_narrow_scaled, (int(self.narrow_planarize[1]/(self.scale_factor)), int(self.narrow_planarize[0]/(self.scale_factor))))
                         self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.303)
 
-                    if self.inspection_config.widget in [8, 9, 10, 11, 12, 21, 22, 23]:
+                    if self.inspection_config.widget in [8, 21, 22, 23]:
                         self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_wide_scaled, (int(self.wide_planarize[1]/(self.scale_factor)), int(self.wide_planarize[0]/(self.scale_factor))))
                         self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.555683)
 
@@ -1036,7 +1051,7 @@ class InspectionThread(QThread):
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
                             self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
-                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
 
                             self.InspectionImages[0] = self.combinedImage.copy()
 
@@ -1060,8 +1075,8 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
 
-                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, 1024:1980, :]
-                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1980:-1024, :]
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, 256:768, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:-256, :]
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
@@ -1135,7 +1150,7 @@ class InspectionThread(QThread):
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=184)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=337)
                             self.P658217UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
                             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
@@ -1211,8 +1226,8 @@ class InspectionThread(QThread):
                             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
-                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2_NISSAN_7UJ0A)
+                            self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
 
                             self.InspectionImages[0] = self.combinedImage.copy()
 
@@ -1236,8 +1251,8 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
 
-                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, 1024:1980, :]
-                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1980:-1024, :]
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, 256:768, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:-256, :]
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
@@ -1245,8 +1260,8 @@ class InspectionThread(QThread):
                                 # cv2.imwrite(f"left_{i}.jpg", self.InspectionImages_endSegmentation_Left[i])
                                 # cv2.imwrite(f"right_{i}.jpg", self.InspectionImages_endSegmentation_Right[i])
 
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False, retina_masks=True)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
 
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P658217UJ0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
@@ -1312,7 +1327,7 @@ class InspectionThread(QThread):
 
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=184)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=337)
                             self.P658217UJ0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
                             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
@@ -1705,7 +1720,7 @@ class InspectionThread(QThread):
         if os.path.exists(path_P658217UA0A_CLIP_Model):
             P658217UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
                                                                             model_path=path_P658217UA0A_CLIP_Model,
-                                                                            confidence_threshold=0.8,
+                                                                            confidence_threshold=0.4,
                                                                             device="cuda:0")
         if os.path.exists(path_P658217UA0A_SEGMENT_Model):
             P658217UA0A_SEGMENT_Model = YOLO(path_P658217UA0A_SEGMENT_Model)
@@ -1713,7 +1728,7 @@ class InspectionThread(QThread):
         if os.path.exists(path_P658217UJ0A_CLIP_Model):
             P658217UJ0A_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
                                                                             model_path=path_P658217UJ0A_CLIP_Model,
-                                                                            confidence_threshold=0.8,
+                                                                            confidence_threshold=0.6,
                                                                             device="cuda:0")
             
         if os.path.exists(path_P658217UJ0A_SEGMENT_Model):
