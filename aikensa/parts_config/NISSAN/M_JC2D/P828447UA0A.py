@@ -30,7 +30,7 @@ bbox_offset = 1
 pixelMultiplier = 0.161 #0.1592
 
 segmentation_pixel_start = 0
-segmentation_pixel_finish = 768
+segmentation_pixel_finish = 512
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
 
 border_width = 512
@@ -157,8 +157,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         rightmostWidth = detectedWidth[-1]
       
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -80, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -80, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -50, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -50, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier

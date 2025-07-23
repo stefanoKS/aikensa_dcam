@@ -1401,14 +1401,14 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
 
-                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :768, :]
-                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:, :]
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :512, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -512:, :]
 
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False)
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P808387UA1A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
 
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P808387UA1A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
@@ -1548,14 +1548,14 @@ class InspectionThread(QThread):
                                             perform_standard_pred=False
                                         )
 
-                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :768, :]
-                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:, :]
+                                self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :512, :]
+                                self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -512:, :]
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
 
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1600, verbose=False)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1600, verbose=False)
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
 
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P828447UA0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
