@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from aikensa.parts_config.sound import play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound
+from aikensa.parts_config.NISSAN.M_JC2D.P8083X7UA0A import partcheck as P8083X7UA0A_check
 
 from ultralytics import YOLO
 
@@ -38,6 +39,9 @@ from ultralytics import YOLO
 from aikensa.parts_config.dailyTenken.dailyTenken import dailyTenken
 
 from PIL import ImageFont, ImageDraw, Image
+
+from aikensa.scripts.scripts_img_processing import add_imageborder
+
 
 @dataclass
 class InspectionConfig:
@@ -52,6 +56,11 @@ class InspectionConfig:
     map2_downscaled: list = field(default_factory=lambda: [None]*30) #for 10 cameras
 
     doInspection: bool = False
+
+    doInspectionLH: bool = False
+    doInspectionRH: bool = False
+    doInspectionSetLH: bool = False
+    doInspectionSetRH: bool = False
 
     kensainNumber: str = None
     ppmsnumber : str = None
@@ -83,8 +92,11 @@ class InspectionThread(QThread):
     P4_RH_Signal = pyqtSignal(QImage)
     P5_RH_Signal = pyqtSignal(QImage)
 
-    P808387UA0A_InspectionResult_PitchMeasured = pyqtSignal(list, list)
-    P808397UA0A_InspectionResult_PitchMeasured = pyqtSignal(list, list)
+    P808397UA0A_InspectionResult_PitchMeasured = pyqtSignal(list)
+    P808387UA0A_InspectionResult_PitchMeasured = pyqtSignal(list)
+
+    P808397UA0A_InspectionResult_Status = pyqtSignal(list)
+    P808387UA0A_InspectionResult_Status = pyqtSignal(list)
     
     today_numofPart_signal = pyqtSignal(list)
     current_numofPart_signal = pyqtSignal(list)
@@ -197,17 +209,17 @@ class InspectionThread(QThread):
         self.P5_RH_image_scaled = None
 
         #value for opencv cropping
-        self.P1_LH_image_scaled_crop = [0, 9, 700, 34]
-        self.P2_LH_image_scaled_crop = [0, 63, 700, 88]
-        self.P3_LH_image_scaled_crop = [0, 117, 700, 142]
-        self.P4_LH_image_scaled_crop = [0, 170, 700, 195]
-        self.P5_LH_image_scaled_crop = [0, 225, 700, 250]
+        self.P1_LH_image_scaled_crop = [0, 11, 700, 36]
+        self.P2_LH_image_scaled_crop = [0, 66, 700, 91]
+        self.P3_LH_image_scaled_crop = [0, 121, 700, 146]
+        self.P4_LH_image_scaled_crop = [0, 174, 700, 199]
+        self.P5_LH_image_scaled_crop = [0, 229, 700, 254]
 
-        self.P1_RH_image_scaled_crop = [0, 9, 700, 34]
-        self.P2_RH_image_scaled_crop = [0, 63, 700, 88]
-        self.P3_RH_image_scaled_crop = [0, 117, 700, 142]
-        self.P4_RH_image_scaled_crop = [0, 170, 700, 195]
-        self.P5_RH_image_scaled_crop = [0, 225, 700, 250]
+        self.P1_RH_image_scaled_crop = [0, 11, 700, 36]
+        self.P2_RH_image_scaled_crop = [0, 65, 700, 90]
+        self.P3_RH_image_scaled_crop = [0, 119, 700, 144]
+        self.P4_RH_image_scaled_crop = [0, 174, 700, 199]
+        self.P5_RH_image_scaled_crop = [0, 228, 700, 250]
 
 
         self.frame_width = 3072
@@ -227,22 +239,32 @@ class InspectionThread(QThread):
         self.timerFinish = None
         self.fps = None
 
-        self.InspectionImages = [None]*1
-        self.InspectionImages_bgr = [None]*1
+        self.InspectionImages = [None]*5
+        self.InspectionImages_squared = [None]*5
+        self.InspectionImages_raw = [None]*5
+        self.InspectionImages_bgr = [None]*5
 
-        self.InspectionImages_endSegmentation_Left = [None]*1
-        self.InspectionImages_endSegmentation_Right = [None]*1
+        self.InspectionImages_endSegmentation_Left = [None]*5
+        self.InspectionImages_endSegmentation_Right = [None]*5
 
         self.InspectionResult_EndSegmentation_Left = [None]*5
         self.InspectionResult_EndSegmentation_Right = [None]*5
 
-        self.InspectionSet = [None] * 10
+        self.InspectionSet_LH = [None] * 5
+        self.InspectionSet_RH = [None] * 5
+        self.InspectionSetCorrect_LH = [None] * 5
+        self.InspectionSetCorrect_RH = [None] * 5
         self.InspectionPitch = [None] * 10
+        
+        self.segmentation_width = 512
+        self.segmentation_border = 384
+
+        self.InspectionResult_ClipDetection = [None] * 10
 
         self.InspectionResult_PitchMeasured = [None]*30
         self.InspectionResult_PitchResult = [None]*30
-        self.InspectionResult_DetectionID = [None]*30
-        self.InspectionResult_Status = [None]*30
+        self.InspectionResult_DetectionID = [None]*5
+        self.InspectionResult_Status = [None]*5
         self.InspectionResult_DeltaPitch = [None]*30
         self.InspectionResult_NGReason = [None]*30
 
@@ -295,6 +317,9 @@ class InspectionThread(QThread):
 
         self.holding_register_map = load_register_map(self.holding_register_path)
         self.input_register_map = load_register_map(self.input_register_path)
+
+        self.InspectionResult_PitchMeasured = [None]*30
+        self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
 
     @pyqtSlot(dict)
     def on_holding_update(self, reg_dict):
@@ -520,10 +545,23 @@ class InspectionThread(QThread):
                 self.planarizeTransform_right = np.array(transform_list)
                 self.planarizeTransform_right_scaled = scale_translation(self.planarizeTransform_right, self.scale )
 
+        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+        self.P808387UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+        self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+        
+
+        print(f"AIKENSA_STATUS set to 0")
+
         while self.running:
 
             if self.inspection_config.widget == 0:
                 self.inspection_config.cameraID = -1
+
+            # if self.inspection_config.doInspectionLH is True:
+            #     print("LH Inspection Started")
+
+            # if self.inspection_config.doInspectionRH is True:
+            #     print("RH Inspection Started")
 
             if self.inspection_config.widget > 0:
 
@@ -616,25 +654,10 @@ class InspectionThread(QThread):
                         self.P3_RH_image_scaled = resize_image(self.P3_RH_image_scaled, width=1791, height=71)
                         self.P4_RH_image_scaled = resize_image(self.P4_RH_image_scaled, width=1791, height=71)
                         self.P5_RH_image_scaled = resize_image(self.P5_RH_image_scaled, width=1791, height=71)
-
-
-
-                        # cv2.imwrite("./P1_LH_image_scaled.png", self.P1_LH_image_scaled)
-                        # cv2.imwrite("./P2_LH_image_scaled.png", self.P2_LH_image_scaled)
-                        # cv2.imwrite("./P3_LH_image_scaled.png", self.P3_LH_image_scaled)
-                        # cv2.imwrite("./P4_LH_image_scaled.png", self.P4_LH_image_scaled)
-                        # cv2.imwrite("./P5_LH_image_scaled.png", self.P5_LH_image_scaled)
-
-                        # cv2.imwrite("./P1_RH_image_scaled.png", self.P1_RH_image_scaled)
-                        # cv2.imwrite("./P2_RH_image_scaled.png", self.P2_RH_image_scaled)
-                        # cv2.imwrite("./P3_RH_image_scaled.png", self.P3_RH_image_scaled)
-                        # cv2.imwrite("./P4_RH_image_scaled.png", self.P4_RH_image_scaled)
-                        # cv2.imwrite("./P5_RH_image_scaled.png", self.P5_RH_image_scaled)
                         
                     self.InspectionResult_PitchMeasured = [None]*30
                     self.InspectionResult_PitchResult = [None]*30
                     self.InspectionResult_DeltaPitch = [None]*30
-
                     
                     if self.P1_LH_image_scaled is not None:
                         self.P1_LH_Signal.emit(self.convertQImage(self.P1_LH_image_scaled))
@@ -659,6 +682,7 @@ class InspectionThread(QThread):
                         self.P5_RH_Signal.emit(self.convertQImage(self.P5_RH_image_scaled))
 
                     # self.P82832W080P_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
 
             if self.inspection_config.widget in [7]:    
 
@@ -701,45 +725,365 @@ class InspectionThread(QThread):
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
 
-                if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
-                    self.inspection_config.doInspection = False
+                # if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
+                #     self.inspection_config.doInspectionLH = False
+                #     self.inspection_config.doInspectionRH = False
+                
 
-                if self.AIKENSA_COMMAND == 1:
+                if self.AIKENSA_COMMAND == 1 or self.AIKENSA_COMMAND == 2 or self.inspection_config.doInspectionLH is True or self.inspection_config.doInspectionRH is True or self.inspection_config.doInspectionSetLH is True or self.inspection_config.doInspectionSetRH is True:
                     #This is JAKA asking for part set inspection
-                    if self.TRAYPOSITION == 1:
+
+                    if self.TRAYPOSITION == 1 or self.inspection_config.doInspectionLH is True or self.inspection_config.doInspectionSetLH is True:
                         #This means the tray is on the left side
-                        #Generate random 0 and 1 for the inspection result
-                        for i in range(len(self.InspectionSet)):
-                            self.InspectionSet[i] = random.randint(0, 1)
-                        
-                        self.requestModbusWrite.emit(self.holding_register_map["P1_EXIST"], [self.InspectionSet[0]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P2_EXIST"], [self.InspectionSet[1]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P3_EXIST"], [self.InspectionSet[2]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P4_EXIST"], [self.InspectionSet[3]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P5_EXIST"], [self.InspectionSet[4]])
-                        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [1])
-                        time.sleep(0.5)
-                        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+                        self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
+                        self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
+                        self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                        self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                        self.combinedImage_left = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
+                        self.combinedImage_left = warpTwoImages_template(self.combinedImage_left, self.mergeframe2, self.H2)
+                        self.combinedImage_left = cv2.warpPerspective(self.combinedImage_left, self.planarizeTransform_left, (int(self.planarize[1]), int(self.planarize[0])))
 
-                    if self.TRAYPOSITION == 2:
+                        for idx in range(1,6):
+                            crop_attr = getattr(self, f"P{idx}_LH_image_scaled_crop")
+                            scaled = [int(c / self.scale) for c in crop_attr]
+                            print(scaled)
+                            img = image_cropping(self.combinedImage_left, scaled)
+                            setattr(self, f"P{idx}_LH_image", img)
+
+                            # #save_image_based on time, remove duplicate images
+                            # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            # save_path = f"./aikensa/training_images/P{idx}_LH_{timestamp}.png"
+                            # cv2.imwrite(save_path, img)
+
+                        if self.AIKENSA_COMMAND == 1 or self.inspection_config.doInspectionSetLH is True:
+                            self.inspection_config.doInspectionSetLH = False
+                            print("LH Inspection Set Started")
+                            #resize image to 512x512
+
+                            self.InspectionImages = [self.P1_LH_image, self.P2_LH_image, self.P3_LH_image, self.P4_LH_image, self.P5_LH_image]
+
+                            self.P1_LH_image = resize_image(self.P1_LH_image, width=512, height=512)
+                            self.P2_LH_image = resize_image(self.P2_LH_image, width=512, height=512)
+                            self.P3_LH_image = resize_image(self.P3_LH_image, width=512, height=512)
+                            self.P4_LH_image = resize_image(self.P4_LH_image, width=512, height=512)
+                            self.P5_LH_image = resize_image(self.P5_LH_image, width=512, height=512)
+
+                            self.InspectionImages_squared = [self.P1_LH_image, self.P2_LH_image, self.P3_LH_image, self.P4_LH_image, self.P5_LH_image]
+                            
+                            for i in range(len(self.InspectionImages_squared)):
+                                image = self.InspectionImages_squared[i]
+                                if image is not None:
+                                    _ = self.P8083X7UA0A_EXIST_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                    self.InspectionSet_LH[i] = list(_)[0].probs.data.argmax().item()
+                            print(f"Inspection Result Detection ID: {self.InspectionSet_LH}")
+
+                            #If result detection ID is 1, do another P8083X7UA0A_SET_CORRECT_Model to check whether the part is set correctly
+                            #If not senf signal to modbus to wait for anotbher button press for re inspection
+                            for i in range(len(self.InspectionSet_LH)):
+                                if self.InspectionSet_LH[i] == 1:
+                                    image = self.InspectionImages[i]
+                                    #This is LH, so crop image from 1296 to 1296+128px
+                                    image = image[:, 1296:1296+128, :]
+                                    _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
+                                    self.InspectionSetCorrect_LH[i] = list(_)[0].probs.data.argmax().item()
+                                    print(f"Inspection Result Set Correct ID: {self.InspectionSetCorrect_LH[i]}")
+
+                                    if self.InspectionSetCorrect_LH[i] == 1:
+                                        self.InspectionResult_Status[i] = "製品\nセット\nOK"
+                                    if self.InspectionSetCorrect_LH[i] == 0:
+                                        self.InspectionResult_Status[i] = "製品\nセット\n不良"
+
+                                if self.InspectionSet_LH[i] == 0:
+                                    self.InspectionResult_Status[i] = "製品\nなし"
+                            
+                            # If there is 0 value in inspectionSetCorrect, send signal to modbus to redo inspection
+                            if 0 in self.InspectionSetCorrect_LH:
+                                print("Inspection Set Correct Result: Not all parts are set correctly, waiting for re-inspection")
+                                self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [5])
+
+                            # If 0 doesnt exists in inspection correct LH, then send signal to modbus to proceed with inspection
+                            if 0 not in self.InspectionSetCorrect_LH:
+                                print("Inspection Set Correct Result: All parts are set correctly, proceeding with inspection")
+
+                                for i in range(5):
+                                    reg_key = f"P{i+1}_EXIST"                  # "P1_EXIST", "P2_EXIST", …
+                                    raw_val = self.InspectionSet_LH[i]
+                                    # guard against silly None or numpy types
+                                    if raw_val is None:
+                                        raw_val = 0
+                                    val = int(raw_val)                         # now a plain Python int
+                                    self.requestModbusWrite.emit(
+                                        self.holding_register_map[reg_key],
+                                        [val]
+                                    )
+
+                                self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [1])
+                            
+                            self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+                            self.InspectionResult_Status = [None]*5
+                            time.sleep(5.5)
+                            self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+
+                        if self.AIKENSA_COMMAND == 2 or self.inspection_config.doInspectionLH is True:
+
+                            self.inspection_config.doInspectionLH = False
+                            print("LH Inspection Started")
+
+                            self.InspectionImages = [self.P1_LH_image, self.P2_LH_image, self.P3_LH_image, self.P4_LH_image, self.P5_LH_image]
+                            self.InspectionImages_raw = [img.copy() if img is not None else None for img in self.InspectionImages]
+
+                            # # Filter out images that are not detected
+                            # self.InspectionImages = [img for img, result in zip(self.InspectionImages, self.InspectionSet_LH) if result != 0]
+
+                            for i in range(len(self.InspectionImages)):
+                                image = self.InspectionImages[i]
+                                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                                if image is not None:
+                                    self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                                image, 
+                                                self.P8083X7UA0A_CLIP_Model, 
+                                                slice_height=180, slice_width=1960, 
+                                                overlap_height_ratio=0.0, overlap_width_ratio=0.3,
+                                                postprocess_match_metric="IOS",
+                                                postprocess_match_threshold=0.005,
+                                                postprocess_class_agnostic=True,
+                                                postprocess_type="GREEDYNMM",
+                                                verbose=0,
+                                                perform_standard_pred=False
+                                            )
+                                    self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :self.segmentation_width, :]
+                                    self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -self.segmentation_width:, :]
+                                    self.InspectionImages_endSegmentation_Left[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Left[i], cv2.COLOR_BGR2RGB)
+                                    self.InspectionImages_endSegmentation_Right[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Right[i], cv2.COLOR_BGR2RGB)
+                                    self.InspectionImages_endSegmentation_Left[i] = add_imageborder(self.InspectionImages_endSegmentation_Left[i], width = self.segmentation_border)
+                                    self.InspectionImages_endSegmentation_Right[i] = add_imageborder(self.InspectionImages_endSegmentation_Right[i], width = self.segmentation_border)
+                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P8083X7UA0A_check(self.InspectionImages[i], 
+                                                                                                                                                                                                                                  self.InspectionResult_ClipDetection[i].object_prediction_list,
+                                                                                                                                                                                                                                  self.InspectionResult_EndSegmentation_Left[i],
+                                                                                                                                                                                                                                  self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                  partSide = "LH")
+                                    #Print Status and NG Reason
+                                    print(f"Inspection Result Pitch Measured: {self.InspectionResult_PitchMeasured[i]}")
+                                    print(f"Inspection Result Status: {self.InspectionResult_Status[i]}")
+                                    print(f"Inspection Result NG Reason: {self.InspectionResult_NGReason[i]}")
+
+                            #emit the signal for the inspection result
+                            self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
+                            print(self.InspectionResult_Status)
+                            self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+
+                            #emit image and results
+                            #resize resize_image(self.P1_RH_image_scaled, width=1791, height=71)
+                            for j in range(5):
+                                #add date time to the image name
+                                cv2.imwrite(f"./aikensa/training_images/P{j+1}_LH_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png", self.InspectionImages_raw[j])
+                                signal_attr = f"P{j+1}_LH_Signal"
+                                img = self.InspectionImages[j]
+                                #resize image to 1791x71
+                                img = resize_image(img, width=1791, height=71)
+                                #emit the signal
+                                signal = getattr(self, signal_attr, None)
+                                if img is not None and signal is not None:
+                                    signal.emit(self.convertQImage(img))
+
+
+                            self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
+                            time.sleep(1.5)
+                            # self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+                            # time.sleep(0.5)
+
+                            #Freeze thread for 2 seconds to allow the user to see the results
+                            time.sleep(3)
+
+
+
+                            #Reset the value
+                            self.InspectionResult_PitchMeasured = [None]*30
+                            self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
+                            self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+
+                    if self.TRAYPOSITION == 2 or self.inspection_config.doInspectionRH is True or self.inspection_config.doInspectionSetRH is True:
                         #This means the tray is on the right side
-                        for i in range(len(self.InspectionSet)):
-                            self.InspectionSet[i] = random.randint(0, 1)
 
-                        self.requestModbusWrite.emit(self.holding_register_map["P1_EXIST"], [self.InspectionSet[0]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P2_EXIST"], [self.InspectionSet[1]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P3_EXIST"], [self.InspectionSet[2]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P4_EXIST"], [self.InspectionSet[3]])
-                        self.requestModbusWrite.emit(self.holding_register_map["P5_EXIST"], [self.InspectionSet[4]])
-                        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [1])
-                        time.sleep(0.5)
-                        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+                        self.mergeframe3 = cv2.rotate(self.mergeframe3, cv2.ROTATE_180)
+                        self.mergeframe4 = cv2.rotate(self.mergeframe4, cv2.ROTATE_180)
+                        self.mergeframe3 = cv2.remap(self.mergeframe3, self.inspection_config.map1[2], self.inspection_config.map2[2], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                        self.mergeframe4 = cv2.remap(self.mergeframe4, self.inspection_config.map1[3], self.inspection_config.map2[3], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+                        self.combinedImage_right = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe3, self.H3)
+                        self.combinedImage_right = warpTwoImages_template(self.combinedImage_right, self.mergeframe4, self.H4)
+                        self.combinedImage_right = cv2.warpPerspective(self.combinedImage_right, self.planarizeTransform_right, (int(self.planarize[1]), int(self.planarize[0])))
+                        # cv2.imwrite("./combinedImage_right.png", self.combinedImage_right)
+
+                        for idx in range(1,6):
+                            crop_attr = getattr(self, f"P{idx}_RH_image_scaled_crop")
+                            scaled = [int(c / self.scale) for c in crop_attr]
+                            print(scaled)
+                            img = image_cropping(self.combinedImage_right, scaled)
+                            setattr(self, f"P{idx}_RH_image", img)
+                            # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            # save_path = f"./aikensa/training_images/P{idx}_RH_{timestamp}.png"
+                            # cv2.imwrite(save_path, img)
+
+                        if self.AIKENSA_COMMAND == 1 or self.inspection_config.doInspectionSetRH is True:
+                            self.inspection_config.doInspectionSetRH = False
+                            print("RH Inspection Set Started")
+                            #resize image to 512x512
+
+                            self.InspectionImages = [self.P1_RH_image, self.P2_RH_image, self.P3_RH_image, self.P4_RH_image, self.P5_RH_image]
+
+                            self.P1_RH_image = resize_image(self.P1_RH_image, width=512, height=512)
+                            self.P2_RH_image = resize_image(self.P2_RH_image, width=512, height=512)
+                            self.P3_RH_image = resize_image(self.P3_RH_image, width=512, height=512)
+                            self.P4_RH_image = resize_image(self.P4_RH_image, width=512, height=512)
+                            self.P5_RH_image = resize_image(self.P5_RH_image, width=512, height=512)
+                            print(f"Inspection Result Detection ID: {self.InspectionResult_DetectionID}")
+
+                            self.InspectionImages_squared = [self.P1_RH_image, self.P2_RH_image, self.P3_RH_image, self.P4_RH_image, self.P5_RH_image]
+                            
+                            for i in range(len(self.InspectionImages_squared)):
+                                image = self.InspectionImages_squared[i]
+                                if image is not None:
+                                    _ = self.P8083X7UA0A_EXIST_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                    self.InspectionSet_RH[i] = list(_)[0].probs.data.argmax().item()
+                            print(f"Inspection Result Detection ID: {self.InspectionSet_RH}")
+
+                            #If result detection ID is 1, do another P8083X7UA0A_SET_CORRECT_Model to check whether the part is set correctly
+                            #If not send signal to modbus to wait for another button press for re inspection
+                            for i in range(len(self.InspectionSet_RH)):
+                                if self.InspectionSet_RH[i] == 1:
+                                    image = self.InspectionImages[i]
+                                    #This is RH, so crop image from 2080 to 2080+128px
+                                    image = image[:, 2070:2070+128, :]
+                                    cv2.imwrite(f"test_{i}.png", image)
+                                    _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
+                                    self.InspectionSetCorrect_RH[i] = list(_)[0].probs.data.argmax().item()
+                                    print(f"Inspection Result Set Correct ID: {self.InspectionSetCorrect_RH[i]}")
+
+                                    if self.InspectionSetCorrect_RH[i] == 1:
+                                        self.InspectionResult_Status[i] = "製品\nセット\nOK"
+                                    if self.InspectionSetCorrect_RH[i] == 0:
+                                        self.InspectionResult_Status[i] = "製品\nセット\n不良"
+
+                                if self.InspectionSet_RH[i] == 0:
+                                    self.InspectionResult_Status[i] = "製品\nなし"
+
+                            # If there is 0 value in inspectionSetCorrect, send signal to modbus to redo inspection
+                            if 0 in self.InspectionSetCorrect_RH:
+                                print("Inspection Set Correct Result: Not all parts are set correctly, waiting for re-inspection")
+                                self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [5])
+
+                            # If 0 doesnt exists in inspection correct LH, then send signal to modbus to proceed with inspection
+                            if 0 not in self.InspectionSetCorrect_RH:
+                                print("Inspection Set Correct Result: All parts are set correctly, proceeding with inspection")
+
+                                for i in range(5):
+                                    reg_key = f"P{i+1}_EXIST"                  # "P1_EXIST", "P2_EXIST", …
+                                    raw_val = self.InspectionSet_RH[i]
+                                    # guard against silly None or numpy types
+                                    if raw_val is None:
+                                        raw_val = 0
+                                    val = int(raw_val)                         # now a plain Python int
+                                    self.requestModbusWrite.emit(
+                                        self.holding_register_map[reg_key],
+                                        [val]
+                                    )
+
+                                self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [1])
+                            
+                            self.P808387UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+                            self.InspectionResult_Status = [None]*5
+                            time.sleep(5.5)
+                            self.P808387UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+
+                        if self.AIKENSA_COMMAND == 2 or self.inspection_config.doInspectionRH is True:
+                            
+                            self.inspection_config.doInspectionRH = False
+                            print("RH Inspection Started")
+
+                            self.InspectionImages = [self.P1_RH_image, self.P2_RH_image, self.P3_RH_image, self.P4_RH_image, self.P5_RH_image]
+                            self.InspectionImages_raw = [img.copy() if img is not None else None for img in self.InspectionImages]
+
+                            # # Filter out images that are not detected
+                            # self.InspectionImages = [img for img, result in zip(self.InspectionImages, self.InspectionSet_RH) if result != 0]
+
+                            for i in range(len(self.InspectionImages)):
+                                image = self.InspectionImages[i]
+                                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                                if image is not None:
+                                    self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
+                                                image, 
+                                                self.P8083X7UA0A_CLIP_Model, 
+                                                slice_height=180, slice_width=1960, 
+                                                overlap_height_ratio=0.0, overlap_width_ratio=0.3,
+                                                postprocess_match_metric="IOS",
+                                                postprocess_match_threshold=0.005,
+                                                postprocess_class_agnostic=True,
+                                                postprocess_type="GREEDYNMM",
+                                                verbose=0,
+                                                perform_standard_pred=False
+                                            )
+                                    self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :self.segmentation_width, :]
+                                    self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -self.segmentation_width:, :]
+                                    self.InspectionImages_endSegmentation_Left[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Left[i], cv2.COLOR_BGR2RGB)
+                                    self.InspectionImages_endSegmentation_Right[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Right[i], cv2.COLOR_BGR2RGB)
+                                    self.InspectionImages_endSegmentation_Left[i] = add_imageborder(self.InspectionImages_endSegmentation_Left[i], width = self.segmentation_border)
+                                    self.InspectionImages_endSegmentation_Right[i] = add_imageborder(self.InspectionImages_endSegmentation_Right[i], width = self.segmentation_border)
+                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P8083X7UA0A_check(self.InspectionImages[i], 
+                                                                                                                                                                                                                                  self.InspectionResult_ClipDetection[i].object_prediction_list,
+                                                                                                                                                                                                                                  self.InspectionResult_EndSegmentation_Left[i],
+                                                                                                                                                                                                                                  self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                  partSide = "RH")
+                                    #Print Status and NG Reason
+                                    print(f"Inspection Result Pitch Measured: {self.InspectionResult_PitchMeasured[i]}")
+                                    print(f"Inspection Result Status: {self.InspectionResult_Status[i]}")
+                                    print(f"Inspection Result NG Reason: {self.InspectionResult_NGReason[i]}")
+
+                            #emit the signal for the inspection result
+                            self.P808387UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
+                            print(self.InspectionResult_Status)
+                            self.P808387UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
+
+                            #emit image and results
+                            #resize resize_image(self.P1_RH_image_scaled, width=1791, height=71)
+                            for j in range(5):
+                                #add date time to the image name
+                                cv2.imwrite(f"./aikensa/training_images/P{j+1}_RH_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png", self.InspectionImages_raw[j])
+                                signal_attr = f"P{j+1}_RH_Signal"
+                                img = self.InspectionImages[j]
+                                #resize image to 1791x71
+                                img = resize_image(img, width=1791, height=71)
+                                #emit the signal
+                                signal = getattr(self, signal_attr, None)
+                                if img is not None and signal is not None:
+                                    signal.emit(self.convertQImage(img))
+                            #Freeze thread for 3 seconds to allow the user to see the results
+
+                            self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
+                            time.sleep(1.5)
+                            # self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+                            # time.sleep(0.5)
+
+                            time.sleep(3)
+
+
+
+                            #Reset the value
+                            self.InspectionResult_PitchMeasured = [None]*30
+                            self.InspectionResult_Status = [None]*5
+                            self.P808387UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
+                            self.P808387UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
 
                     if self.TRAYPOSITION == 0:
                         #This means that the tray is in the wrong position
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
                         #Need to print in the status bar so user can see and notice it clearly
 
+                if self.AIKENSA_COMMAND == 3:
+                    self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
 
                 # if self.inspection_config.doInspection is True:
                 #     self.inspection_config.doInspection = False
@@ -1128,11 +1472,21 @@ class InspectionThread(QThread):
 
     def initialize_model(self):
         # Define model paths
+        path_P8083X7UA0A_EXIST_Model = "./aikensa/models/P8083X7UA0A_exist.pt"
+        path_P8083X7UA0A_SET_CORRECT_MODEL = "./aikensa/models/P8083X7UA0A_set_correct.pt"
         path_P8083X7UA0A_CLIP_Model = "./aikensa/models/P8083X7UA0A_detect.pt"
         path_P8083X7UA0A_SEGMENT_Model = "./aikensa/models/P8083X7UA0A_segment.pt"
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
 
         # Initialize each model with existence check
+
+        if os.path.exists(path_P8083X7UA0A_EXIST_Model):
+            self.P8083X7UA0A_EXIST_Model = YOLO(path_P8083X7UA0A_EXIST_Model)
+        else:
+            print(f"Model file {path_P8083X7UA0A_EXIST_Model} does not exist. Initializing as None.")
+            self.P8083X7UA0A_EXIST_Model = None
+
+
         if os.path.exists(path_P8083X7UA0A_CLIP_Model):
             self.P8083X7UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
                 model_type="yolov8",
@@ -1143,6 +1497,19 @@ class InspectionThread(QThread):
         else:
             print(f"Model file {path_P8083X7UA0A_CLIP_Model} does not exist. Initializing as None.")
             self.P8083X7UA0A_CLIP_Model = None
+
+        if os.path.exists(path_P8083X7UA0A_SET_CORRECT_MODEL):
+            self.P8083X7UA0A_SET_CORRECT_Model = YOLO(path_P8083X7UA0A_SET_CORRECT_MODEL)
+        else:
+            print(f"Model file {path_P8083X7UA0A_SET_CORRECT_MODEL} does not exist. Initializing as None.")
+            self.P8083X7UA0A_SET_CORRECT_Model = None
+
+        if os.path.exists(path_P8083X7UA0A_SEGMENT_Model):
+            self.P8083X7UA0A_SEGMENT_Model = YOLO(path_P8083X7UA0A_SEGMENT_Model)
+        else:
+            print(f"Model file {path_P8083X7UA0A_SEGMENT_Model} does not exist. Initializing as None.")
+            self.P8083X7UA0A_SEGMENT_Model = None
+
 
         if os.path.exists(path_NICHIJOU_TENKEN_Model):
             self.NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(

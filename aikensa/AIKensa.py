@@ -58,7 +58,8 @@ class AIKensa(QMainWindow):
         JAKA_ip_address = "192.168.5.120" 
         JAKA_port = 6502
 
-        self.modbusClientThread = ModbusClientThread(host=JAKA_ip_address, port=JAKA_port, slave_id=1, start_addr=0, count=124, poll_interval=0.5)
+
+        self.modbusClientThread = ModbusClientThread(host=JAKA_ip_address, port=JAKA_port, slave_id=1, start_addr=0, count=125, poll_interval=0.2)
         self.calibration_thread = CalibrationThread(CalibrationConfig())
         self.inspection_thread = InspectionThread(InspectionConfig(),  modbus_client_thread = self.modbusClientThread)  
 
@@ -70,14 +71,16 @@ class AIKensa(QMainWindow):
         self.secondary = QMainWindow()
         self.secondary_stack = QStackedWidget()
 
-        self._setup_ui()
-        self._show_left_fullscreen()
-
         empty_right = self._load_ui(UI_FILES[9])  # ← empty.ui
         self.secondary_stack.addWidget(empty_right)
 
         right_page = self._load_ui(UI_FILES[8])   # ← P808387UA0A.ui
         self.secondary_stack.addWidget(right_page)
+
+        self._setup_ui()
+        self._show_left_fullscreen()
+
+
 
         self.secondary.setCentralWidget(self.secondary_stack)
         self.secondary.move(self.right_geo.topLeft())
@@ -125,6 +128,11 @@ class AIKensa(QMainWindow):
         self.inspection_thread.P3_RH_Signal.connect(self._setP3_RH_Frame)
         self.inspection_thread.P4_RH_Signal.connect(self._setP4_RH_Frame)
         self.inspection_thread.P5_RH_Signal.connect(self._setP5_RH_Frame)
+
+        self.inspection_thread.P808397UA0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P808397UA0A)
+        self.inspection_thread.P808387UA0A_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P808387UA0A)
+        self.inspection_thread.P808397UA0A_InspectionResult_Status.connect(self._outputStatusText_P808397UA0A)
+        self.inspection_thread.P808387UA0A_InspectionResult_Status.connect(self._outputStatusText_P808387UA0A)
 
         # self.inspection_thread.partCam.connect(self._setPartFrame)
         # self.inspection_thread.partKatabuL.connect(self._setFrameKatabuL)
@@ -254,9 +262,21 @@ class AIKensa(QMainWindow):
 
 
         for i in self.inspection_widget_indices:
-            self.Inspect_button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButton")
+            self.Inspect_button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectButtonLH")
             if self.Inspect_button:
-                self.Inspect_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspection", True))
+                self.Inspect_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspectionLH", True))
+            
+            self.InspectSet_button = self.stackedWidget.widget(i).findChild(QPushButton, "InspectSetButtonLH")
+            if self.InspectSet_button:
+                self.InspectSet_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspectionSetLH", True))
+
+        # Connect button for the secondary stacked widget
+        self.secondary_inspect_button = self.secondary_stack.widget(1).findChild(QPushButton, "InspectButtonRH")
+        self.secondary_inspect_set_button = self.secondary_stack.widget(1).findChild(QPushButton, "InspectSetButtonRH")
+        if self.secondary_inspect_button:
+            self.secondary_inspect_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspectionRH", True))
+        if self.secondary_inspect_set_button:
+            self.secondary_inspect_set_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspectionSetRH", True))
 
         for i in self.inspection_widget_indices_without_dailytenken:
             self.connect_inspectionConfig_button(i, "kansei_plus", "kansei_plus", True)
@@ -554,6 +574,115 @@ class AIKensa(QMainWindow):
         label = widget.findChild(QLabel, "FramePart10")
         label.setPixmap(QPixmap.fromImage(image))
 
+    def _outputMeasurementText_P808397UA0A(self, measurementValue):
+
+        label_names_part_A = ["R_A_1", "R_A_2", "R_A_3", "R_A_4", "R_A_5", "R_A_6", "R_A_7", "R_A_8", "R_A_9", "R_A_10"]
+        label_names_part_B = ["R_B_1", "R_B_2", "R_B_3", "R_B_4", "R_B_5", "R_B_6", "R_B_7", "R_B_8", "R_B_9", "R_B_10"]
+        label_names_part_C = ["R_C_1", "R_C_2", "R_C_3", "R_C_4", "R_C_5", "R_C_6", "R_C_7", "R_C_8", "R_C_9", "R_C_10"]
+        label_names_part_D = ["R_D_1", "R_D_2", "R_D_3", "R_D_4", "R_D_5", "R_D_6", "R_D_7", "R_D_8", "R_D_9", "R_D_10"]
+        label_names_part_E = ["R_E_1", "R_E_2", "R_E_3", "R_E_4", "R_E_5", "R_E_6", "R_E_7", "R_E_8", "R_E_9", "R_E_10"]
+
+        all_label_names = [label_names_part_A, label_names_part_B, label_names_part_C, label_names_part_D, label_names_part_E]
+
+        # Loop over each part (A, B, C, D, E)
+        for part_index, labels in enumerate(all_label_names):
+            if part_index >= len(measurementValue) or measurementValue[part_index] is None:
+                part_measurements = [0] * len(labels)  # If not enough parts or None, fill with zeros
+            else:
+                part_measurements = measurementValue[part_index]
+
+            # Ensure part_measurements is a list and extend with zeros if necessary
+            if part_measurements is None or len(part_measurements) < len(labels):
+                part_measurements = (part_measurements or []) + [0] * (len(labels) - len(part_measurements))
+
+            # Update each label with the corresponding measurement value
+            for i, label_name in enumerate(labels):
+                # Find the QLabel by name and set the text to the corresponding measurement value
+                label = self.stackedWidget.widget(7).findChild(QLabel, label_name)
+                if label:
+                    label.setText(str(part_measurements[i]))
+
+    def _outputStatusText_P808397UA0A(self, inspectionStatus):
+        label_names = ["P1_LH_STATUS", "P2_LH_STATUS", "P3_LH_STATUS", "P4_LH_STATUS", "P5_LH_STATUS"]
+
+        for i, status in enumerate(inspectionStatus):
+            widget = self.stackedWidget.widget(7)
+            label = widget.findChild(QLabel, label_names[i])
+            if label:
+                label.setText(status)
+                if status == "検査準備完了":
+                    label.setStyleSheet("QLabel { background-color: lightblue; }")
+                elif status == "検査中":
+                    label.setStyleSheet("QLabel { background-color: pink; }")
+                elif status == "OK":
+                    label.setStyleSheet("QLabel { background-color: green; }")
+                elif status == "NG":
+                    label.setStyleSheet("QLabel { background-color: red; }")
+                elif status == "製品\nセット\nOK":
+                    label.setStyleSheet("QLabel { background-color: lightgreen; }")
+                elif status == "製品\nセット\n不良":
+                    label.setStyleSheet("QLabel { background-color: #ff9999; }")  # light red
+                elif status == "製品\nなし":
+                    label.setStyleSheet("QLabel { background-color: #444444; }")
+                #else white
+                else:
+                    label.setStyleSheet("QLabel { background-color: white; }")
+
+    def _outputMeasurementText_P808387UA0A(self, measurementValue):
+
+        label_names_part_A = ["R_A_1", "R_A_2", "R_A_3", "R_A_4", "R_A_5", "R_A_6", "R_A_7", "R_A_8", "R_A_9", "R_A_10"]
+        label_names_part_B = ["R_B_1", "R_B_2", "R_B_3", "R_B_4", "R_B_5", "R_B_6", "R_B_7", "R_B_8", "R_B_9", "R_B_10"]
+        label_names_part_C = ["R_C_1", "R_C_2", "R_C_3", "R_C_4", "R_C_5", "R_C_6", "R_C_7", "R_C_8", "R_C_9", "R_C_10"]
+        label_names_part_D = ["R_D_1", "R_D_2", "R_D_3", "R_D_4", "R_D_5", "R_D_6", "R_D_7", "R_D_8", "R_D_9", "R_D_10"]
+        label_names_part_E = ["R_E_1", "R_E_2", "R_E_3", "R_E_4", "R_E_5", "R_E_6", "R_E_7", "R_E_8", "R_E_9", "R_E_10"]
+
+        all_label_names = [label_names_part_A, label_names_part_B, label_names_part_C, label_names_part_D, label_names_part_E]
+
+        # Loop over each part (A, B, C, D, E)
+        for part_index, labels in enumerate(all_label_names):
+            if part_index >= len(measurementValue) or measurementValue[part_index] is None:
+                part_measurements = [0] * len(labels)  # If not enough parts or None, fill with zeros
+            else:
+                part_measurements = measurementValue[part_index]
+
+            # Ensure part_measurements is a list and extend with zeros if necessary
+            if part_measurements is None or len(part_measurements) < len(labels):
+                part_measurements = (part_measurements or []) + [0] * (len(labels) - len(part_measurements))
+
+            # Update each label with the corresponding measurement value
+            for i, label_name in enumerate(labels):
+                # Find the QLabel by name and set the text to the corresponding measurement value
+                label = self.secondary_stack.widget(1).findChild(QLabel, label_name)
+                if label:
+                    label.setText(str(part_measurements[i]))
+
+    def _outputStatusText_P808387UA0A(self, inspectionStatus):
+        label_names = ["P1_RH_STATUS", "P2_RH_STATUS", "P3_RH_STATUS", "P4_RH_STATUS", "P5_RH_STATUS"]
+
+        for i, status in enumerate(inspectionStatus):
+            widget = self.secondary_stack.widget(1)
+            label = widget.findChild(QLabel, label_names[i])
+            if label:
+                label.setText(status)
+                if status == "検査準備完了":
+                    label.setStyleSheet("QLabel { background-color: lightblue; }")
+                elif status == "検査中":
+                    label.setStyleSheet("QLabel { background-color: pink; }")
+                elif status == "OK":
+                    label.setStyleSheet("QLabel { background-color: green; }")
+                elif status == "NG":
+                    label.setStyleSheet("QLabel { background-color: red; }")
+                elif status == "製品\nセット\nOK":
+                    label.setStyleSheet("QLabel { background-color: lightgreen; }")
+                elif status == "製品\nセット\n不良":
+                    label.setStyleSheet("QLabel { background-color: #ff9999; }")  # light red
+                elif status == "製品\nなし":
+                    label.setStyleSheet("QLabel { background-color: #444444; }")
+                #else white
+                else:
+                    label.setStyleSheet("QLabel { background-color: white; }")
+                    
+
     def _set_calib_params(self, thread, key, value):
         setattr(thread.calib_config, key, value)
 
@@ -575,7 +704,6 @@ class AIKensa(QMainWindow):
         else:
             print(" → showing EMPTY page")
             self.secondary_stack.setCurrentIndex(0)
-
 
     def _show_left_fullscreen(self):
         self.move(self.left_geo.topLeft())

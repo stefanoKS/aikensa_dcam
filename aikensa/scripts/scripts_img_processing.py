@@ -107,10 +107,10 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
         font_scale = 50.0
 
     if status == "OK":
-        color = (10, 210, 60)
+        color = (15, 220, 20)
 
     elif status == "NG":
-        color = (200, 30, 50)
+        color = (230, 55, 50)
     
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     img_pil = Image.fromarray(image_rgb)
@@ -118,7 +118,7 @@ def draw_status_text_PIL(image, status, print_status, size = "normal"):
     font = ImageFont.truetype(kanjiFontPath, font_scale)
 
     draw.text((120, 5), status, font=font, fill=color)  
-    draw.text((120, 100), print_status, font=font, fill=color)
+    draw.text((350, 5), print_status, font=font, fill=color)
     image = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
     return image
@@ -251,6 +251,44 @@ def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=
     cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     center_x, center_y = x, y
     return (center_x, center_y)
+
+def getMostLeftPoint(x, y, w, h):
+    """Calculate the most left point of a bounding box.
+    Args:
+        x (int): The x-coordinate of the bounding box center.
+        y (int): The y-coordinate of the bounding box center.
+        w (int): The width of the bounding box.
+        h (int): The height of the bounding box.
+    Returns:
+        tuple: The most left point coordinates of the bounding box as (left_x, left_y).
+    """
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)
+    left_x = int((x - w / 2))
+    left_y = int((y + h / 2))
+
+    return (left_x, left_y)
+
+def getMostRightPoint(x, y, w, h):
+    """Calculate the most right point of a bounding box.
+    Args:
+        x (int): The x-coordinate of the bounding box center.
+        y (int): The y-coordinate of the bounding box center.
+        w (int): The width of the bounding box.
+        h (int): The height of the bounding box.
+    Returns:
+        tuple: The most right point coordinates of the bounding box as (right_x, right_y).
+    """
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)
+    right_x = int((x + w / 2))
+    right_y = int((y + h / 2))
+
+    return (right_x, right_y)
 
 def extend_line(p1, p2):
     """Calculate the slope and intercept for a line that goes through p1 and p2"""
@@ -395,3 +433,21 @@ def image_cropping(img: np.ndarray, crop: list[int]) -> np.ndarray:
         raise ValueError(f"Invalid crop coords: {crop} for image shape {(h,w)}")
 
     return img[y_min:y_max, x_min:x_max]
+
+
+
+def add_imageborder(img, color=(255, 255, 255), width=10):
+    """
+    Adds a border to the image.
+
+    Parameters:
+        img (numpy.ndarray): Input image.
+        color (tuple): Border color in BGR format (default is white, i.e. (255, 255, 255)).
+        width (int): Width of the border in pixels.
+
+    Returns:
+        numpy.ndarray: Image with the added border.
+    """
+    bordered_img = cv2.copyMakeBorder(img, width, width, width, width, 
+                                      borderType=cv2.BORDER_CONSTANT, value=color)
+    return bordered_img
