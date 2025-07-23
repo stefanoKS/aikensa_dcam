@@ -33,7 +33,7 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.1592
+pixelMultiplier = 0.1582
 
 segmentation_pixel_start = 256
 segmentation_pixel_finish = 768

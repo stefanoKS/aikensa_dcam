@@ -1050,7 +1050,7 @@ class InspectionThread(QThread):
                             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
 
                             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
+                            self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2_NISSAN_7UA0A)
                             self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_narrow, (int(self.narrow_planarize[1]), int(self.narrow_planarize[0])))
 
                             self.InspectionImages[0] = self.combinedImage.copy()
