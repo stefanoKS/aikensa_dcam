@@ -1091,7 +1091,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
-                                                                                                                                                                                                                                                self.inspection_config.widget)
+                                                                                                                                                                                                                                                self.inspection_config.widget,
+                                                                                                                                                                                                                                                self.P658217UA0A_HANIRE_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -1267,7 +1268,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
-                                                                                                                                                                                                                                                self.inspection_config.widget)
+                                                                                                                                                                                                                                                self.inspection_config.widget,
+                                                                                                                                                                                                                                                self.P658217UA0A_HANIRE_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -1671,6 +1673,7 @@ class InspectionThread(QThread):
         P5819A107_SEGMENT_Model = None
         P658217UA0A_CLIP_Model = None
         P658217UA0A_SEGMENT_Model = None
+        P658217UA0A_HANIRE_Model = None
         P658217UJ0A_CLIP_Model = None
         P658217UJ0A_SEGMENT_Model = None
 
@@ -1688,10 +1691,11 @@ class InspectionThread(QThread):
 
         path_P658217UA0A_CLIP_Model = "./aikensa/models/P658217UA0A_CLIP.pt"
         path_P658217UA0A_SEGMENT_Model = "./aikensa/models/P658217UA0A_SEGMENT.pt"
+        path_P658217UA0A_HANIRE_Model = "./aikensa/models/P658217UA0A_HANIRE.pt"
 
+        #Use the same model with 7UA0A
         path_P658217UJ0A_CLIP_Model = "./aikensa/models/P658217UA0A_CLIP.pt"
         path_P658217UJ0A_SEGMENT_Model = "./aikensa/models/P658217UA0A_SEGMENT.pt"
-
 
 
         if os.path.exists(path_P658207LE0A_CLIP_Model):
@@ -1731,6 +1735,9 @@ class InspectionThread(QThread):
                                                                             confidence_threshold=0.6,
                                                                             device="cuda:0")
             
+        if os.path.exists(path_P658217UA0A_HANIRE_Model):
+            P658217UA0A_HANIRE_Model = YOLO(path_P658217UA0A_HANIRE_Model)
+
         if os.path.exists(path_P658217UJ0A_SEGMENT_Model):
             P658217UJ0A_SEGMENT_Model = YOLO(path_P658217UJ0A_SEGMENT_Model)
 
@@ -1747,6 +1754,7 @@ class InspectionThread(QThread):
 
         self.P658217UA0A_CLIP_Model = P658217UA0A_CLIP_Model
         self.P658217UA0A_SEGMENT_Model = P658217UA0A_SEGMENT_Model
+        self.P658217UA0A_HANIRE_Model = P658217UA0A_HANIRE_Model
 
         self.P658217UJ0A_CLIP_Model = P658217UJ0A_CLIP_Model
         self.P658217UJ0A_SEGMENT_Model = P658217UJ0A_SEGMENT_Model
@@ -1772,6 +1780,8 @@ class InspectionThread(QThread):
             print("P658217UA0A_CLIP_Model loaded")
         if self.P658217UA0A_SEGMENT_Model is not None:
             print("P658217UA0A_SEGMENT_Model loaded")
+        if self.P658217UA0A_HANIRE_Model is not None:
+            print("P658217UA0A_HANIRE_Model loaded")
         if self.P658217UJ0A_CLIP_Model is not None:
             print("P658217UJ0A_CLIP_Model loaded")
         if self.P658217UJ0A_SEGMENT_Model is not None:

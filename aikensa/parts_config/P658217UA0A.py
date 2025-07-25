@@ -1,7 +1,9 @@
 from calendar import c
+from curses import raw
 import re
 import stat
 from unittest import result
+from matplotlib.pyplot import flag
 from networkx import draw
 import numpy as np
 import cv2
@@ -11,6 +13,7 @@ import os
 import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
+from ultralytics import YOLO
 
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
@@ -38,13 +41,11 @@ pixelMultiplier = 0.1582
 segmentation_pixel_start = 256
 segmentation_pixel_finish = 768
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
-
+detected_cropped_size = 84
 
 border_width = 512
 
-
-
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, widgetNumber):
+def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, widgetNumber, YoloHanireModel):
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
 
@@ -71,12 +72,15 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     rightmostPitch = 0
 
     flag_muki = 0 #whether the hole is facing the right direction
+    flag_hanire = 0 #whether the clip is half inserted
 
     status = "OK"
     print_status = ""
 
     combined_lmask = None
     ngreason = ""
+
+    raw_image = image.copy()
 
     if widgetNumber == 9:
         pitchSpec = pitchSpecLH
@@ -139,7 +143,6 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
             return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 
-
     combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
     if combined_lmask is not None and combined_rmask is not None:
         combined_mask[:, segmentation_pixel_start:segmentation_pixel_finish] = combined_lmask
@@ -162,10 +165,13 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
             detectedposY.append(y)
             detectedWidth.append(w)
 
-
             center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
-        
-            print (center)
+
+            hanireResult = check_hanire(raw_image, x, y, YoloHanireModel, border_width)
+            print (f"Hanire result: {hanireResult}")
+            if hanireResult == 0:
+                draw_redCircle(image, x, y, w, h, [image.shape[1], image.shape[0]], thickness=6, bbox_offset=20)
+                flag_hanire = 1
 
             if prev_center is not None:
                 length = calclength(prev_center, center)*pixelMultiplier
@@ -223,6 +229,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
         measuredPitch = [0] * (len(pitchSpec))
 
         return image, measuredPitch, resultPitch, resultid, status, ngreason
+    
+    if flag_hanire == 1:
+        status = "NG"
+        ngreason = "CLIP HALF INSERTED"
+        print_status = "クリップ半入れ不良"
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        measuredPitch = [0] * (len(pitchSpec))
+
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
 
 
     if len(measuredPitch) != len(pitchSpec):
@@ -263,6 +281,35 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     image = draw_status_text_PIL(image, status, print_status, size="normal")
     
     return image, measuredPitch, resultPitch, resultid, status, ngreason
+
+
+def check_hanire(image, x, y, YoloHanireModel, border_width):
+    """
+    Check if the clip is half inserted by using the YoloHanireModel.
+    Returns 1 if half inserted, 0 otherwise.
+    """
+    h_img, w_img = image.shape[:2]
+
+    # 1) skip if image smaller than crop size
+    if h_img < detected_cropped_size or w_img < detected_cropped_size:
+        return 0
+
+
+    half = detected_cropped_size // 2
+    x0, y0 = x - half, y - half
+    x1, y1 = x + half, y + half
+    #convert to int
+    x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
+        
+    if x0 < 0 or y0 < 0 or x1 > w_img or y1 > h_img:
+        return 0
+
+    crop = image[y0:y1, x0:x1]
+
+    hanire = YoloHanireModel(crop, stream=True, verbose=False)
+    hanire = list(hanire)[0].probs.data.argmax().item()
+    # Predict using the YoloHanireModel
+    return hanire  # No half insertion detected
 
 
 
@@ -556,3 +603,12 @@ def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=
     center_x, center_y = x, y
     return (center_x, center_y)
 
+def draw_redCircle(image, x, y, w, h, img_size, thickness=3, bbox_offset=8):
+    color = (10, 10, 255)  # Red color
+    #if the box extends outside the image, adjust it
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)  
+    radius = int((w + h) / 4) + bbox_offset  # Calculate radius based on width and height
+    cv2.circle(image, (x, y), radius, color, thickness)
