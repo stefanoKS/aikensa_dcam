@@ -28,7 +28,7 @@ pitchSpecRH = [15, 76, 88, 117, 15, 311]
 idSpecLH = [0, 0, 0, 0]
 idSpecRH = [1, 1, 1, 1]
 
-pitchTolerance = [3.0, 2.0, 2.0, 2.0, 3.0, 5.0]
+pitchTolerance = [3.0, 2.0, 2.0, 2.0, 3.0, 10.0]
 
 color = (0, 255, 0)
 linecolor = (20,120,120)
@@ -36,7 +36,7 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.1582
+pixelMultiplier = 0.1585
 
 segmentation_pixel_start = 256
 segmentation_pixel_finish = 768
@@ -256,10 +256,16 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
         return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     if any(result != 1 for result in resultid):
-        flag_clip_furyou = 1
+        resultPitch = [0] * len (pitchSpec)
+        resultid = [0] * len(idSpec)
+        measuredPitch = [0] * (len(pitchSpec))
         status = "NG"
         ngreason = "CLIP ID NG"
         print_status = "クリップ類不良"
+        
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
 
     if any(result != 1 for result in resultPitch):
         flag_pitch_furyou = 1

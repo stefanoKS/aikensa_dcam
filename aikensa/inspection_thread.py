@@ -1257,12 +1257,8 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
-                                #save image left and right
-                                # cv2.imwrite(f"left_{i}.jpg", self.InspectionImages_endSegmentation_Left[i])
-                                # cv2.imwrite(f"right_{i}.jpg", self.InspectionImages_endSegmentation_Right[i])
-
-                                self.InspectionResult_EndSegmentation_Left[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
-                                self.InspectionResult_EndSegmentation_Right[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Left[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
+                                self.InspectionResult_EndSegmentation_Right[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
 
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P658217UJ0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,

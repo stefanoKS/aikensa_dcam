@@ -534,7 +534,7 @@ background-color: rgb(211, 215, 207);</string>
       <string notr="true">background-color: rgb(252, 175, 62);</string>
      </property>
      <property name="text">
-      <string> P5: 15±2.0</string>
+      <string> P5: 15±3.0</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
