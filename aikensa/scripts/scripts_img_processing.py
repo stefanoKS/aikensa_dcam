@@ -306,3 +306,42 @@ def play_sound(status):
         # ng_sound.play()
         ng_sound_v2.play()
 
+def check_hanire(image, x, y, YoloHanireModel, detected_cropped_size):
+    """
+    Check if the clip is half inserted by using the YoloHanireModel.
+    Returns 1 if half inserted, 0 otherwise.
+    """
+    h_img, w_img = image.shape[:2]
+
+    # print(f"Image shape: {image.shape}, x: {x}, y: {y}, detected_cropped_size: {detected_cropped_size}")
+
+    # 1) skip if image smaller than crop size
+    if h_img < detected_cropped_size or w_img < detected_cropped_size:
+        return 0
+
+    half = detected_cropped_size // 2
+    x0, y0 = x - half, y - half
+    x1, y1 = x + half, y + half
+    #convert to int
+    x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
+        
+    if x0 < 0 or y0 < 0 or x1 > w_img or y1 > h_img:
+        return 0
+
+    crop = image[y0:y1, x0:x1]
+    # cv2.imwrite("hanire_crop.jpg", crop)
+    # print(f"Crop shape: {crop.shape}")
+    hanire = YoloHanireModel(crop, stream=True, verbose=False)
+    hanire = list(hanire)[0].probs.data.argmax().item()
+    # Predict using the YoloHanireModel
+    return hanire  # No half insertion detected
+
+def draw_redCircle(image, x, y, w, h, img_size, thickness=3, bbox_offset=8):
+    color = (10, 10, 255)  # Red color
+    #if the box extends outside the image, adjust it
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)  
+    radius = int((w + h) / 4) + bbox_offset  # Calculate radius based on width and height
+    cv2.circle(image, (x, y), radius, color, thickness)

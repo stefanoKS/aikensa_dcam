@@ -14,6 +14,7 @@ from PIL import ImageFont, ImageDraw, Image
 
 from aikensa.scripts.scripts_img_processing import create_masks, draw_bounding_box, get_center, find_edge_point_mask, calclength, check_tolerance, check_id, draw_pitch_line
 from aikensa.scripts.scripts_img_processing import draw_status_text_PIL
+from aikensa.scripts.scripts_img_processing import check_hanire, draw_redCircle
 
 
 pitchSpec = [10, 121.5, 121.5, 121.5, 121.5, 121.5, 10, 627.5]
@@ -27,16 +28,28 @@ text_offset = 40
 endoffset_y = 0
 bbox_offset = 1
 
-pixelMultiplier = 0.161 #0.1592
+part_id = "P808387UA1A"  
+yaml_path = os.path.join(os.path.dirname(__file__), "../../partsSettingsMultiplier.yaml")
+with open(yaml_path, "r", encoding="utf-8") as f:
+    parts_settings = yaml.safe_load(f)
+
+try:
+    this_part = parts_settings[part_id]
+except KeyError:
+    raise KeyError(f"No settings found for part “{part_id}” in {yaml_path!r}")
+
+pixelMultiplier       = this_part["pixelMultiplier"]
+detected_cropped_size = this_part["detected_cropped_size"]
+border_width          = this_part["border_width"]
 
 segmentation_pixel_start = 0
 segmentation_pixel_finish = 512
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
+# detected_cropped_size = 84
+# border_width = 512
 
-border_width = 512
 
-
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
+def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, YoloHanireModel):
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
 
@@ -62,11 +75,15 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     leftmostPitch = 0
     rightmostPitch = 0
 
+    flag_hanire = 0 #whether the clip is half inserted
+
     status = "OK"
     print_status = ""
 
     combined_lmask = None
     ngreason = ""
+
+    raw_image = image.copy()
 
     combined_lmask = None
     for lm in leftSegmentation:
@@ -140,7 +157,13 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
 
         center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
       
-        print (center)
+        hanireResult = check_hanire(raw_image, x, y, YoloHanireModel, detected_cropped_size)
+        print (f"Hanire result: {hanireResult}")
+        if hanireResult == 0:
+            draw_redCircle(image, x, y, w, h, [image.shape[1], image.shape[0]], thickness=6, bbox_offset=20)
+            flag_hanire = 1
+                
+        # print (center)
 
         if prev_center is not None:
             length = calclength(prev_center, center)*pixelMultiplier
@@ -179,6 +202,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
     measuredPitch.append(round(totalLength, 1))
     measuredPitch = [round(pitch, 1) for pitch in measuredPitch]
 
+    if flag_hanire == 1:
+        status = "NG"
+        ngreason = "CLIP HALF INSERTED"
+        print_status = "クリップ半入れ不良"
+        image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+        resultPitch = [0] * len(pitchSpec)
+        resultid = [0] * len(idSpec)
+        measuredPitch = [0] * (len(pitchSpec))
+
+        return image, measuredPitch, resultPitch, resultid, status, ngreason
+
     if len(measuredPitch) == len(pitchSpec):
         resultPitch = check_tolerance(measuredPitch, pitchSpec, tolerance_pitch)
         resultid = check_id(detectedid, idSpec)
@@ -201,14 +236,6 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation):
         status = "NG"
         ngreason = "CLIP PITCH NG"
         print_status = "クリップピッチ不良"
-
-    # print("Resultpitch: ", resultPitch)
-    # print("Resultid: ", resultid)
-    # print("MeasuredPitch: ", measuredPitch)
-
-    # if any(result != 1 for result in resultid):
-    #     flag_clip_furyou = 1
-    #     status = "NG"
 
     xy_pairs = list(zip(detectedposX, detectedposY))
     draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)

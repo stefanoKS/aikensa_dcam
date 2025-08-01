@@ -281,7 +281,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
                 y2 = int(y + crop_size / 2)
                 #crop the image
                 crop_img = image_copy[y1:y2, x1:x2]
-                cv2.imwrite("crop_img.png", crop_img)
+                # cv2.imwrite("crop_img.png", crop_img)
                 clipflip_detection = P828XXW0X0P_CLIPFLIP_DETECT(cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
                 print(clipflip_detection)
                 clipflip_detection = list(clipflip_detection)[0].probs.data.argmax().item()

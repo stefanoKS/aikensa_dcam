@@ -1413,7 +1413,8 @@ class InspectionThread(QThread):
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P808387UA1A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
-                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.P828447UA0A_ANOMALY_CLASSIFICATION_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -1560,7 +1561,8 @@ class InspectionThread(QThread):
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P828447UA0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
-                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+                                                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.P828447UA0A_ANOMALY_CLASSIFICATION_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
                                     if self.InspectionResult_Status[i] == "OK": 
@@ -1999,6 +2001,8 @@ class InspectionThread(QThread):
         path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
 
+        path_P828447UA0A_ANOMALY_CLASSIFICATION_Model = "./aikensa/models/P828447UA0A_anomaly_classification.pt"
+
         # Initialize each model with existence check
         if os.path.exists(path_P828XXW0X0P_CLIP_Model):
             self.P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(
@@ -2084,12 +2088,12 @@ class InspectionThread(QThread):
         else:
             print(f"Model file {path_P828XXW0X0P_CLIPFLIP_Model} does not exist. Initializing as None.")
             self.P828XXW0X0P_CLIPFLIP_Model = None
-        # Check if all models are loaded
-        
 
-
-
-        print("Model Loaded")
+        if os.path.exists(path_P828447UA0A_ANOMALY_CLASSIFICATION_Model):
+            self.P828447UA0A_ANOMALY_CLASSIFICATION_Model = YOLO(path_P828447UA0A_ANOMALY_CLASSIFICATION_Model)
+        else:
+            print(f"Model file {path_P828447UA0A_ANOMALY_CLASSIFICATION_Model} does not exist. Initializing as None.")
+            self.P828447UA0A_ANOMALY_CLASSIFICATION_Model = None
         
     def stop(self):
         self.inspection_config.widget = -1
