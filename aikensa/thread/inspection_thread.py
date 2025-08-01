@@ -1996,7 +1996,7 @@ class InspectionThread(QThread):
         path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
         path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
-        path_P808387UA1A_CLIP_Model = "./aikensa/models/P808387UA1A_detect.pt"
+        path_P808387UA1A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P808387UA1A_SEGMENT_Model = "./aikensa/models/P808387UA1A_segment.pt"
         path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
