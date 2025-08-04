@@ -313,6 +313,7 @@ class InspectionThread(QThread):
                 self.mysqlHostPort = credentials["port"]
 
         self.holding_register_path = "./aikensa/modbus/holding_register_map.yaml"
+        
         self.input_register_path = "./aikensa/modbus/input_register_map.yaml"
 
         self.holding_register_map = load_register_map(self.holding_register_path)
@@ -320,6 +321,10 @@ class InspectionThread(QThread):
 
         self.InspectionResult_PitchMeasured = [None]*30
         self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
+
+        #MODBUS COMMAND RELATED
+        self.AIKENSA_COMMAND = 0
+        self.TRAYPOSITION = 0
 
     @pyqtSlot(dict)
     def on_holding_update(self, reg_dict):
@@ -956,7 +961,7 @@ class InspectionThread(QThread):
                                     image = self.InspectionImages[i]
                                     #This is RH, so crop image from 2080 to 2080+128px
                                     image = image[:, 2070:2070+128, :]
-                                    cv2.imwrite(f"test_{i}.png", image)
+                                    # cv2.imwrite(f"test_{i}.png", image)
                                     _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
                                     self.InspectionSetCorrect_RH[i] = list(_)[0].probs.data.argmax().item()
                                     print(f"Inspection Result Set Correct ID: {self.InspectionSetCorrect_RH[i]}")
