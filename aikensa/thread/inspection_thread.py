@@ -221,6 +221,11 @@ class InspectionThread(QThread):
         self.P4_RH_image_scaled_crop = [0, 174, 700, 199]
         self.P5_RH_image_scaled_crop = [0, 228, 700, 250]
 
+        self.LH_CROP_START = 1306
+        self.RH_CROP_START = 2080
+        self.CROP_WIDTH = 128
+        
+
 
         self.frame_width = 3072
         self.frame_height = 2048
@@ -550,12 +555,12 @@ class InspectionThread(QThread):
                 self.planarizeTransform_right = np.array(transform_list)
                 self.planarizeTransform_right_scaled = scale_translation(self.planarizeTransform_right, self.scale )
 
-        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+        self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [8])
         self.P808387UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
         self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
         
 
-        print(f"AIKENSA_STATUS set to 0")
+        print(f"AIKENSA_STATUS set to 8, means its ready for program.")
 
         while self.running:
 
@@ -788,10 +793,21 @@ class InspectionThread(QThread):
                                 if self.InspectionSet_LH[i] == 1:
                                     image = self.InspectionImages[i]
                                     #This is LH, so crop image from 1296 to 1296+128px
-                                    image = image[:, 1296:1296+128, :]
-                                    _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
+                                    image = image[:, self.LH_CROP_START:self.LH_CROP_START+self.CROP_WIDTH, :]
+                                                                        
+                                    base_path = f"aikensa/temp/LH_test_{i}.png"
+                                    save_path = base_path
+                                    count = 1
+                                    while os.path.exists(save_path):
+                                        save_path = f"aikensa/temp/LH_test_{i}_{count}.png"
+                                        count += 1
+                                    cv2.imwrite(save_path, image)
+
+
+                                    # _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
+                                    _ = self.P8083X7UA0A_SET_CORRECT_Model(image, stream=True, verbose=False, imgsz = 128)
                                     self.InspectionSetCorrect_LH[i] = list(_)[0].probs.data.argmax().item()
-                                    print(f"Inspection Result Set Correct ID: {self.InspectionSetCorrect_LH[i]}")
+                                    print(f"Inspection Result Set Correct LH ID: {self.InspectionSetCorrect_LH[i]}")
 
                                     if self.InspectionSetCorrect_LH[i] == 1:
                                         self.InspectionResult_Status[i] = "製品\nセット\nOK"
@@ -959,10 +975,19 @@ class InspectionThread(QThread):
                             for i in range(len(self.InspectionSet_RH)):
                                 if self.InspectionSet_RH[i] == 1:
                                     image = self.InspectionImages[i]
-                                    #This is RH, so crop image from 2080 to 2080+128px
-                                    image = image[:, 2070:2070+128, :]
-                                    # cv2.imwrite(f"test_{i}.png", image)
-                                    _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
+                                    image = image[:, self.RH_CROP_START:self.RH_CROP_START+self.CROP_WIDTH, :]
+
+                                    # Save image with a unique filename if it already exists
+                                    base_path = f"aikensa/temp/RH_test_{i}.png"
+                                    save_path = base_path
+                                    count = 1
+                                    while os.path.exists(save_path):
+                                        save_path = f"aikensa/temp/RH_test_{i}_{count}.png"
+                                        count += 1
+                                    cv2.imwrite(save_path, image)
+
+                                    # _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
+                                    _ = self.P8083X7UA0A_SET_CORRECT_Model(image, stream=True, verbose=False, imgsz = 128)
                                     self.InspectionSetCorrect_RH[i] = list(_)[0].probs.data.argmax().item()
                                     print(f"Inspection Result Set Correct ID: {self.InspectionSetCorrect_RH[i]}")
 
@@ -1087,8 +1112,8 @@ class InspectionThread(QThread):
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
                         #Need to print in the status bar so user can see and notice it clearly
 
-                if self.AIKENSA_COMMAND == 3:
-                    self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
+                # if self.AIKENSA_COMMAND == 3:
+                #     self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
 
                 # if self.inspection_config.doInspection is True:
                 #     self.inspection_config.doInspection = False
