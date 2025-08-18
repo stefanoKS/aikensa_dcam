@@ -15,6 +15,7 @@ class ModbusClientThread(QThread):
     """
     holdingUpdated = pyqtSignal(dict)
     inputRead      = pyqtSignal(dict)
+    robotConnectionSignal = pyqtSignal(bool)
 
     def __init__(self,
                  host: str,
@@ -41,9 +42,11 @@ class ModbusClientThread(QThread):
         connected = await self._client.connect()
         if not connected:
             _logger.error(f"Failed to connect to {self.host}:{self.port}")
+            self.robotConnectionSignal.emit(False)
             return
         _logger.info(f"Connected to {self.host}:{self.port}")
         self._loop.create_task(self._poll_loop())
+        
 
     async def _poll_loop(self):
         prev_input = None
@@ -89,6 +92,9 @@ class ModbusClientThread(QThread):
                     self.inputRead.emit(data_i)
 
             await asyncio.sleep(self.poll_interval)
+            #Send signal to show that the robot is connected
+            self.robotConnectionSignal.emit(True)
+
 
     def run(self):
         """QThread entry point: start and run the asyncio loop."""

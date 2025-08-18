@@ -2,6 +2,7 @@ import re
 import cv2
 import sys
 from matplotlib.pylab import f
+from sympy import use
 import yaml
 import os
 from enum import Enum
@@ -64,7 +65,6 @@ class AIKensa(QMainWindow):
         
         self.calibration_thread = CalibrationThread(CalibrationConfig())
         self.inspection_thread = InspectionThread(InspectionConfig(),  modbus_client_thread = self.modbusClientThread)  
-        self.inspection_thread.start()
 
         self.modbusClientThread.inputRead.connect(self.inspection_thread.on_input_update)
         self.modbusClientThread.start()
@@ -137,6 +137,8 @@ class AIKensa(QMainWindow):
         self.inspection_thread.P808397UA0A_InspectionResult_Status.connect(self._outputStatusText_P808397UA0A)
         self.inspection_thread.P808387UA0A_InspectionResult_Status.connect(self._outputStatusText_P808387UA0A)
 
+        self.modbusClientThread.robotConnectionSignal.connect(self._updateRobotConnectionStatus)
+
         # self.inspection_thread.partCam.connect(self._setPartFrame)
         # self.inspection_thread.partKatabuL.connect(self._setFrameKatabuL)
         # self.inspection_thread.partKatabuR.connect(self._setFrameKatabuR)
@@ -152,8 +154,8 @@ class AIKensa(QMainWindow):
         # self.inspection_thread.P82833W090P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82833W090P)
         # self.inspection_thread.P82832W080P_InspectionResult_PitchMeasured.connect(self._outputMeasurementText_P82832W080P)
 
-        # self.inspection_thread.current_numofPart_signal.connect(self._update_OKNG_label)
-        # self.inspection_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
+        self.inspection_thread.current_numofPart_signal.connect(self._update_OKNG_label)
+        self.inspection_thread.today_numofPart_signal.connect(self._update_todayOKNG_label)
 
         self.stackedWidget = QStackedWidget()
 
@@ -259,7 +261,7 @@ class AIKensa(QMainWindow):
 
         self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8]
         self.inspection_widget_indices = [7, 8, 21, 22, 23]
-        self.inspection_widget_indices_without_dailytenken = [7, 8]
+
 
         self.timeLabel = [self.stackedWidget.widget(i).findChild(QLabel, "timeLabel") for i in self.widget_indices_list]
 
@@ -281,23 +283,35 @@ class AIKensa(QMainWindow):
         if self.secondary_inspect_set_button:
             self.secondary_inspect_set_button.clicked.connect(lambda: self._set_inspection_params(self.inspection_thread, "doInspectionSetRH", True))
 
-        for i in self.inspection_widget_indices_without_dailytenken:
-            self.connect_inspectionConfig_button(i, "kansei_plus", "kansei_plus", True)
-            self.connect_inspectionConfig_button(i, "kansei_minus", "kansei_minus", True)
-            self.connect_inspectionConfig_button(i, "furyou_plus", "furyou_plus", True)
-            self.connect_inspectionConfig_button(i, "furyou_minus", "furyou_minus", True)
-            self.connect_inspectionConfig_button(i, "kansei_plus_10", "kansei_plus_10", True)
-            self.connect_inspectionConfig_button(i, "kansei_minus_10", "kansei_minus_10", True)
-            self.connect_inspectionConfig_button(i, "furyou_plus_10", "furyou_plus_10", True)
-            self.connect_inspectionConfig_button(i, "furyou_minus_10", "furyou_minus_10", True)
-            #connect reset button
-            self.connect_inspectionConfig_button(i, "counterReset", "counterReset", True)
+        self.robot_status_widget_left = [self.stackedWidget.widget(i).findChild(QLabel, "robot_status") for i in [0, 7]]
+        self.robot_status_widget_right = [self.secondary_stack.widget(i).findChild(QLabel, "robot_status") for i in [1]]
 
-            self.connect_line_edit_text_changed(widget_index=i, line_edit_name="kensain_name", inspection_param="kensainNumber")
 
-            #additional logic for ppms number
-            if i in [13, 14, 15, 16, 17, 18]:
-                self.connect_line_edit_text_changed(widget_index=i, line_edit_name="ppms_number", inspection_param="ppmsnumber")
+
+        self.connect_inspectionConfig_button(7, "kansei_plus_left", "kansei_plus_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "kansei_minus_left", "kansei_minus_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "furyou_plus_left", "furyou_plus_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "furyou_minus_left", "furyou_minus_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "kansei_plus_10_left", "kansei_plus_10_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "kansei_minus_10_left", "kansei_minus_10_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "furyou_plus_10_left", "furyou_plus_10_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "furyou_minus_10_left", "furyou_minus_10_left", True, use_secondary=False)
+        self.connect_inspectionConfig_button(7, "counterReset_left", "counterReset_left", True, use_secondary=False)
+
+        self.connect_inspectionConfig_button(1, "kansei_plus_right", "kansei_plus_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "kansei_minus_right", "kansei_minus_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "furyou_plus_right", "furyou_plus_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "furyou_minus_right", "furyou_minus_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "kansei_plus_10_right", "kansei_plus_10_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "kansei_minus_10_right", "kansei_minus_10_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "furyou_plus_10_right", "furyou_plus_10_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "furyou_minus_10_right", "furyou_minus_10_right", True, use_secondary=True)
+        self.connect_inspectionConfig_button(1, "counterReset_right", "counterReset_right", True, use_secondary=True)
+
+        self.connect_line_edit_text_changed(widget_index=7, line_edit_name="kensain_name", inspection_param="kensainNumber", use_secondary=False)
+
+        self.connect_line_edit_text_changed(widget_index=7, line_edit_name="ppms_number_left", inspection_param="ppmsnumber_left", use_secondary=False)
+        self.connect_line_edit_text_changed(widget_index=1, line_edit_name="ppms_number_right", inspection_param="ppmsnumber_right", use_secondary=True)
 
         for i in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(i)
@@ -314,6 +328,22 @@ class AIKensa(QMainWindow):
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
         self.setCentralWidget(self.stackedWidget)
         self.showFullScreen()
+
+
+    def _updateRobotConnectionStatus(self, connected: bool):
+        
+        status_text = "ON" if connected else "OFF"
+        status_color = "green" if connected else "red"
+
+        for label in self.robot_status_widget_left:
+            if label is not None:
+                label.setText(status_text)
+                label.setStyleSheet(f"color: {status_color};")
+
+        for label in self.robot_status_widget_right:
+            if label is not None:
+                label.setText(status_text)
+                label.setStyleSheet(f"color: {status_color};")
 
     def connect_button_font_color_change(self, widget_index, qtbutton, cam_param):
         widget = self.stackedWidget.widget(widget_index)
@@ -350,18 +380,32 @@ class AIKensa(QMainWindow):
         else:
             print(f"Button '{qtbutton}' not found.")
 
-    def connect_line_edit_text_changed(self, widget_index, line_edit_name, inspection_param):
-        widget = self.stackedWidget.widget(widget_index)
+    def connect_line_edit_text_changed(self, widget_index, line_edit_name, inspection_param, use_secondary=False):
+        """
+        Connects a QLineEdit's textChanged signal to update an inspection parameter.
+        If use_secondary is True, operates on the secondary_stack instead of stackedWidget.
+        """
+        if use_secondary:
+            widget = self.secondary_stack.widget(widget_index)
+        else:
+            widget = self.stackedWidget.widget(widget_index)
         line_edit = widget.findChild(QLineEdit, line_edit_name)
         if line_edit:
             line_edit.textChanged.connect(lambda text: self._set_inspection_params(self.inspection_thread, inspection_param, text))
 
-    def connect_inspectionConfig_button(self, widget_index, button_name, cam_param, value):
-        widget = self.stackedWidget.widget(widget_index)
+    def connect_inspectionConfig_button(self, widget_index, button_name, cam_param, value, use_secondary=False):
+        """
+        Connects a QPushButton to set an inspection parameter.
+        If use_secondary is True, operates on the secondary_stack instead of stackedWidget.
+        """
+        if use_secondary:
+            widget = self.secondary_stack.widget(widget_index)
+        else:
+            widget = self.stackedWidget.widget(widget_index)
         button = widget.findChild(QPushButton, button_name)
         if button:
+            # print(f"Connecting button '{button_name}' in widget index {widget_index} to parameter '{cam_param}' with value '{value}'")
             button.pressed.connect(lambda: self._set_inspection_params(self.inspection_thread, cam_param, value))
-            # print(f"Button '{button_name}' connected to cam_param '{cam_param}' with value '{value}' in widget {widget_index}")
 
     def _close_app(self):
         self.calibration_thread.stop()
@@ -370,9 +414,9 @@ class AIKensa(QMainWindow):
         self.calibration_thread.quit()
         self.inspection_thread.quit()
         self.modbusClientThread.quit()
-        self.calibration_thread.wait(500)
-        self.inspection_thread.wait(500)
-        self.modbusClientThread.wait(500)
+        # self.calibration_thread.wait(500)
+        # self.inspection_thread.wait(500)
+        # self.modbusClientThread.wait(500)
         time.sleep(1.0)
         QCoreApplication.instance().quit()
 
@@ -405,10 +449,13 @@ class AIKensa(QMainWindow):
 
     def _update_OKNG_label(self, numofPart):
         for widget_key, part_name in self.widget_dir_map.items():
-            # Get OK and NG values using widget_key as index
             if 0 <= widget_key < len(numofPart):
                 ok, ng = numofPart[widget_key]
-                widget = self.stackedWidget.widget(widget_key)
+                if widget_key == 8:
+                    # For widget 8, update labels in secondary_stack at index 1
+                    widget = self.secondary_stack.widget(1)
+                else:
+                    widget = self.stackedWidget.widget(widget_key)
                 if widget:
                     current_kansei_label = widget.findChild(QLabel, "current_kansei")
                     current_furyou_label = widget.findChild(QLabel, "current_furyou")
@@ -421,17 +468,20 @@ class AIKensa(QMainWindow):
 
     def _update_todayOKNG_label(self, numofPart):
         for widget_key, part_name in self.widget_dir_map.items():
-            # Get OK and NG values using widget_key as index
             if 0 <= widget_key < len(numofPart):
                 ok, ng = numofPart[widget_key]
-                widget = self.stackedWidget.widget(widget_key)
+                if widget_key == 8:
+                    # For widget 8, update labels in secondary_stack at index 1
+                    widget = self.secondary_stack.widget(1)
+                else:
+                    widget = self.stackedWidget.widget(widget_key)
                 if widget:
-                    current_kansei_label = widget.findChild(QLabel, "status_kansei")
-                    current_furyou_label = widget.findChild(QLabel, "status_furyou")
-                    if current_kansei_label:
-                        current_kansei_label.setText(str(ok))
-                    if current_furyou_label:
-                        current_furyou_label.setText(str(ng))
+                    ruikei_kansei_label = widget.findChild(QLabel, "status_kansei")
+                    ruikei_furyou_label = widget.findChild(QLabel, "status_furyou")
+                    if ruikei_kansei_label:
+                        ruikei_kansei_label.setText(str(ok))
+                    if ruikei_furyou_label:
+                        ruikei_furyou_label.setText(str(ng))
             else:
                 print(f"Widget key {widget_key} is out of bounds for todaynumofPart")
 #5
@@ -468,22 +518,6 @@ class AIKensa(QMainWindow):
                         label.setStyleSheet("background-color: red;")
                     else:
                         label.setStyleSheet("background-color: white;")
-
-    def _update_OKNG_label(self, numofPart):
-        for widget_key, part_name in self.widget_dir_map.items():
-            # Get OK and NG values using widget_key as index
-            if 0 <= widget_key < len(numofPart):
-                ok, ng = numofPart[widget_key]
-                widget = self.stackedWidget.widget(widget_key)
-                if widget:
-                    current_kansei_label = widget.findChild(QLabel, "current_kansei")
-                    current_furyou_label = widget.findChild(QLabel, "current_furyou")
-                    if current_kansei_label:
-                        current_kansei_label.setText(str(ok))
-                    if current_furyou_label:
-                        current_furyou_label.setText(str(ng))
-            else:
-                print(f"Widget key {widget_key} is out of bounds for numofPart")
 
     def _set_labelFrame(self, widget, paramValue, label_names):
         colorOK = "blue"

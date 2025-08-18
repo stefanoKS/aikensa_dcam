@@ -63,17 +63,30 @@ class InspectionConfig:
     doInspectionSetRH: bool = False
 
     kensainNumber: str = None
-    ppmsnumber : str = None
-    furyou_plus: bool = False
-    furyou_minus: bool = False
-    kansei_plus: bool = False
-    kansei_minus: bool = False
-    furyou_plus_10: bool = False #to add 10
-    furyou_minus_10: bool = False
-    kansei_plus_10: bool = False
-    kansei_minus_10: bool = False
 
-    counterReset: bool = False
+    ppmsnumber_left : str = None
+    ppmsnumber_right: str = None
+
+    furyou_plus_left: bool = False
+    furyou_minus_left: bool = False
+    kansei_plus_left: bool = False
+    kansei_minus_left: bool = False
+    furyou_plus_10_left: bool = False #to add 10
+    furyou_minus_10_left: bool = False
+    kansei_plus_10_left: bool = False
+    kansei_minus_10_left: bool = False
+
+    furyou_plus_right: bool = False
+    furyou_minus_right: bool = False
+    kansei_plus_right: bool = False
+    kansei_minus_right: bool = False
+    furyou_plus_10_right: bool = False #to add 10
+    furyou_minus_10_right: bool = False
+    kansei_plus_10_right: bool = False
+    kansei_minus_10_right: bool = False
+
+    counterReset_left: bool = False
+    counterReset_right: bool = False
 
     today_numofPart: list = field(default_factory=lambda: [[0, 0] for _ in range(30)])
     current_numofPart: list = field(default_factory=lambda: [[0, 0] for _ in range(30)])
@@ -100,6 +113,8 @@ class InspectionThread(QThread):
     
     today_numofPart_signal = pyqtSignal(list)
     current_numofPart_signal = pyqtSignal(list)
+
+
 
     requestModbusWrite = pyqtSignal(int, list)
 
@@ -330,6 +345,9 @@ class InspectionThread(QThread):
         #MODBUS COMMAND RELATED
         self.AIKENSA_COMMAND = 0
         self.TRAYPOSITION = 0
+
+
+
 
     @pyqtSlot(dict)
     def on_holding_update(self, reg_dict):
@@ -693,44 +711,86 @@ class InspectionThread(QThread):
 
                     # self.P82832W080P_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
 
+            self.kensaHonsuu_adjustment_flags_left = {
+                "furyou_plus":      self.inspection_config.furyou_plus_left,
+                "furyou_minus":     self.inspection_config.furyou_minus_left,
+                "furyou_plus_10":   self.inspection_config.furyou_plus_10_left,
+                "furyou_minus_10":  self.inspection_config.furyou_minus_10_left,
+                "kansei_plus":      self.inspection_config.kansei_plus_left,
+                "kansei_minus":     self.inspection_config.kansei_minus_left,
+                "kansei_plus_10":   self.inspection_config.kansei_plus_10_left,
+                "kansei_minus_10":  self.inspection_config.kansei_minus_10_left,
+                }
+            self.kensaHonsuu_adjustment_flags_right = {
+                "furyou_plus":      self.inspection_config.furyou_plus_right,
+                "furyou_minus":     self.inspection_config.furyou_minus_right,
+                "furyou_plus_10":   self.inspection_config.furyou_plus_10_right,
+                "furyou_minus_10":  self.inspection_config.furyou_minus_10_right,
+                "kansei_plus":      self.inspection_config.kansei_plus_right,
+                "kansei_minus":     self.inspection_config.kansei_minus_right,
+                "kansei_plus_10":   self.inspection_config.kansei_plus_10_right,
+                "kansei_minus_10":  self.inspection_config.kansei_minus_10_right,
+            }
+
+            if any(self.kensaHonsuu_adjustment_flags_left.values()):
+                w = self.inspection_config.widget
+                cur = self.inspection_config.current_numofPart[w]
+                tot = self.inspection_config.today_numofPart[w]
+                # print(f"Manual Adjustment for widget {w} with current: {cur}, total: {tot}")
+
+                self.inspection_config.current_numofPart[w], self.inspection_config.today_numofPart[w] = \
+                    self.manual_adjustment(
+                        cur, tot,
+                        furyou_plus=self.kensaHonsuu_adjustment_flags_left["furyou_plus"],
+                        furyou_minus=self.kensaHonsuu_adjustment_flags_left["furyou_minus"],
+                        furyou_plus_10=self.kensaHonsuu_adjustment_flags_left["furyou_plus_10"],
+                        furyou_minus_10=self.kensaHonsuu_adjustment_flags_left["furyou_minus_10"],
+                        kansei_plus=self.kensaHonsuu_adjustment_flags_left["kansei_plus"],
+                        kansei_minus=self.kensaHonsuu_adjustment_flags_left["kansei_minus"],
+                        kansei_plus_10=self.kensaHonsuu_adjustment_flags_left["kansei_plus_10"],
+                        kansei_minus_10=self.kensaHonsuu_adjustment_flags_left["kansei_minus_10"],
+                    )
+                print("Manual Adjustment Done")
+
+
+            #print the values
+            if any(self.kensaHonsuu_adjustment_flags_right.values()):
+                w = 8
+                cur = self.inspection_config.current_numofPart[w]
+                tot = self.inspection_config.today_numofPart[w]
+                # print(f"Manual Adjustment for widget {w} with current: {cur}, total: {tot}")
+
+                self.inspection_config.current_numofPart[w], self.inspection_config.today_numofPart[w] = \
+                    self.manual_adjustment(
+                        cur, tot,
+                        furyou_plus=self.kensaHonsuu_adjustment_flags_right["furyou_plus"],
+                        furyou_minus=self.kensaHonsuu_adjustment_flags_right["furyou_minus"],
+                        furyou_plus_10=self.kensaHonsuu_adjustment_flags_right["furyou_plus_10"],
+                        furyou_minus_10=self.kensaHonsuu_adjustment_flags_right["furyou_minus_10"],
+                        kansei_plus=self.kensaHonsuu_adjustment_flags_right["kansei_plus"],
+                        kansei_minus=self.kensaHonsuu_adjustment_flags_right["kansei_minus"],
+                        kansei_plus_10=self.kensaHonsuu_adjustment_flags_right["kansei_plus_10"],
+                        kansei_minus_10=self.kensaHonsuu_adjustment_flags_right["kansei_minus_10"],
+                    )
+                print("Manual Adjustment Done")
+
+            # if self.inspection_config.counterReset_left is True:
+            #     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
+            #     self.inspection_config.counterReset_left = False
+            #     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+            #             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
+            #             currentnumofPart = [0, 0], 
+            #             deltaTime = 0.0,
+            #             kensainName = self.inspection_config.kensainNumber, 
+            #             detected_pitch_str = "COUNTERRESET", 
+            #             delta_pitch_str = "COUNTERRESET", 
+            #             total_length=0,
+            #             resultPitch = "COUNTERRESET",
+            #             status = "COUNTERRESET",
+            #             NGreason = "COUNTERRESET")
 
             if self.inspection_config.widget in [7]:    
-
-                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
-                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
-                        self.inspection_config.furyou_plus, 
-                        self.inspection_config.furyou_minus, 
-                        self.inspection_config.furyou_plus_10, 
-                        self.inspection_config.furyou_minus_10, 
-                        self.inspection_config.kansei_plus, 
-                        self.inspection_config.kansei_minus,
-                        self.inspection_config.kansei_plus_10,
-                        self.inspection_config.kansei_minus_10)
-                    print("Manual Adjustment Done")
-                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
-                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
-                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
-                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
-                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
-                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
-                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
-                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
                     
-                if self.inspection_config.counterReset is True:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-                    self.inspection_config.counterReset = False
-                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
-                            deltaTime = 0.0,
-                            kensainName = self.inspection_config.kensainNumber, 
-                            detected_pitch_str = "COUNTERRESET", 
-                            delta_pitch_str = "COUNTERRESET", 
-                            total_length=0,
-                            resultPitch = "COUNTERRESET",
-                            status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -890,6 +950,13 @@ class InspectionThread(QThread):
                                     print(f"Inspection Result Status: {self.InspectionResult_Status[i]}")
                                     print(f"Inspection Result NG Reason: {self.InspectionResult_NGReason[i]}")
 
+                                    if self.InspectionResult_Status[i] == "OK": 
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
+                                    if self.InspectionResult_Status[i] == "NG": 
+                                        self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
+                                        self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
+
                             #emit the signal for the inspection result
                             self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
                             print(self.InspectionResult_Status)
@@ -917,11 +984,9 @@ class InspectionThread(QThread):
 
                             #Freeze thread for 2 seconds to allow the user to see the results
                             time.sleep(3)
-
-
-
                             #Reset the value
                             self.InspectionResult_PitchMeasured = [None]*30
+                            self.InspectionResult_Status = [None]*5
                             self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
                             self.P808397UA0A_InspectionResult_Status.emit(self.InspectionResult_Status)
 
@@ -1072,6 +1137,13 @@ class InspectionThread(QThread):
                                     print(f"Inspection Result Status: {self.InspectionResult_Status[i]}")
                                     print(f"Inspection Result NG Reason: {self.InspectionResult_NGReason[i]}")
 
+                                    if self.InspectionResult_Status[i] == "OK": 
+                                        self.inspection_config.current_numofPart[8][0] += 1
+                                        self.inspection_config.today_numofPart[8][0] += 1
+                                    if self.InspectionResult_Status[i] == "NG": 
+                                        self.inspection_config.current_numofPart[8][1] += 1
+                                        self.inspection_config.today_numofPart[8][1] += 1
+
                             #emit the signal for the inspection result
                             self.P808387UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
                             print(self.InspectionResult_Status)
@@ -1099,8 +1171,6 @@ class InspectionThread(QThread):
 
                             time.sleep(3)
 
-
-
                             #Reset the value
                             self.InspectionResult_PitchMeasured = [None]*30
                             self.InspectionResult_Status = [None]*5
@@ -1111,145 +1181,6 @@ class InspectionThread(QThread):
                         #This means that the tray is in the wrong position
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
                         #Need to print in the status bar so user can see and notice it clearly
-
-                # if self.AIKENSA_COMMAND == 3:
-                #     self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [0])
-
-                # if self.inspection_config.doInspection is True:
-                #     self.inspection_config.doInspection = False
-                #     print("Inspection Started")
-                #     print(self.inspection_config.kensainNumber)
-
-
-                #     if self.InspectionTimeStart is not None:
-
-                #         if time.time() - self.InspectionTimeStart > self.InspectionWaitTime:
-                #             print("Inspection Time is over")
-                #             self.InspectionTimeStart = time.time()
-
-                #             self.emit = self.combinedImage_scaled
-                #             if self.emit is None:
-                #                 self.emit = np.zeros((428, 1791, 3), dtype=np.uint8)
-
-                #             self.emit = self.draw_status_text_PIL(self.emit, "検査中", (50,150,10), size="large", x_offset = -200, y_offset = -100)
-                #             self.partCam.emit(self.convertQImage(self.emit))
-
-                #             self.mergeframe1 = cv2.remap(self.mergeframe1, self.inspection_config.map1[0], self.inspection_config.map2[0], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-                #             self.mergeframe2 = cv2.remap(self.mergeframe2, self.inspection_config.map1[1], self.inspection_config.map2[1], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-                #             self.mergeframe1 = cv2.rotate(self.mergeframe1, cv2.ROTATE_180)
-                #             self.mergeframe2 = cv2.rotate(self.mergeframe2, cv2.ROTATE_180)
-
-                #             self.combinedImage = warpTwoImages_template(self.homography_blank_canvas, self.mergeframe1, self.H1)
-                #             self.combinedImage = warpTwoImages_template(self.combinedImage, self.mergeframe2, self.H2)
-                #             self.combinedImage = cv2.warpPerspective(self.combinedImage, self.planarizeTransform_wide, (int(self.wide_planarize[1]), int(self.wide_planarize[0])))
-
-                #             self.InspectionImages[0] = self.combinedImage.copy()
-                #             self.InspectionImages_bgr[0] =self.combinedImage.copy()
-                #             self.InspectionImages_bgr[0] = cv2.cvtColor(self.InspectionImages_bgr[0], cv2.COLOR_BGR2RGB)
-
-                #             if self.inspection_config.widget in [5, 6, 7, 8, 9, 10, 11, 12]: # emit katabu
-                #                 if self.inspection_config.widget in [5, 7, 9, 11]:
-                #                     #katabu L is blank
-                #                     #katabu R is cropped image
-                #                     self.katabuImageL = self.createBlackImage(width=256, height=128)
-                #                     self.katabuImageR = self.frameCrop(self.combinedImage, self.katabuImageR_Crop[0], self.katabuImageR_Crop[1], self.katabuImageR_Crop[2], self.katabuImageR_Crop[3], self.katabuImageR_Crop[4], self.katabuImageR_Crop[5])
-                #                     self.katabuImage = self.katabuImageR.copy()
-                #                     self.katabuImage_init = self.katabuImageR.copy()
-                #                 if self.inspection_config.widget in [6, 8, 10, 12]: 
-                #                     #katabu L is cropped image
-                #                     #katabu R is blank
-                #                     self.katabuImageL = self.frameCrop(self.combinedImage, self.katabuImageL_Crop[0], self.katabuImageL_Crop[1], self.katabuImageL_Crop[2], self.katabuImageL_Crop[3], self.katabuImageL_Crop[4], self.katabuImageL_Crop[5])
-                #                     self.katabuImageR = self.createBlackImage(width=256, height=128)
-                #                     self.katabuImage = self.katabuImageL.copy()
-                #                     self.katabuImage_init = self.katabuImageL.copy()
-
-                #                 self.partKatabuL.emit(self.convertQImage(self.katabuImageL))
-                #                 self.partKatabuR.emit(self.convertQImage(self.katabuImageR))
-
-                #             for i in range(len(self.InspectionImages)):
-                #                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
-                #                             self.InspectionImages_bgr[i], 
-                #                             self.P828XXW0X0P_CLIP_Model, 
-                #                             slice_height=1280, slice_width=1280, 
-                #                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
-                #                             postprocess_match_metric="IOS",
-                #                             postprocess_match_threshold=0.2,
-                #                             postprocess_class_agnostic=True,
-                #                             postprocess_type="GREEDYNMM",
-                #                             verbose=0,
-                #                             perform_standard_pred=False
-                #                         )
-                #                 if self.inspection_config.widget in [5, 7, 9, 11]:
-                #                     self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtColor(self.katabuImage, cv2.COLOR_BGR2RGB),
-                #                                                                                         stream=True,
-                #                                                                                         verbose=False,
-                #                                                                                         conf=0.1,
-                #                                                                                         iou=0.5)
-
-                #                 if self.inspection_config.widget in [6, 8, 10, 12]: 
-                #                     self.InspectionResult_KatabuDetection = self.P828XXW0X0P_KATABU_Model(cv2.cvtColor(self.katabuImage, cv2.COLOR_BGR2RGB),
-                #                                                                                         stream=True,
-                #                                                                                         verbose=False,
-                #                                                                                         conf=0.1,
-                #                                                                                         iou=0.5)    
-                                    
-                #                 self.InspectionImages[i], self.InspectionImagesKatabu[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]  = P828XXW0X0P_check(self.InspectionImages[i], self.katabuImage,
-                #                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
-                #                                                                                                                                                                                                 self.InspectionResult_KatabuDetection,
-                #                                                                                                                                                                                                 self.widget_name_map[self.inspection_config.widget])
-
-
-                #                 for i in range(len(self.InspectionResult_Status)):
-                #                     if self.InspectionResult_Status[i] == "OK": 
-                #                         # Increment the 'OK' count at the appropriate index (1)
-                #                         self.inspection_config.current_numofPart[self.inspection_config.widget][0] += 1
-                #                         self.inspection_config.today_numofPart[self.inspection_config.widget][0] += 1
-                #                         play_ok_sound()
-
-                #                     elif self.InspectionResult_Status[i] == "NG": 
-                #                         # Increment the 'NG' count at the appropriate index (0)
-                #                         self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
-                #                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
-                #                         play_ng_sound()
-
-                #             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
-                #             self.save_image_result_withKatabu(self.combinedImage, self.InspectionImages[0], self.katabuImage_init, self.InspectionImagesKatabu[0], self.InspectionResult_Status[0])
-
-                #             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                #                     numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
-                #                     currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
-                #                     deltaTime = 0.0,
-                #                     kensainName = self.inspection_config.kensainNumber, 
-                #                     detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
-                #                     delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                #                     total_length=0,
-                #                     resultPitch = self.InspectionResult_PitchResult[0], 
-                #                     status = self.InspectionResult_Status[0], 
-                #                     NGreason = self.InspectionResult_NGReason[0])
-
-
-                #             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                #             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                #             self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
-
-                #             self.P82833W050PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                #             self.P82832W040PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                #             self.P82833W090PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                #             self.P82832W080PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-
-
-                #             self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-                #             self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
-
-                #             if self.inspection_config.widget in [5, 7, 9, 11]:
-                #                 self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
-                #             if self.inspection_config.widget in [6, 8, 10, 12]: 
-                #                 self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
-                            
-                            
-
-                #             time.sleep(1.5)
-
 
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
@@ -1275,14 +1206,23 @@ class InspectionThread(QThread):
             return image  # Return the original image if an error occurs
 
     def setCounterFalse(self):
-        self.inspection_config.furyou_plus = False
-        self.inspection_config.furyou_minus = False
-        self.inspection_config.kansei_plus = False
-        self.inspection_config.kansei_minus = False
-        self.inspection_config.furyou_plus_10 = False
-        self.inspection_config.furyou_minus_10 = False
-        self.inspection_config.kansei_plus_10 = False
-        self.inspection_config.kansei_minus_10 = False
+        self.inspection_config.furyou_plus_left = False
+        self.inspection_config.furyou_minus_left = False
+        self.inspection_config.kansei_plus_left = False
+        self.inspection_config.kansei_minus_left = False
+        self.inspection_config.furyou_plus_10_left = False
+        self.inspection_config.furyou_minus_10_left = False
+        self.inspection_config.kansei_plus_10_left = False
+        self.inspection_config.kansei_minus_10_left = False
+
+        self.inspection_config.furyou_plus_right = False
+        self.inspection_config.furyou_minus_right = False
+        self.inspection_config.kansei_plus_right = False
+        self.inspection_config.kansei_minus_right = False
+        self.inspection_config.furyou_plus_10_right = False
+        self.inspection_config.furyou_minus_10_right = False
+        self.inspection_config.kansei_plus_10_right = False
+        self.inspection_config.kansei_minus_10_right = False
 
     def manual_adjustment(self, currentPart, Totalpart,
                           furyou_plus, furyou_minus, 
@@ -1329,18 +1269,18 @@ class InspectionThread(QThread):
 
         self.setCounterFalse()
 
-        self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                numofPart = [ok_count_total, ng_count_total], 
-                currentnumofPart = [ok_count_current, ng_count_current],
-                deltaTime = 0.0,
-                kensainName = self.inspection_config.kensainNumber, 
-                detected_pitch_str = "MANUAL", 
-                delta_pitch_str = "MANUAL", 
-                total_length=0,
-                resultPitch = "MANUAL",
-                status = "MANUAL",
-                NGreason = "MANUAL",
-                PPMS="MANUAL")
+        # self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
+        #         numofPart = [ok_count_total, ng_count_total], 
+        #         currentnumofPart = [ok_count_current, ng_count_current],
+        #         deltaTime = 0.0,
+        #         kensainName = self.inspection_config.kensainNumber, 
+        #         detected_pitch_str = "MANUAL", 
+        #         delta_pitch_str = "MANUAL", 
+        #         total_length=0,
+        #         resultPitch = "MANUAL",
+        #         status = "MANUAL",
+        #         NGreason = "MANUAL",
+        #         PPMS="MANUAL")
 
         return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
     

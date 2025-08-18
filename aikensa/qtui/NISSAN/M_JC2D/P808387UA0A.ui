@@ -1838,7 +1838,7 @@ OK Parts:</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="current_kansei_right">
+   <widget class="QLabel" name="current_kansei">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -1896,7 +1896,7 @@ NG Parts:</string>
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="current_furyou_right">
+   <widget class="QLabel" name="current_furyou">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -1925,7 +1925,7 @@ background-color: rgb(238, 238, 236);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="status_furyou_right">
+   <widget class="QLabel" name="status_furyou">
     <property name="geometry">
      <rect>
       <x>790</x>
@@ -2004,7 +2004,7 @@ background-color: rgb(238, 238, 236);</string>
 background-color: rgb(38, 162, 105);</string>
     </property>
     <property name="text">
-     <string>本日合計</string>
+     <string>本日累計</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -2038,7 +2038,7 @@ background-color: rgb(38, 162, 105);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="status_kansei_right">
+   <widget class="QLabel" name="status_kansei">
     <property name="geometry">
      <rect>
       <x>790</x>
@@ -2781,6 +2781,107 @@ Counter Reset</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QLabel" name="robot_status">
+    <property name="geometry">
+     <rect>
+      <x>1160</x>
+      <y>950</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 0, 0);</string>
+    </property>
+    <property name="text">
+     <string>OFF</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>950</x>
+      <y>950</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>ロボット接続：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_ppms">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>830</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>PPMS番号：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="ppms_number_right">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>830</y>
+      <width>251</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>NONUMBER</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_25</zorder>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
@@ -2794,14 +2895,14 @@ Counter Reset</string>
    <zorder>partlabel_7</zorder>
    <zorder>partlabel_8</zorder>
    <zorder>label_6</zorder>
-   <zorder>current_kansei_right</zorder>
+   <zorder>current_kansei</zorder>
    <zorder>label_7</zorder>
-   <zorder>current_furyou_right</zorder>
+   <zorder>current_furyou</zorder>
    <zorder>partlabel</zorder>
-   <zorder>status_furyou_right</zorder>
+   <zorder>status_furyou</zorder>
    <zorder>label_26</zorder>
    <zorder>label_24</zorder>
-   <zorder>status_kansei_right</zorder>
+   <zorder>status_kansei</zorder>
    <zorder>label_9</zorder>
    <zorder>counterReset</zorder>
    <zorder>furyou_plus_10_right</zorder>
@@ -2830,6 +2931,10 @@ Counter Reset</string>
    <zorder>P3color_3</zorder>
    <zorder>P3color_2</zorder>
    <zorder>InspectSetButtonRH</zorder>
+   <zorder>robot_status</zorder>
+   <zorder>label_8</zorder>
+   <zorder>label_ppms</zorder>
+   <zorder>ppms_number_right</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

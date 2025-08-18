@@ -2101,7 +2101,7 @@ background-color: rgb(238, 238, 236);</string>
 background-color: rgb(38, 162, 105);</string>
     </property>
     <property name="text">
-     <string>本日合計</string>
+     <string>本日累計</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -2224,7 +2224,7 @@ Counter Reset</string>
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_plus_10">
+   <widget class="QPushButton" name="furyou_plus_10_left">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -2245,7 +2245,7 @@ Counter Reset</string>
      <string>+10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_plus_10">
+   <widget class="QPushButton" name="kansei_plus_10_left">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -2266,7 +2266,7 @@ Counter Reset</string>
      <string>+10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_plus">
+   <widget class="QPushButton" name="kansei_plus_left">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -2287,7 +2287,7 @@ Counter Reset</string>
      <string>+1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_minus_10">
+   <widget class="QPushButton" name="furyou_minus_10_left">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2308,7 +2308,7 @@ Counter Reset</string>
      <string>-10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_minus">
+   <widget class="QPushButton" name="kansei_minus_left">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2329,7 +2329,7 @@ Counter Reset</string>
      <string>-1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="kansei_minus_10">
+   <widget class="QPushButton" name="kansei_minus_10_left">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2350,7 +2350,7 @@ Counter Reset</string>
      <string>-10</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_minus">
+   <widget class="QPushButton" name="furyou_minus_left">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -2371,7 +2371,7 @@ Counter Reset</string>
      <string>-1</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="furyou_plus">
+   <widget class="QPushButton" name="furyou_plus_left">
     <property name="geometry">
      <rect>
       <x>270</x>
@@ -2878,6 +2878,107 @@ Counter Reset</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QLabel" name="robot_status">
+    <property name="geometry">
+     <rect>
+      <x>1160</x>
+      <y>950</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 0, 0);</string>
+    </property>
+    <property name="text">
+     <string>OFF</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>950</x>
+      <y>950</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>22</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>ロボット接続：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="ppms_number_left">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>830</y>
+      <width>251</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
+    </property>
+    <property name="text">
+     <string>NONUMBER</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_ppms_2">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>830</y>
+      <width>181</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>17</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(238, 238, 236);</string>
+    </property>
+    <property name="text">
+     <string>PPMS番号：</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_25</zorder>
    <zorder>line_1</zorder>
    <zorder>line_2</zorder>
@@ -2905,14 +3006,14 @@ Counter Reset</string>
    <zorder>status_kansei</zorder>
    <zorder>label_9</zorder>
    <zorder>counterReset</zorder>
-   <zorder>furyou_plus_10</zorder>
-   <zorder>kansei_plus_10</zorder>
-   <zorder>kansei_plus</zorder>
-   <zorder>furyou_minus_10</zorder>
-   <zorder>kansei_minus</zorder>
-   <zorder>kansei_minus_10</zorder>
-   <zorder>furyou_minus</zorder>
-   <zorder>furyou_plus</zorder>
+   <zorder>furyou_plus_10_left</zorder>
+   <zorder>kansei_plus_10_left</zorder>
+   <zorder>kansei_plus_left</zorder>
+   <zorder>furyou_minus_10_left</zorder>
+   <zorder>kansei_minus_left</zorder>
+   <zorder>kansei_minus_10_left</zorder>
+   <zorder>furyou_minus_left</zorder>
+   <zorder>furyou_plus_left</zorder>
    <zorder>P6color</zorder>
    <zorder>P5color</zorder>
    <zorder>P4color</zorder>
@@ -2931,6 +3032,10 @@ Counter Reset</string>
    <zorder>P3color_2</zorder>
    <zorder>P3color_3</zorder>
    <zorder>InspectSetButtonLH</zorder>
+   <zorder>robot_status</zorder>
+   <zorder>label_10</zorder>
+   <zorder>ppms_number_left</zorder>
+   <zorder>label_ppms_2</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
