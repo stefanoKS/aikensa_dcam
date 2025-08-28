@@ -138,7 +138,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         tolerance_pitch = pitchTolerance_080P
         idSpec = clipSpec_080P
 
-
     elif partname == "P82833W050PKENGEN":
         pitchSpec = pitchSpec_050PKENGEN
         tolerance_pitch = pitchTolerance_050P
@@ -158,7 +157,6 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
         pitchSpec = pitchSpec_080PKENGEN
         tolerance_pitch = pitchTolerance_080P
         idSpec = clipSpec_080P
-
 
     elif partname == "P82833W050PCLIPSOUNYUUKI":
         pitchSpec = pitchSpec_050PCLIPSOUNYUUKI
@@ -183,7 +181,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     #KATABU MARKING DETECTION
     #only do the katabu marking detection if the part is not ___clipsounyuuki
-    if partname not in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
+    if partname  in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
             
         #class 0 is for clip, class 1 is for katabu marking
         for r in katabumarking_detection:
@@ -246,7 +244,14 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
                 return image, img_katabumarking, measuredPitch, resultPitch, resultid, status, ngreason
     
     for i, detection in enumerate(sorted_detections):
-        detectedid.append(detection.category.id)
+
+        if partname in ["P82833W050PKENGEN", "P82832W040PKENGEN"] and detection.category.id == 4:
+            print ("Hole detected")
+            continue
+        else:
+            detectedid.append(detection.category.id)
+
+
         bbox = detection.bbox
         x, y = get_center(bbox)
         w = bbox.maxx - bbox.minx
@@ -267,6 +272,8 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
             image = drawbox(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
             image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
         prev_center = center
+
+
 
 
         #only do the not clipsounyuuki once

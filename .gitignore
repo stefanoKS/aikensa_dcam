@@ -190,3 +190,4 @@ aikensa/cameracalibration/*
 aikensa/param/*
 aikensa/camscripts/cam_config.yaml
 aikensa/mysql/id.yaml
+aikensa/parts_config/partsSettingsMultiplier.yaml
