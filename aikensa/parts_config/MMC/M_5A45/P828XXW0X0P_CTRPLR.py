@@ -181,8 +181,7 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
     #KATABU MARKING DETECTION
     #only do the katabu marking detection if the part is not ___clipsounyuuki
-    if partname  in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
-            
+    if partname not in ["P82833W050PCLIPSOUNYUUKI", "P82832W040PCLIPSOUNYUUKI", "P82833W090PCLIPSOUNYUUKI", "P82832W080PCLIPSOUNYUUKI"]:
         #class 0 is for clip, class 1 is for katabu marking
         for r in katabumarking_detection:
             for box in r.boxes:
@@ -247,31 +246,28 @@ def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detec
 
         if partname in ["P82833W050PKENGEN", "P82832W040PKENGEN"] and detection.category.id == 4:
             print ("Hole detected")
-            continue
         else:
             detectedid.append(detection.category.id)
+            bbox = detection.bbox
+            x, y = get_center(bbox)
+            w = bbox.maxx - bbox.minx
+            h = bbox.maxy - bbox.miny
 
+            detectedposX.append(x)
+            detectedposY.append(y)
+            detectedWidth.append(w)
 
-        bbox = detection.bbox
-        x, y = get_center(bbox)
-        w = bbox.maxx - bbox.minx
-        h = bbox.maxy - bbox.miny
+            image_copy = image.copy()
 
-        detectedposX.append(x)
-        detectedposY.append(y)
-        detectedWidth.append(w)
+            center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
 
-        image_copy = image.copy()
-
-        center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
-
-        if prev_center is not None:
-            length = calclength(prev_center, center)*pixelMultiplier
-            measuredPitch.append(length)
-            line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
-            image = drawbox(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
-            image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
-        prev_center = center
+            if prev_center is not None:
+                length = calclength(prev_center, center)*pixelMultiplier
+                measuredPitch.append(length)
+                line_center = ((prev_center[0] + center[0]) // 2, (prev_center[1] + center[1]) // 2)
+                image = drawbox(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
+                image = drawtext(image, line_center, length, font_scale=2.0, offset=40, font_thickness=2)
+            prev_center = center
 
 
 
