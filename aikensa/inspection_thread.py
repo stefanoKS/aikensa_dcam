@@ -1144,7 +1144,7 @@ class InspectionThread(QThread):
                                 font = ImageFont.truetype(self.kanjiFontPath, 120)
                                 draw = ImageDraw.Draw(img_pil)
                                 centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                                draw.text((centerpos[0]-900, centerpos[1]+20), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
+                                draw.text((centerpos[0]-900, centerpos[1]+20), u"ケースを変えてください", font=font, fill=(5, 80, 160, 0))
                                 imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
                                 play_konpou_sound()
                                 self.InspectionImages[0] = imgResult
@@ -1317,7 +1317,7 @@ class InspectionThread(QThread):
                                 font = ImageFont.truetype(self.kanjiFontPath, 120)
                                 draw = ImageDraw.Draw(img_pil)
                                 centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                                draw.text((centerpos[0]-900, centerpos[1]+20), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
+                                draw.text((centerpos[0]-900, centerpos[1]+20), u"ケースを変えてください", font=font, fill=(5, 80, 160, 0))
                                 imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
                                 play_konpou_sound()
                                 self.InspectionImages[0] = imgResult
