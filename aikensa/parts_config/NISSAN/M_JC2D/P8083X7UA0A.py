@@ -43,12 +43,14 @@ endoffset_y = 0
 bbox_offset = 1
 
 pixelMultiplier = 0.1996 #0.1592
+pixelMultiplier_eptoLH = 0.21
+pixelMultiplier_eptoRH = 0.20
 
 segmentation_pixel_start = 0
-segmentation_pixel_finish = 512
+segmentation_pixel_finish = 256
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
 
-border_width = 384
+border_width = 256
 
 
 def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, partSide):
@@ -143,7 +145,16 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
         combined_mask[:, segmentation_pixel_start:segmentation_pixel_finish] = combined_lmask
         combined_mask[:, -segmentation_pixel_finish:] = combined_rmask
 
-    # cv2.imwrite("combined_mask.jpg", combined_mask)
+
+        # Save combined_mask with incrementing number if file exists
+        # base_filename = "combined_mask"
+        # ext = ".jpg"
+        # filename = f"{base_filename}{ext}"
+        # counter = 1
+        # while os.path.exists(filename):
+        #     filename = f"{base_filename}_{counter}{ext}"
+        #     counter += 1
+        # cv2.imwrite(filename, combined_mask)
 
     for i, detection in enumerate(sorted_detections):
 
@@ -199,8 +210,8 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
         rightmostWidth = detectedWidth[-1]
       
         # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -40, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -40, Xoffsetval = 0)
+        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -10, Xoffsetval = 0)
+        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -10, Xoffsetval = 0)
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
@@ -246,13 +257,13 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
     if detectedid == idSpec_with_epto:
         if partSide == "LH":
             epto_left = abs(detectedposX[3] - epto_edge_point[0])
-            epto_left = round(epto_left * pixelMultiplier, 1)
+            epto_left = round(epto_left * pixelMultiplier_eptoLH, 1)
             measuredPitch.append(epto_left)
             measuredPitch.append(epto_width)
 
         if partSide == "RH":
             epto_right = abs(epto_edge_point[0] - detectedposX[5])
-            epto_right = round(epto_right * pixelMultiplier, 1)
+            epto_right = round(epto_right * pixelMultiplier_eptoRH, 1)
             measuredPitch.append(epto_right)
             measuredPitch.append(epto_width)
 

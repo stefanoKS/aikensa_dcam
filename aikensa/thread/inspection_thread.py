@@ -1,4 +1,5 @@
 import inspect
+from logging import config
 from tabnanny import verbose
 import cv2
 import os
@@ -224,16 +225,16 @@ class InspectionThread(QThread):
         self.P5_RH_image_scaled = None
 
         #value for opencv cropping
-        self.P1_LH_image_scaled_crop = [0, 11, 700, 36]
-        self.P2_LH_image_scaled_crop = [0, 66, 700, 91]
-        self.P3_LH_image_scaled_crop = [0, 121, 700, 146]
-        self.P4_LH_image_scaled_crop = [0, 174, 700, 199]
-        self.P5_LH_image_scaled_crop = [0, 229, 700, 254]
+        self.P1_LH_image_scaled_crop = [0, 8, 700, 33]
+        self.P2_LH_image_scaled_crop = [0, 63, 700, 88]
+        self.P3_LH_image_scaled_crop = [0, 116, 700, 141]
+        self.P4_LH_image_scaled_crop = [0, 173, 700, 198]
+        self.P5_LH_image_scaled_crop = [0, 228, 700, 250]
 
-        self.P1_RH_image_scaled_crop = [0, 11, 700, 36]
-        self.P2_RH_image_scaled_crop = [0, 65, 700, 90]
-        self.P3_RH_image_scaled_crop = [0, 119, 700, 144]
-        self.P4_RH_image_scaled_crop = [0, 174, 700, 199]
+        self.P1_RH_image_scaled_crop = [0, 8, 700, 33]
+        self.P2_RH_image_scaled_crop = [0, 63, 700, 88]
+        self.P3_RH_image_scaled_crop = [0, 116, 700, 141]
+        self.P4_RH_image_scaled_crop = [0, 172, 700, 197]
         self.P5_RH_image_scaled_crop = [0, 228, 700, 250]
 
         self.LH_CROP_START = 1306
@@ -276,8 +277,8 @@ class InspectionThread(QThread):
         self.InspectionSetCorrect_RH = [None] * 5
         self.InspectionPitch = [None] * 10
         
-        self.segmentation_width = 512
-        self.segmentation_border = 384
+        self.segmentation_width = 256
+        self.segmentation_border = 256
 
         self.InspectionResult_ClipDetection = [None] * 10
 
@@ -749,7 +750,9 @@ class InspectionThread(QThread):
                         kansei_minus=self.kensaHonsuu_adjustment_flags_left["kansei_minus"],
                         kansei_plus_10=self.kensaHonsuu_adjustment_flags_left["kansei_plus_10"],
                         kansei_minus_10=self.kensaHonsuu_adjustment_flags_left["kansei_minus_10"],
+                        config_widget=w
                     )
+                print (w)
                 print("Manual Adjustment Done")
 
 
@@ -771,7 +774,9 @@ class InspectionThread(QThread):
                         kansei_minus=self.kensaHonsuu_adjustment_flags_right["kansei_minus"],
                         kansei_plus_10=self.kensaHonsuu_adjustment_flags_right["kansei_plus_10"],
                         kansei_minus_10=self.kensaHonsuu_adjustment_flags_right["kansei_minus_10"],
+                        config_widget=w
                     )
+                print(w)
                 print("Manual Adjustment Done")
 
             # if self.inspection_config.counterReset_left is True:
@@ -966,16 +971,15 @@ class InspectionThread(QThread):
                             #resize resize_image(self.P1_RH_image_scaled, width=1791, height=71)
                             for j in range(5):
                                 #add date time to the image name
-                                cv2.imwrite(f"./aikensa/training_images/P{j+1}_LH_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png", self.InspectionImages_raw[j])
                                 signal_attr = f"P{j+1}_LH_Signal"
                                 img = self.InspectionImages[j]
+                                self.save_image_result(self.InspectionImages_raw[j], self.InspectionImages[j], self.InspectionResult_Status[j], 7, j)
                                 #resize image to 1791x71
                                 img = resize_image(img, width=1791, height=71)
                                 #emit the signal
                                 signal = getattr(self, signal_attr, None)
                                 if img is not None and signal is not None:
                                     signal.emit(self.convertQImage(img))
-
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
                             time.sleep(1.5)
@@ -1125,8 +1129,8 @@ class InspectionThread(QThread):
                                     self.InspectionImages_endSegmentation_Right[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Right[i], cv2.COLOR_BGR2RGB)
                                     self.InspectionImages_endSegmentation_Left[i] = add_imageborder(self.InspectionImages_endSegmentation_Left[i], width = self.segmentation_border)
                                     self.InspectionImages_endSegmentation_Right[i] = add_imageborder(self.InspectionImages_endSegmentation_Right[i], width = self.segmentation_border)
-                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
-                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.3, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.3, imgsz=1280, verbose=False, retina_masks=True)
                                     self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P8083X7UA0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                   self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                   self.InspectionResult_EndSegmentation_Left[i],
@@ -1153,10 +1157,11 @@ class InspectionThread(QThread):
                             #resize resize_image(self.P1_RH_image_scaled, width=1791, height=71)
                             for j in range(5):
                                 #add date time to the image name
-                                cv2.imwrite(f"./aikensa/training_images/P{j+1}_RH_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png", self.InspectionImages_raw[j])
+                                # cv2.imwrite(f"./aikensa/training_images/P{j+1}_RH_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png", self.InspectionImages_raw[j])
                                 signal_attr = f"P{j+1}_RH_Signal"
                                 img = self.InspectionImages[j]
                                 #resize image to 1791x71
+                                self.save_image_result(self.InspectionImages_raw[j], self.InspectionImages[j], self.InspectionResult_Status[j], 8 , j)
                                 img = resize_image(img, width=1791, height=71)
                                 #emit the signal
                                 signal = getattr(self, signal_attr, None)
@@ -1228,7 +1233,8 @@ class InspectionThread(QThread):
                           furyou_plus, furyou_minus, 
                           furyou_plus_10, furyou_minus_10,
                           kansei_plus, kansei_minus,
-                          kansei_plus_10, kansei_minus_10):
+                          kansei_plus_10, kansei_minus_10,
+                          config_widget):
         
         ok_count_current = currentPart[0]
         ng_count_current = currentPart[1]
@@ -1269,18 +1275,18 @@ class InspectionThread(QThread):
 
         self.setCounterFalse()
 
-        # self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-        #         numofPart = [ok_count_total, ng_count_total], 
-        #         currentnumofPart = [ok_count_current, ng_count_current],
-        #         deltaTime = 0.0,
-        #         kensainName = self.inspection_config.kensainNumber, 
-        #         detected_pitch_str = "MANUAL", 
-        #         delta_pitch_str = "MANUAL", 
-        #         total_length=0,
-        #         resultPitch = "MANUAL",
-        #         status = "MANUAL",
-        #         NGreason = "MANUAL",
-        #         PPMS="MANUAL")
+        self.save_result_database(partname = self.widget_dir_map[config_widget],
+                numofPart = [ok_count_total, ng_count_total], 
+                currentnumofPart = [ok_count_current, ng_count_current],
+                deltaTime = 0.0,
+                kensainName = self.inspection_config.kensainNumber, 
+                detected_pitch_str = "MANUAL", 
+                delta_pitch_str = "MANUAL", 
+                total_length=0,
+                resultPitch = "MANUAL",
+                status = "MANUAL",
+                NGreason = "MANUAL",
+                PPMS="MANUAL")
 
         return [ok_count_current, ng_count_current], [ok_count_total, ng_count_total]
     
@@ -1392,21 +1398,57 @@ class InspectionThread(QThread):
 
         return image
 
-    def save_image_result(self, image_initial, image_result, result):
-        raw_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" +  str(result) + "/nama/"
-        result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
+    def save_image_result(self, image_initial, image_result, result, widget, j):
+        # Save images to temporary in-memory placeholders before writing to disk
+        self.temp_image_initial = image_initial.copy() if image_initial is not None else None
+        self.temp_image_result = image_result.copy() if image_result is not None else None
+
+        raw_dir = "aikensa/inspection_results/" + self.widget_dir_map[widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" +  str(result) + "/nama/"
+        result_dir = "aikensa/inspection_results/" + self.widget_dir_map[widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
         os.makedirs(raw_dir, exist_ok=True)
         os.makedirs(result_dir, exist_ok=True)
-        cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
-        cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
+        # Add part j in the filename
+        filename = f"P{j+1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        cv2.imwrite(os.path.join(raw_dir, filename), self.temp_image_initial)
+        cv2.imwrite(os.path.join(result_dir, filename), self.temp_image_result)
+
+    # def convertQImage(self, image):
+    #     h, w, ch = image.shape
+    #     bytesPerLine = ch * w
+    #     processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_BGR888)
+    #     return processed_image
 
     def convertQImage(self, image):
-        h, w, ch = image.shape
-        bytesPerLine = ch * w
-        processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_BGR888)
-        return processed_image
+        """
+        Safe conversion: returns a QImage that owns its memory.
+        Works for BGR (OpenCV), BGRA, and grayscale.
+        """
+        if image is None:
+            return QImage()
+
+        # Ensure contiguous uint8 buffer
+        if image.dtype != np.uint8:
+            image = image.astype(np.uint8)
+        if not image.flags['C_CONTIGUOUS']:
+            image = np.ascontiguousarray(image)
+
+        h, w = image.shape[:2]
+
+        if image.ndim == 2:
+            # Grayscale
+            qimg = QImage(image.data, w, h, w, QImage.Format_Grayscale8)
+        elif image.shape[2] == 3:
+            # OpenCV BGR
+            qimg = QImage(image.data, w, h, 3*w, QImage.Format_BGR888)
+        elif image.shape[2] == 4:
+            # OpenCV BGRA
+            qimg = QImage(image.data, w, h, 4*w, QImage.Format_BGRA8888)
+        else:
+            raise ValueError(f"Unsupported image shape: {image.shape}")
+
+        return qimg.copy()   # <-- forces deep copy; QImage owns its data
     
-    def converQImageRGB(self, image):
+    def convertQImageRGB(self, image):
         h, w, ch = image.shape
         bytesPerLine = ch * w
         processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_RGB888)
