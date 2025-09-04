@@ -237,8 +237,8 @@ class InspectionThread(QThread):
         self.P4_RH_image_scaled_crop = [0, 172, 700, 197]
         self.P5_RH_image_scaled_crop = [0, 228, 700, 250]
 
-        self.LH_CROP_START = 1306
-        self.RH_CROP_START = 2080
+        self.LH_CROP_START = 1261
+        self.RH_CROP_START = 2090
         self.CROP_WIDTH = 128
         
 
@@ -859,14 +859,17 @@ class InspectionThread(QThread):
                                     image = self.InspectionImages[i]
                                     #This is LH, so crop image from 1296 to 1296+128px
                                     image = image[:, self.LH_CROP_START:self.LH_CROP_START+self.CROP_WIDTH, :]
-                                                                        
-                                    base_path = f"aikensa/temp/LH_test_{i}.png"
-                                    save_path = base_path
-                                    count = 1
-                                    while os.path.exists(save_path):
-                                        save_path = f"aikensa/temp/LH_test_{i}_{count}.png"
-                                        count += 1
-                                    cv2.imwrite(save_path, image)
+
+                                       
+                                    # save image for debugging
+
+                                    # base_path = f"aikensa/temp/LH_test_{i}.png"
+                                    # save_path = base_path
+                                    # count = 1
+                                    # while os.path.exists(save_path):
+                                    #     save_path = f"aikensa/temp/LH_test_{i}_{count}.png"
+                                    #     count += 1
+                                    # cv2.imwrite(save_path, image)
 
 
                                     # _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
@@ -1046,14 +1049,14 @@ class InspectionThread(QThread):
                                     image = self.InspectionImages[i]
                                     image = image[:, self.RH_CROP_START:self.RH_CROP_START+self.CROP_WIDTH, :]
 
-                                    # Save image with a unique filename if it already exists
-                                    base_path = f"aikensa/temp/RH_test_{i}.png"
-                                    save_path = base_path
-                                    count = 1
-                                    while os.path.exists(save_path):
-                                        save_path = f"aikensa/temp/RH_test_{i}_{count}.png"
-                                        count += 1
-                                    cv2.imwrite(save_path, image)
+                                    # # Save image with a unique filename if it already exists
+                                    # base_path = f"aikensa/temp/RH_test_{i}.png"
+                                    # save_path = base_path
+                                    # count = 1
+                                    # while os.path.exists(save_path):
+                                    #     save_path = f"aikensa/temp/RH_test_{i}_{count}.png"
+                                    #     count += 1
+                                    # cv2.imwrite(save_path, image)
 
                                     # _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
                                     _ = self.P8083X7UA0A_SET_CORRECT_Model(image, stream=True, verbose=False, imgsz = 128)

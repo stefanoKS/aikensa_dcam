@@ -2608,53 +2608,6 @@ Counter Reset</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_ppms">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>950</y>
-      <width>181</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Ubuntu Mono</family>
-      <pointsize>17</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
-      <underline>false</underline>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
-    </property>
-    <property name="text">
-     <string>PPMS番号：</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="ppms_number">
-    <property name="geometry">
-     <rect>
-      <x>520</x>
-      <y>950</y>
-      <width>251</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(255, 255, 255);</string>
-    </property>
-    <property name="text">
-     <string>NONUMBER</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
    <widget class="QLabel" name="P4_LH_STATUS">
     <property name="geometry">
      <rect>
@@ -3022,8 +2975,6 @@ Counter Reset</string>
    <zorder>P3color</zorder>
    <zorder>P1color</zorder>
    <zorder>P2color</zorder>
-   <zorder>label_ppms</zorder>
-   <zorder>ppms_number</zorder>
    <zorder>P4_LH_STATUS</zorder>
    <zorder>P5_LH_STATUS</zorder>
    <zorder>P2_LH_STATUS</zorder>
