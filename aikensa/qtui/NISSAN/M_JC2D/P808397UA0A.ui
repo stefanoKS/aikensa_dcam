@@ -2191,7 +2191,7 @@ background-color: rgb(38, 162, 105);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="counterReset">
+   <widget class="QPushButton" name="counterReset_left">
     <property name="geometry">
      <rect>
       <x>360</x>
@@ -2958,7 +2958,7 @@ Counter Reset</string>
    <zorder>label_24</zorder>
    <zorder>status_kansei</zorder>
    <zorder>label_9</zorder>
-   <zorder>counterReset</zorder>
+   <zorder>counterReset_left</zorder>
    <zorder>furyou_plus_10_left</zorder>
    <zorder>kansei_plus_10_left</zorder>
    <zorder>kansei_plus_left</zorder>

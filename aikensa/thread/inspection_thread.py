@@ -981,6 +981,8 @@ class InspectionThread(QThread):
                                         self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
 
+                                    
+
                             #emit the signal for the inspection result
                             self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
                             print(self.InspectionResult_Status)
@@ -999,6 +1001,24 @@ class InspectionThread(QThread):
                                 signal = getattr(self, signal_attr, None)
                                 if img is not None and signal is not None:
                                     signal.emit(self.convertQImage(img))
+                                    
+                            #Save result to database
+                            for i in range(5):
+                                w = 7
+                                self.save_result_database(partname = self.widget_dir_map[w],
+                                        numofPart = self.inspection_config.today_numofPart[w], 
+                                        currentnumofPart = self.inspection_config.current_numofPart[w],
+                                        deltaTime = 0.0,
+                                        kensainName = self.inspection_config.kensainNumber, 
+                                        detected_pitch_str = self.InspectionResult_PitchMeasured[i], 
+                                        delta_pitch_str = self.InspectionResult_DeltaPitch[i], 
+                                        total_length=0,
+                                        resultPitch = self.InspectionResult_PitchResult[i], 
+                                        status = self.InspectionResult_Status[i], 
+                                        NGreason = self.InspectionResult_NGReason[i],
+                                        PPMS = self.inspection_config.ppmsnumber_left)
+
+
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
                             time.sleep(1.5)
@@ -1187,6 +1207,23 @@ class InspectionThread(QThread):
                                 if img is not None and signal is not None:
                                     signal.emit(self.convertQImage(img))
                             #Freeze thread for 3 seconds to allow the user to see the results
+
+
+                            #Save result to database
+                            for i in range(5):
+                                w = 8
+                                self.save_result_database(partname = self.widget_dir_map[w],
+                                        numofPart = self.inspection_config.today_numofPart[w], 
+                                        currentnumofPart = self.inspection_config.current_numofPart[w],
+                                        deltaTime = 0.0,
+                                        kensainName = self.inspection_config.kensainNumber, 
+                                        detected_pitch_str = self.InspectionResult_PitchMeasured[i], 
+                                        delta_pitch_str = self.InspectionResult_DeltaPitch[i], 
+                                        total_length=0,
+                                        resultPitch = self.InspectionResult_PitchResult[i], 
+                                        status = self.InspectionResult_Status[i], 
+                                        NGreason = self.InspectionResult_NGReason[i],
+                                        PPMS = self.inspection_config.ppmsnumber_right)
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
                             time.sleep(1.5)
