@@ -779,23 +779,39 @@ class InspectionThread(QThread):
                 print(w)
                 print("Manual Adjustment Done")
 
-            # if self.inspection_config.counterReset_left is True:
-            #     self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-            #     self.inspection_config.counterReset_left = False
-            #     self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-            #             numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-            #             currentnumofPart = [0, 0], 
-            #             deltaTime = 0.0,
-            #             kensainName = self.inspection_config.kensainNumber, 
-            #             detected_pitch_str = "COUNTERRESET", 
-            #             delta_pitch_str = "COUNTERRESET", 
-            #             total_length=0,
-            #             resultPitch = "COUNTERRESET",
-            #             status = "COUNTERRESET",
-            #             NGreason = "COUNTERRESET")
+            if self.inspection_config.counterReset_left is True:
+                w = 7
+                self.inspection_config.current_numofPart[w] = [0, 0]
+                self.inspection_config.counterReset_left = False
+                self.save_result_database(partname = self.widget_dir_map[w],
+                        numofPart = self.inspection_config.today_numofPart[w],
+                        currentnumofPart = [0, 0], 
+                        deltaTime = 0.0,
+                        kensainName = self.inspection_config.kensainNumber, 
+                        detected_pitch_str = "COUNTERRESET", 
+                        delta_pitch_str = "COUNTERRESET", 
+                        total_length=0,
+                        resultPitch = "COUNTERRESET",
+                        status = "COUNTERRESET",
+                        NGreason = "COUNTERRESET")
+
+            if self.inspection_config.counterReset_right is True:
+                w = 8
+                self.inspection_config.current_numofPart[w] = [0, 0]
+                self.inspection_config.counterReset_right = False
+                self.save_result_database(partname = self.widget_dir_map[w],
+                        numofPart = self.inspection_config.today_numofPart[w],
+                        currentnumofPart = [0, 0],
+                        deltaTime = 0.0,
+                        kensainName = self.inspection_config.kensainNumber,
+                        detected_pitch_str = "COUNTERRESET", 
+                        delta_pitch_str = "COUNTERRESET", 
+                        total_length=0,
+                        resultPitch = "COUNTERRESET",
+                        status = "COUNTERRESET",
+                        NGreason = "COUNTERRESET")
 
             if self.inspection_config.widget in [7]:    
-                    
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
