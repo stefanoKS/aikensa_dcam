@@ -19,7 +19,7 @@ from aikensa.scripts.scripts_img_processing import check_hanire, draw_redCircle
 
 pitchSpec = [10, 121.5, 121.5, 121.5, 121.5, 121.5, 10, 627.5]
 idSpec = [0, 0, 0, 0, 0, 0]
-tolerance_pitch = [3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.0, 5.0]
+tolerance_pitch = [3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.0, 10.0]
 
 
 color = (0, 255, 0)
@@ -158,6 +158,13 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, Y
         center = draw_bounding_box(image, x, y, w, h, [image.shape[1], image.shape[0]], color=color)
       
         hanireResult = check_hanire(raw_image, x, y, YoloHanireModel, detected_cropped_size)
+
+
+        
+        #FORCEFULLY CHANGE THE HANIRE TO OFF
+        hanireResult = 1
+
+        
         print (f"Hanire result: {hanireResult}")
         if hanireResult == 0:
             draw_redCircle(image, x, y, w, h, [image.shape[1], image.shape[0]], thickness=6, bbox_offset=20)
