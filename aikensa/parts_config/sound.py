@@ -8,6 +8,7 @@ keisoku_sound = pygame.mixer.Sound("aikensa/sound/mixkit-bell-notification-933.w
 konpou_sound = pygame.mixer.Sound("aikensa/sound/mixkit-software-interface-back-2575.wav")
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav")
 ng_sound = pygame.mixer.Sound("aikensa/sound/mixkit-classic-short-alarm-993.wav")
+announce_sound = pygame.mixer.Sound("aikensa/sound/announce.wav")
 
 def play_ok_sound():
     ok_sound.play()
@@ -26,3 +27,6 @@ def play_keisoku_sound():
 
 def play_konpou_sound():
     konpou_sound.play()
+
+def play_announce_sound():
+    announce_sound.play()   

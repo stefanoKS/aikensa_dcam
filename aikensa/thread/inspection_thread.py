@@ -31,7 +31,7 @@ from aikensa.scripts.scripts_img_processing import image_cropping
 from dataclasses import dataclass, field
 from typing import List
 
-from aikensa.parts_config.sound import play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound
+from aikensa.parts_config.sound import play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound, play_announce_sound
 from aikensa.parts_config.NISSAN.M_JC2D.P8083X7UA0A import partcheck as P8083X7UA0A_check
 
 from ultralytics import YOLO
@@ -346,7 +346,7 @@ class InspectionThread(QThread):
         #MODBUS COMMAND RELATED
         self.AIKENSA_COMMAND = 0
         self.TRAYPOSITION = 0
-
+        self.SOUND_ANNOUNCE = 0
 
 
 
@@ -370,10 +370,12 @@ class InspectionThread(QThread):
         """
         cmd_addr  = self.input_register_map["AIKENSACOMMAND"]  # e.g. 112
         tray_addr = self.input_register_map["TRAYPOSITION"]    # e.g. 113
+        sound_announce_addr = self.input_register_map["SOUND_ANNOUNCE"]
 
         self.AIKENSA_COMMAND = reg_dict.get(cmd_addr, 0)
         self.TRAYPOSITION    = reg_dict.get(tray_addr,  0)
-        print(f"AIKENSACOMMAND={self.AIKENSA_COMMAND}, TRAYPOSITION={self.TRAYPOSITION}")
+        self.SOUND_ANNOUNCE  = reg_dict.get(sound_announce_addr, 0)
+        print(f"AIKENSACOMMAND={self.AIKENSA_COMMAND}, TRAYPOSITION={self.TRAYPOSITION}, SOUND_ANNOUNCE={self.SOUND_ANNOUNCE}")
 
 
 
@@ -1019,6 +1021,12 @@ class InspectionThread(QThread):
                                         PPMS = self.inspection_config.ppmsnumber_left)
 
 
+                            #if all self.inspectionresultstatus is OK play OK sound, if any is NG play NG sound
+                            if all(status == "OK" for status in self.InspectionResult_Status if status is not None):
+                                play_ok_sound()
+                            elif any(status == "NG" for status in self.InspectionResult_Status if status is not None):
+                                play_ng_sound()
+
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
                             time.sleep(1.5)
@@ -1224,6 +1232,13 @@ class InspectionThread(QThread):
                                         status = self.InspectionResult_Status[i], 
                                         NGreason = self.InspectionResult_NGReason[i],
                                         PPMS = self.inspection_config.ppmsnumber_right)
+                                
+                            #if all self.inspectionresultstatus is OK play OK sound, if any is NG play NG sound
+                            if all(status == "OK" for status in self.InspectionResult_Status if status is not None):
+                                play_ok_sound()
+                            elif any(status == "NG" for status in self.InspectionResult_Status if status is not None):
+                                play_ng_sound()
+
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
                             time.sleep(1.5)
@@ -1243,6 +1258,13 @@ class InspectionThread(QThread):
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
                         #Need to print in the status bar so user can see and notice it clearly
 
+
+            # #Sound related stuff
+            # if self.SOUND_ANNOUNCE == 1:
+            #     play_announce_sound()
+            #     self.SOUND_ANNOUNCE = 0
+
+            
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
 
