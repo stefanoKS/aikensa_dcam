@@ -60,7 +60,7 @@ class AIKensa(QMainWindow):
         JAKA_port = 6502
 
 
-        self.modbusClientThread = ModbusClientThread(host=JAKA_ip_address, port=JAKA_port, slave_id=1, start_addr=110, count=12, poll_interval=0.2)
+        self.modbusClientThread = ModbusClientThread(host=JAKA_ip_address, port=JAKA_port, slave_id=1, start_addr=110, count=15, poll_interval=0.2)
 
         
         self.calibration_thread = CalibrationThread(CalibrationConfig())

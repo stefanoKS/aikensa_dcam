@@ -31,7 +31,7 @@ from aikensa.scripts.scripts_img_processing import image_cropping
 from dataclasses import dataclass, field
 from typing import List
 
-from aikensa.parts_config.sound import play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound, play_announce_sound
+from aikensa.parts_config.sound import play_konpou_sound, play_keisoku_sound, play_ok_sound, play_ng_sound, play_announce_sound, play_announce_sound_2
 from aikensa.parts_config.NISSAN.M_JC2D.P8083X7UA0A import partcheck as P8083X7UA0A_check
 
 from ultralytics import YOLO
@@ -361,7 +361,9 @@ class InspectionThread(QThread):
         # print(f"Serial Number Front: {self.serialNumber_front}")
         # print(f"Serial Number Back:  {self.serialNumber_back}")
         self.InstructionCode = 0 #for debug
-
+        announce_addr = self.holding_register_map["SOUND_ANNOUNCE"]
+        self.SOUND_ANNOUNCE = reg_dict.get(announce_addr, 0)
+        
     @pyqtSlot(dict)
     def on_input_update(self, reg_dict: dict):
         """
@@ -370,12 +372,10 @@ class InspectionThread(QThread):
         """
         cmd_addr  = self.input_register_map["AIKENSACOMMAND"]  # e.g. 112
         tray_addr = self.input_register_map["TRAYPOSITION"]    # e.g. 113
-        sound_announce_addr = self.input_register_map["SOUND_ANNOUNCE"]
 
         self.AIKENSA_COMMAND = reg_dict.get(cmd_addr, 0)
         self.TRAYPOSITION    = reg_dict.get(tray_addr,  0)
-        self.SOUND_ANNOUNCE  = reg_dict.get(sound_announce_addr, 0)
-        print(f"AIKENSACOMMAND={self.AIKENSA_COMMAND}, TRAYPOSITION={self.TRAYPOSITION}, SOUND_ANNOUNCE={self.SOUND_ANNOUNCE}")
+        print(f"AIKENSACOMMAND={self.AIKENSA_COMMAND}, TRAYPOSITION={self.TRAYPOSITION}")
 
 
 
@@ -818,11 +818,6 @@ class InspectionThread(QThread):
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
 
-                # if time.time() - self.InspectionTimeStart < self.InspectionWaitTime:
-                #     self.inspection_config.doInspectionLH = False
-                #     self.inspection_config.doInspectionRH = False
-                
-
                 if self.AIKENSA_COMMAND == 1 or self.AIKENSA_COMMAND == 2 or self.inspection_config.doInspectionLH is True or self.inspection_config.doInspectionRH is True or self.inspection_config.doInspectionSetLH is True or self.inspection_config.doInspectionSetRH is True:
                     #This is JAKA asking for part set inspection
 
@@ -877,19 +872,7 @@ class InspectionThread(QThread):
                                     image = self.InspectionImages[i]
                                     #This is LH, so crop image from 1296 to 1296+128px
                                     image = image[:, self.LH_CROP_START:self.LH_CROP_START+self.CROP_WIDTH, :]
-
                                        
-                                    # save image for debugging
-
-                                    # base_path = f"aikensa/temp/LH_test_{i}.png"
-                                    # save_path = base_path
-                                    # count = 1
-                                    # while os.path.exists(save_path):
-                                    #     save_path = f"aikensa/temp/LH_test_{i}_{count}.png"
-                                    #     count += 1
-                                    # cv2.imwrite(save_path, image)
-
-
                                     # _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
                                     _ = self.P8083X7UA0A_SET_CORRECT_Model(image, stream=True, verbose=False, imgsz = 128)
                                     self.InspectionSetCorrect_LH[i] = list(_)[0].probs.data.argmax().item()
@@ -1258,11 +1241,16 @@ class InspectionThread(QThread):
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
                         #Need to print in the status bar so user can see and notice it clearly
 
+            print(f"Holding Register SOUND_ANNOUNCE: {self.SOUND_ANNOUNCE}")
+
 
             # #Sound related stuff
-            # if self.SOUND_ANNOUNCE == 1:
-            #     play_announce_sound()
-            #     self.SOUND_ANNOUNCE = 0
+            if self.SOUND_ANNOUNCE == 1:
+                play_announce_sound()
+                self.requestModbusWrite.emit(self.holding_register_map["SOUND_ANNOUNCE"], [0])
+            if self.SOUND_ANNOUNCE == 2:
+                play_announce_sound_2()
+                self.requestModbusWrite.emit(self.holding_register_map["SOUND_ANNOUNCE"], [0])
 
             
             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
@@ -1490,12 +1478,6 @@ class InspectionThread(QThread):
         cv2.imwrite(os.path.join(raw_dir, filename), self.temp_image_initial)
         cv2.imwrite(os.path.join(result_dir, filename), self.temp_image_result)
 
-    # def convertQImage(self, image):
-    #     h, w, ch = image.shape
-    #     bytesPerLine = ch * w
-    #     processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_BGR888)
-    #     return processed_image
-
     def convertQImage(self, image):
         """
         Safe conversion: returns a QImage that owns its memory.
@@ -1532,7 +1514,6 @@ class InspectionThread(QThread):
         processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_RGB888)
         return processed_image
     
-
     def load_matrix_from_yaml(self, filename):
         with open(filename, 'r') as file:
             calibration_param = yaml.load(file, Loader=yaml.FullLoader)

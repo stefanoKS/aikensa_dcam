@@ -83,6 +83,8 @@ class ModbusClientThread(QThread):
                 if data_h != prev_holding:
                     prev_holding = data_h
                     self.holdingUpdated.emit(data_h)
+                #print holding for debug
+                # print(f"Holding Registers: {data_h}")
 
             # Emit Input if changed
             if inputs is not None:
