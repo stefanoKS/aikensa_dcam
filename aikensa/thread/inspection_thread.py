@@ -25,7 +25,7 @@ from aikensa.opencv_imgprocessing.cameracalibrate import detectCharucoBoard , ca
 from aikensa.opencv_imgprocessing.arucoplanarize import planarize, planarize_image
 from aikensa.scripts.scripts_method import scale_translation, load_register_map
 from aikensa.scripts.scripts_img_processing import rescaled_image, resize_image, make_undistort_maps
-from aikensa.scripts.scripts_img_processing import image_cropping
+from aikensa.scripts.scripts_img_processing import image_cropping, resize_image_array
 
 
 from dataclasses import dataclass, field
@@ -267,6 +267,8 @@ class InspectionThread(QThread):
 
         self.InspectionImages_endSegmentation_Left = [None]*5
         self.InspectionImages_endSegmentation_Right = [None]*5
+
+        self.InspectionImages_set_inspect = [None]*5
 
         self.InspectionResult_EndSegmentation_Left = [None]*5
         self.InspectionResult_EndSegmentation_Right = [None]*5
@@ -866,7 +868,7 @@ class InspectionThread(QThread):
                             print(f"Inspection Result Detection ID: {self.InspectionSet_LH}")
 
                             #If result detection ID is 1, do another P8083X7UA0A_SET_CORRECT_Model to check whether the part is set correctly
-                            #If not senf signal to modbus to wait for anotbher button press for re inspection
+                            #If not send signal to modbus to wait for another button press for re inspection
                             for i in range(len(self.InspectionSet_LH)):
                                 if self.InspectionSet_LH[i] == 1:
                                     image = self.InspectionImages[i]
@@ -922,12 +924,22 @@ class InspectionThread(QThread):
                             self.InspectionImages = [self.P1_LH_image, self.P2_LH_image, self.P3_LH_image, self.P4_LH_image, self.P5_LH_image]
                             self.InspectionImages_raw = [img.copy() if img is not None else None for img in self.InspectionImages]
 
-                            # # Filter out images that are not detected
-                            # self.InspectionImages = [img for img, result in zip(self.InspectionImages, self.InspectionSet_LH) if result != 0]
+                            self.InspectionImages_set_inspect = resize_image_array(self.InspectionImages, width=512, height=512)
+
+                            for i in range(len(self.InspectionImages_set_inspect)):
+                                image = self.InspectionImages_set_inspect[i]
+                                if image is not None:
+                                    _ = self.P8083X7UA0A_EXIST_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                    self.InspectionSet_LH[i] = list(_)[0].probs.data.argmax().item()
+                            print(f"Inspection Result Detection ID: {self.InspectionSet_LH}")
+                            # 1 means part detected, 0 means no part detected
 
                             for i in range(len(self.InspectionImages)):
                                 image = self.InspectionImages[i]
                                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                                #make image none if selt.InspectionSet_LH[i] is 0
+                                if self.InspectionSet_LH[i] == 0:
+                                    image = None
                                 if image is not None:
                                     self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                                 image, 
@@ -965,8 +977,14 @@ class InspectionThread(QThread):
                                     if self.InspectionResult_Status[i] == "NG": 
                                         self.inspection_config.current_numofPart[self.inspection_config.widget][1] += 1
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
-
-                                    
+                                if image is None:
+                                    self.InspectionResult_PitchMeasured[i] = None
+                                    self.InspectionResult_PitchResult[i] = None
+                                    self.InspectionResult_DeltaPitch[i] = None
+                                    self.InspectionResult_DetectionID[i] = None
+                                    self.InspectionResult_Status[i] = "製品\nなし"
+                                    self.InspectionResult_NGReason[i] = None
+                                    self.InspectionImages[i] = np.zeros_like(self.InspectionImages_raw[i]) if self.InspectionImages_raw[i] is not None else None
 
                             #emit the signal for the inspection result
                             self.P808397UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)

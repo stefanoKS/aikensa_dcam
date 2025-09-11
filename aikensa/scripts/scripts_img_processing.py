@@ -451,3 +451,27 @@ def add_imageborder(img, color=(255, 255, 255), width=10):
     bordered_img = cv2.copyMakeBorder(img, width, width, width, width, 
                                       borderType=cv2.BORDER_CONSTANT, value=color)
     return bordered_img
+
+def resize_image_array(image_array, width=512, height=512):
+    """
+    Resizes all images in the input array to the specified width and height.
+
+    Parameters:
+        image_array (list of numpy.ndarray): List of images to be resized.
+        width (int, optional): Target width for resizing. Default is 384.
+        height (int, optional): Target height for resizing. Default is 256.
+
+    Returns:
+        list of numpy.ndarray: List containing resized images. If an image in the input array is None, None is returned for that position.
+
+    Explanation:
+        This function iterates through the provided array of images and resizes each valid image to the given dimensions using linear interpolation. Images that are None are preserved as None in the output list.
+    """
+    resized_images = []
+    for img in image_array:
+        if img is not None:
+            resized_img = cv2.resize(img, (width, height), interpolation=cv2.INTER_LINEAR)
+            resized_images.append(resized_img)
+        else:
+            resized_images.append(None)
+    return resized_images
