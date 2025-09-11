@@ -982,7 +982,7 @@ class InspectionThread(QThread):
                                     self.InspectionResult_PitchResult[i] = None
                                     self.InspectionResult_DeltaPitch[i] = None
                                     self.InspectionResult_DetectionID[i] = None
-                                    self.InspectionResult_Status[i] = "製品\nなし"
+                                    self.InspectionResult_Status[i] = "NOPART"
                                     self.InspectionResult_NGReason[i] = None
                                     self.InspectionImages[i] = np.zeros_like(self.InspectionImages_raw[i]) if self.InspectionImages_raw[i] is not None else None
 
@@ -1022,12 +1022,10 @@ class InspectionThread(QThread):
                                         PPMS = self.inspection_config.ppmsnumber_left)
 
 
-                            #if all self.inspectionresultstatus is OK play OK sound, if any is NG play NG sound
-                            if all(status == "OK" for status in self.InspectionResult_Status if status is not None):
-                                play_ok_sound()
-                            elif any(status == "NG" for status in self.InspectionResult_Status if status is not None):
+                            if any(status == "NG" for status in self.InspectionResult_Status if status is not None):
                                 play_ng_sound()
-
+                            else:
+                                play_ok_sound()
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])
                             time.sleep(1.5)
@@ -1087,21 +1085,12 @@ class InspectionThread(QThread):
                                     self.InspectionSet_RH[i] = list(_)[0].probs.data.argmax().item()
                             print(f"Inspection Result Detection ID: {self.InspectionSet_RH}")
 
-                            #If result detection ID is 1, do another P8083X7UA0A_SET_CORRECT_Model to check whether the part is set correctly
-                            #If not send signal to modbus to wait for another button press for re inspection
+      
                             for i in range(len(self.InspectionSet_RH)):
                                 if self.InspectionSet_RH[i] == 1:
                                     image = self.InspectionImages[i]
                                     image = image[:, self.RH_CROP_START:self.RH_CROP_START+self.CROP_WIDTH, :]
 
-                                    # # Save image with a unique filename if it already exists
-                                    # base_path = f"aikensa/temp/RH_test_{i}.png"
-                                    # save_path = base_path
-                                    # count = 1
-                                    # while os.path.exists(save_path):
-                                    #     save_path = f"aikensa/temp/RH_test_{i}_{count}.png"
-                                    #     count += 1
-                                    # cv2.imwrite(save_path, image)
 
                                     # _ = self.P8083X7UA0A_SET_CORRECT_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False, imgsz = 128, rect=False)
                                     _ = self.P8083X7UA0A_SET_CORRECT_Model(image, stream=True, verbose=False, imgsz = 128)
@@ -1152,12 +1141,21 @@ class InspectionThread(QThread):
                             self.InspectionImages = [self.P1_RH_image, self.P2_RH_image, self.P3_RH_image, self.P4_RH_image, self.P5_RH_image]
                             self.InspectionImages_raw = [img.copy() if img is not None else None for img in self.InspectionImages]
 
-                            # # Filter out images that are not detected
-                            # self.InspectionImages = [img for img, result in zip(self.InspectionImages, self.InspectionSet_RH) if result != 0]
+                            self.InspectionImages_set_inspect = resize_image_array(self.InspectionImages, width=512, height=512)
+
+                            for i in range(len(self.InspectionImages_set_inspect)):
+                                image = self.InspectionImages_set_inspect[i]
+                                if image is not None:
+                                    _ = self.P8083X7UA0A_EXIST_Model(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), stream=True, verbose=False)
+                                    self.InspectionSet_RH[i] = list(_)[0].probs.data.argmax().item()
+                            print(f"Inspection Result Detection ID: {self.InspectionSet_RH}")
+                            # 1 means part detected, 0 means no part detected
 
                             for i in range(len(self.InspectionImages)):
                                 image = self.InspectionImages[i]
                                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                                if self.InspectionSet_RH[i] == 0:
+                                    image = None
                                 if image is not None:
                                     self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                                 image, 
@@ -1195,7 +1193,15 @@ class InspectionThread(QThread):
                                     if self.InspectionResult_Status[i] == "NG": 
                                         self.inspection_config.current_numofPart[8][1] += 1
                                         self.inspection_config.today_numofPart[8][1] += 1
-
+                                if image is None:
+                                    self.InspectionResult_PitchMeasured[i] = None
+                                    self.InspectionResult_PitchResult[i] = None
+                                    self.InspectionResult_DeltaPitch[i] = None
+                                    self.InspectionResult_DetectionID[i] = None
+                                    self.InspectionResult_Status[i] = "NOPART"
+                                    self.InspectionResult_NGReason[i] = None
+                                    self.InspectionImages[i] = np.zeros_like(self.InspectionImages_raw[i]) if self.InspectionImages_raw[i] is not None else None
+                                    
                             #emit the signal for the inspection result
                             self.P808387UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured)
                             print(self.InspectionResult_Status)
@@ -1216,7 +1222,6 @@ class InspectionThread(QThread):
                                 if img is not None and signal is not None:
                                     signal.emit(self.convertQImage(img))
                             #Freeze thread for 3 seconds to allow the user to see the results
-
 
                             #Save result to database
                             for i in range(5):
@@ -1258,9 +1263,6 @@ class InspectionThread(QThread):
                         #This means that the tray is in the wrong position
                         print("Tray Position is not set correctly. Please set the tray to the left or right side.")
                         #Need to print in the status bar so user can see and notice it clearly
-
-            print(f"Holding Register SOUND_ANNOUNCE: {self.SOUND_ANNOUNCE}")
-
 
             # #Sound related stuff
             if self.SOUND_ANNOUNCE == 1:

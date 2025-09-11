@@ -715,6 +715,8 @@ class AIKensa(QMainWindow):
                     label.setStyleSheet("QLabel { background-color: #ff9999; }")  # light red
                 elif status == "製品\nなし":
                     label.setStyleSheet("QLabel { background-color: #444444; }")
+                elif status  == "NOPART":
+                    label.setStyleSheet("QLabel { background-color: lightblue; }")
                 #else white
                 else:
                     label.setStyleSheet("QLabel { background-color: white; }")

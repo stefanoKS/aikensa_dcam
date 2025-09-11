@@ -43,7 +43,7 @@ endoffset_y = 0
 bbox_offset = 1
 
 pixelMultiplier = 0.1996 #0.1592
-pixelMultiplier_eptoLH = 0.21
+pixelMultiplier_eptoLH = 0.20
 pixelMultiplier_eptoRH = 0.20
 
 segmentation_pixel_start = 0
@@ -270,9 +270,9 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
         print ("Measured Pitches with EPTO:", measuredPitch)
 
         if measuredPitch[-1] < epto_width - epto_width_tolerance or measuredPitch[-1] > epto_width + epto_width_tolerance:
-            measuredPitch = [0] * (len(pitchSpec))
-            resultPitch = [0] * (len(pitchSpec))
-            resultid = [0] * (len(idSpec))
+            measuredPitch = measuredPitch
+            resultPitch = resultPitch
+            resultid = idSpec
             status = "NG"
             ngreason = "EPTO TAPE WIDTH NG"
             print_status = "EPTOテープ幅不良"
@@ -280,9 +280,9 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
             return image, measuredPitch, resultPitch, resultid, status, ngreason
         
         if measuredPitch[-2] < epto_clip_pitch - epto_clip_pitch_tolerance or measuredPitch[-2] > epto_clip_pitch + epto_clip_pitch_tolerance:
-            measuredPitch = [0] * (len(pitchSpec))
-            resultPitch = [0] * (len(pitchSpec))
-            resultid = [0] * (len(idSpec))
+            measuredPitch = measuredPitch
+            resultPitch = resultPitch
+            resultid = idSpec
             status = "NG"
             ngreason = "EPTO SET POSITION NG"
             print_status = "EPTOセット位置不良"
