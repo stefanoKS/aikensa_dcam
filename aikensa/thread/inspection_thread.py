@@ -959,8 +959,8 @@ class InspectionThread(QThread):
                                     self.InspectionImages_endSegmentation_Right[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Right[i], cv2.COLOR_BGR2RGB)
                                     self.InspectionImages_endSegmentation_Left[i] = add_imageborder(self.InspectionImages_endSegmentation_Left[i], width = self.segmentation_border)
                                     self.InspectionImages_endSegmentation_Right[i] = add_imageborder(self.InspectionImages_endSegmentation_Right[i], width = self.segmentation_border)
-                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
-                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.2, imgsz=720, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.2, imgsz=720, verbose=False, retina_masks=True)
                                     self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P8083X7UA0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                   self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                   self.InspectionResult_EndSegmentation_Left[i],
@@ -1175,8 +1175,8 @@ class InspectionThread(QThread):
                                     self.InspectionImages_endSegmentation_Right[i] = cv2.cvtColor(self.InspectionImages_endSegmentation_Right[i], cv2.COLOR_BGR2RGB)
                                     self.InspectionImages_endSegmentation_Left[i] = add_imageborder(self.InspectionImages_endSegmentation_Left[i], width = self.segmentation_border)
                                     self.InspectionImages_endSegmentation_Right[i] = add_imageborder(self.InspectionImages_endSegmentation_Right[i], width = self.segmentation_border)
-                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.3, imgsz=1280, verbose=False, retina_masks=True)
-                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.3, imgsz=1280, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Left[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.2, imgsz=720, verbose=False, retina_masks=True)
+                                    self.InspectionResult_EndSegmentation_Right[i] = self.P8083X7UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.2, imgsz=720, verbose=False, retina_masks=True)
                                     self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P8083X7UA0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                   self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                   self.InspectionResult_EndSegmentation_Left[i],
@@ -1240,10 +1240,10 @@ class InspectionThread(QThread):
                                         PPMS = self.inspection_config.ppmsnumber_right)
                                 
                             #if all self.inspectionresultstatus is OK play OK sound, if any is NG play NG sound
-                            if all(status == "OK" for status in self.InspectionResult_Status if status is not None):
-                                play_ok_sound()
-                            elif any(status == "NG" for status in self.InspectionResult_Status if status is not None):
+                            if any(status == "NG" for status in self.InspectionResult_Status if status is not None):
                                 play_ng_sound()
+                            else:
+                                play_ok_sound()
 
 
                             self.requestModbusWrite.emit(self.holding_register_map["AIKENSA_STATUS"], [2])

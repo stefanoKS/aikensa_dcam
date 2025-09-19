@@ -43,7 +43,7 @@ endoffset_y = 0
 bbox_offset = 1
 
 pixelMultiplier = 0.1996 #0.1592
-pixelMultiplier_eptoLH = 0.20
+pixelMultiplier_eptoLH = 0.208
 pixelMultiplier_eptoRH = 0.20
 
 segmentation_pixel_start = 0
