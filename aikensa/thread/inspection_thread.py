@@ -1783,17 +1783,21 @@ class InspectionThread(QThread):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, PPMS))
         self.conn.commit()
-
+    
         # Update the totatl part number (Maybe the day has been changed)
         for key, value in self.widget_dir_map.items():
             self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
 
-        #Also save to mysql cursor
-        self.mysql_cursor.execute('''
-        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, PPMS)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, PPMS))
-        self.mysql_conn.commit()
+        try:
+            #Also save to mysql cursor
+            self.mysql_cursor.execute('''
+            INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, PPMS)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, PPMS))
+            self.mysql_conn.commit()
+        except Exception as e:
+            print(f"Error saving to MySQL database: {str(e)}")
+
 
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
