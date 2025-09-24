@@ -221,6 +221,8 @@ class InspectionThread(QThread):
         self.InspectionImages = [None]*1
         self.InspectionImages_bgr = [None]*1
 
+        self.emitImages = [None]*1
+
         self.InspectionImagesKatabu = [None]*1
 
         self.InspectionImages_endSegmentation_Left = [None]*1
@@ -2098,19 +2100,8 @@ class InspectionThread(QThread):
                         #write the gaikanframe to folder with cv2
                     self.save_image(self.gaikanframe)
                     print(True)
-                        
-
-                #REMOVE THIS TO DISABLE GAIKAN
 
 
-                # if self.inspection_config.doInspection is True:
-                #     self.inspection_config.doInspection = False
-
-                #     self.ethernetTrigger[0] = 1 #Only set the first element. The SIOX program will handle the rest.
-                #     self.ethernetStatus.emit(self.ethernetTrigger)
-
-                #     self.gaikanStart = True
-                #     self.gaikanTime = time.time()
                     
 
                 if self.inspection_config.doInspection is True:
@@ -2162,14 +2153,10 @@ class InspectionThread(QThread):
                                         
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1640, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1640:, :]
-                                #pad white color around the image with 200 pixels of white color
+
                                 self.InspectionImages_endSegmentation_Left[i] = add_imageborder(img = self.InspectionImages_endSegmentation_Left[i], width = 200)
                                 self.InspectionImages_endSegmentation_Right[i] = add_imageborder(img = self.InspectionImages_endSegmentation_Right[i], width = 200)
-                                # self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[255, 255, 255])
-                                # self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[255, 255, 255])
-                                #save the inspectionimages_endsegmentation_left and right
-                                # cv2.imwrite("InspectionImages_endSegmentation_Left.jpg", self.InspectionImages_endSegmentation_Left[i])
-                                # cv2.imwrite("InspectionImages_endSegmentation_Right.jpg", self.InspectionImages_endSegmentation_Right[i])
+   
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False)
 
@@ -2192,17 +2179,18 @@ class InspectionThread(QThread):
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
                                         play_ng_sound()
 
+                        
+
+                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
+                            self.emitImages[0] = cv2.cvtColor(self.emitImages[0], cv2.COLOR_RGB2BGR)
+                            self.part1Cam.emit(self.converQImageRGB(self.emitImages[0]))
+
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=137)
+                            self.P8462284S00_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
-
-                            # self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            #         numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
-                            #         currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
-                            #         deltaTime = 0.0,
-                            #         kensainName = self.inspection_config.kensainNumber, 
-                            #         detected_pitch_str = self.InspectionResult_PitchMeasured[0], 
-                            #         delta_pitch_str = self.InspectionResult_DeltaPitch[0], 
-                            #         total_length=0)
-
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                                     numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
                                     currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
@@ -2217,46 +2205,6 @@ class InspectionThread(QThread):
                                     ClipInsertionMachine = self.inspection_config.clipSounyuuNumber,
                                     PPMS = self.inspection_config.ppmsnumber)
                                 
-                            # print(f"Measured Pitch: {self.InspectionResult_PitchMeasured}")
-                            # print(f"Delta Pitch: {self.InspectionResult_DeltaPitch}")
-                            # print(f"Pirch Results: {self.InspectionResult_PitchResult}")
-
-                            # #Add custom text to the image
-                            # if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 10 == 0 and self.InspectionResult_Status[0] == "OK" and self.inspection_config.current_numofPart[self.inspection_config.widget][0] != 0 :
-                            #     if self.inspection_config.current_numofPart[self.inspection_config.widget][0] % 150 == 0:
-                            #         imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
-                            #         img_pil = Image.fromarray(imgresults)
-                            #         font = ImageFont.truetype(self.kanjiFontPath, 120)
-                            #         draw = ImageDraw.Draw(img_pil)
-                            #         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                            #         draw.text((centerpos[0]-900, centerpos[1]+20), u"ダンボールに入れてください", font=font, fill=(5, 80, 160, 0))
-                            #         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                            #         play_konpou_sound()
-                            #         self.InspectionImages[0] = imgResult
-
-                            #     else:
-                            #         imgresults = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_BGR2RGB)
-                            #         img_pil = Image.fromarray(imgresults)
-                            #         font = ImageFont.truetype(self.kanjiFontPath, 120)
-                            #         draw = ImageDraw.Draw(img_pil)
-                            #         centerpos = (imgresults.shape[1] // 2, imgresults.shape[0] // 2) 
-                            #         draw.text((centerpos[0]-900, centerpos[1]+20), u"束ねてください", font=font, fill=(5, 80, 160, 0))
-                            #         imgResult = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-                            #         play_keisoku_sound()         
-                            #         self.InspectionImages[0] = imgResult                         
-
-                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=137)
-                            self.P8462284S00_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-
-                            # self.InspectionImages_prev[0] = self.InspectionImages[0]
-                            # self.InspectionResult_PitchMeasured_prev = self.InspectionResult_PitchMeasured.copy()
-                            # self.InspectionResult_PitchResult_prev = self.InspectionResult_PitchResult.copy()
-
-                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-                            self.part1Cam.emit(self.converQImageRGB(self.InspectionImages[0]))
-
                             time.sleep(1.5)
 
             if self.inspection_config.widget in [21, 22, 23]:
@@ -2478,12 +2426,16 @@ class InspectionThread(QThread):
         for key, value in self.widget_dir_map.items():
             self.inspection_config.today_numofPart[key] = self.get_last_entry_total_numofPart(value)
 
-        #Also save to mysql cursor
-        self.mysql_cursor.execute('''
-        INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, ClipInsertionMachine, PPMS)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, ClipInsertionMachine, PPMS))
-        self.mysql_conn.commit()
+        try:
+            #Also save to mysql cursor
+            self.mysql_cursor.execute('''
+            INSERT INTO inspection_results (partName, numofPart, currentnumofPart, timestampHour, timestampDate, deltaTime, kensainName, detected_pitch, delta_pitch, total_length, resultpitch, status, NGreason, ClipInsertionMachine, PPMS)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (partname, numofPart, currentnumofPart, timestamp_hour, timestamp_date, deltaTime, kensainName, detected_pitch_str, delta_pitch_str, total_length, resultPitch, status, NGreason, ClipInsertionMachine, PPMS))
+            self.mysql_conn.commit()
+        except Exception as e:
+            print(f"Error saving to MySQL: {e}")
+
 
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
@@ -2592,6 +2544,7 @@ class InspectionThread(QThread):
         result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
         os.makedirs(raw_dir, exist_ok=True)
         os.makedirs(result_dir, exist_ok=True)
+        image_result = self.downSampling(image_result, width=image_result.shape[1] // 2, height=image_result.shape[0] // 2)
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
 
@@ -2600,6 +2553,7 @@ class InspectionThread(QThread):
         result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
         os.makedirs(raw_dir, exist_ok=True)
         os.makedirs(result_dir, exist_ok=True)
+        image_result = self.downSampling(image_result, width=image_result.shape[1] // 2, height=image_result.shape[0] // 2)
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_katabu.png", katabu_initial)
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
