@@ -6,6 +6,7 @@ import os
 from enum import Enum
 import time
 import datetime
+from typing import List
 
 from PyQt5 import QtCore
 

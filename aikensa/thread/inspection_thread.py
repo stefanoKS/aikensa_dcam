@@ -880,7 +880,7 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.P828XXW0X0P_CLIP_Model, 
-                                            slice_height=1280, slice_width=1280, 
+                                            slice_height=1920, slice_width=1920, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,
@@ -1054,7 +1054,7 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.P828XXW0X0P_CLIP_Model, 
-                                            slice_height=1280, slice_width=1280, 
+                                            slice_height=1920, slice_width=1920, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,
@@ -1207,7 +1207,7 @@ class InspectionThread(QThread):
                                 self.InspectionResult_ClipDetection[i] = get_sliced_prediction(
                                             self.InspectionImages_bgr[i], 
                                             self.P828XXW0X0P_CLIP_Model, 
-                                            slice_height=1280, slice_width=1280, 
+                                            slice_height=1920, slice_width=1920, 
                                             overlap_height_ratio=0.0, overlap_width_ratio=0.2,
                                             postprocess_match_metric="IOS",
                                             postprocess_match_threshold=0.2,
