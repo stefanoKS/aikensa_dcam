@@ -2730,7 +2730,7 @@ class InspectionThread(QThread):
         path_P8462284S00_CLIP_Model = "./aikensa/models/P8462284S00_detect.pt"
         path_P8462284S00_SEGMENT_Model = "./aikensa/models/P8462284S00_segment.pt"
         P8462284S00_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P8462284S00_CLIP_Model,
-                                                                            confidence_threshold=0.7,
+                                                                            confidence_threshold=0.80,
                                                                             device="cuda:0")
         P8462284S00_SEGMENT_Model = YOLO(path_P8462284S00_SEGMENT_Model)
         self.P8462284S00_CLIP_Model = P8462284S00_CLIP_Model
