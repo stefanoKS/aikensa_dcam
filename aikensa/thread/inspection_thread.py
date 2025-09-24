@@ -228,6 +228,7 @@ class InspectionThread(QThread):
 
         self.InspectionImages = [None]*1
         self.InspectionImages_bgr = [None]*1
+        self.emitImages = [None]*1
 
         self.InspectionImagesKatabu = [None]*1
 
@@ -1095,6 +1096,22 @@ class InspectionThread(QThread):
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
                                         play_ng_sound()
 
+
+                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
+                            self.emitImages[0] = cv2.cvtColor(self.emitImages[0], cv2.COLOR_RGB2BGR)
+                            self.partCam.emit(self.converQImageRGB(self.emitImages[0]))
+                            if self.inspection_config.widget in [5, 7, 9, 11]:
+                                self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
+                            if self.inspection_config.widget in [6, 8, 10, 12]: 
+                                self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
+
+                            self.P82833W050PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W040PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82833W090PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W080PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+
                             # self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
                             self.save_image_result_withKatabu(self.combinedImage, self.InspectionImages[0], self.katabuImage_init, self.InspectionImagesKatabu[0], self.InspectionResult_Status[0])
 
@@ -1109,27 +1126,6 @@ class InspectionThread(QThread):
                                     resultPitch = self.InspectionResult_PitchResult[0], 
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0])
-
-
-                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
-
-                            self.P82833W050PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                            self.P82832W040PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                            self.P82833W090PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                            self.P82832W080PKENGEN_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-
-
-                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
-
-                            if self.inspection_config.widget in [5, 7, 9, 11]:
-                                self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
-                            if self.inspection_config.widget in [6, 8, 10, 12]: 
-                                self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
-                            
-                            
 
                             time.sleep(1.5)
             #for clip insertion  machine
@@ -1241,6 +1237,18 @@ class InspectionThread(QThread):
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
                                         play_ng_sound()
 
+                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
+                            self.emitImages[0] = cv2.cvtColor(self.emitImages[0], cv2.COLOR_RGB2BGR)
+                            self.partCam.emit(self.converQImageRGB(self.emitImages[0]))
+
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+
+                            self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
@@ -1255,19 +1263,6 @@ class InspectionThread(QThread):
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0],
                                     PPMS = self.inspection_config.ppmsnumber)
-
-                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
-
-                            self.P82833W050PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                            self.P82832W040PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                            self.P82833W090PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-                            self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-
-                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-
-                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
                             self.bool_keep_measurement = True
 
@@ -1401,8 +1396,16 @@ class InspectionThread(QThread):
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
                                         play_ng_sound()
 
-                            self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
+                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=169)
+                            self.emitImages[0] = cv2.cvtColor(self.emitImages[0], cv2.COLOR_RGB2BGR)
+                            self.partCam.emit(self.converQImageRGB(self.emitImages[0]))
+
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+                            self.P808387UA1A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+
+                            self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
                                     numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget], 
                                     currentnumofPart = self.inspection_config.current_numofPart[self.inspection_config.widget],
@@ -1415,16 +1418,6 @@ class InspectionThread(QThread):
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0],
                                     PPMS = self.inspection_config.ppmsnumber)
-
-                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=169)
-
-                            self.P808387UA1A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-
-                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-
-                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
                             self.bool_keep_measurement = False
 
@@ -1549,6 +1542,14 @@ class InspectionThread(QThread):
                                         self.inspection_config.today_numofPart[self.inspection_config.widget][1] += 1
                                         play_ng_sound()
 
+                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=169)
+                            self.emitImages[0] = cv2.cvtColor(self.emitImages[0], cv2.COLOR_RGB2BGR)
+                            self.partCam.emit(self.converQImageRGB(self.emitImages[0]))
+
+                            self.P828447UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
+                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
+                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
+
                             self.save_image_result(self.combinedImage, self.InspectionImages[0], self.InspectionResult_Status[0])
 
                             self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
@@ -1563,16 +1564,6 @@ class InspectionThread(QThread):
                                     status = self.InspectionResult_Status[0], 
                                     NGreason = self.InspectionResult_NGReason[0],
                                     PPMS = self.inspection_config.ppmsnumber)
-
-                            self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
-                            self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
-                            self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=169)
-
-                            self.P828447UA0A_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
-
-                            self.InspectionImages[0] = cv2.cvtColor(self.InspectionImages[0], cv2.COLOR_RGB2BGR)
-
-                            self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
 
                             self.bool_keep_measurement = False
 
@@ -1882,6 +1873,8 @@ class InspectionThread(QThread):
         result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
         os.makedirs(raw_dir, exist_ok=True)
         os.makedirs(result_dir, exist_ok=True)
+        #resize the image_result to half the size of initial size to save space
+        image_result = self.downSampling(image_result, width=image_result.shape[1] // 2, height=image_result.shape[0] // 2)
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
 
@@ -1890,6 +1883,8 @@ class InspectionThread(QThread):
         result_dir = "aikensa/inspection_results/" + self.widget_dir_map[self.inspection_config.widget] + "/" + datetime.now().strftime("%Y%m%d") +  "/" + str(result) + "/kekka/"
         os.makedirs(raw_dir, exist_ok=True)
         os.makedirs(result_dir, exist_ok=True)
+        #resize the image_result to half the size of initial size to save space
+        image_result = self.downSampling(image_result, width=image_result.shape[1] // 2, height=image_result.shape[0] // 2)
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_initial)
         cv2.imwrite(raw_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_katabu.png", katabu_initial)
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)

@@ -1,0 +1,93 @@
+{
+  "ui_files": [
+    "aikensa/qtui/mainPage.ui",
+    "aikensa/qtui/calibration_cam1.ui",
+    "aikensa/qtui/calibration_cam2.ui",
+    "aikensa/qtui/camera_merge.ui",
+    "aikensa/qtui/empty.ui",
+    "aikensa/qtui/MMC/M_5A45/P82833W050P.ui",
+    "aikensa/qtui/MMC/M_5A45/P82832W040P.ui",
+    "aikensa/qtui/MMC/M_5A45/P82833W090P.ui",
+    "aikensa/qtui/MMC/M_5A45/P82832W080P.ui",
+    "aikensa/qtui/MMC/M_5A45/P82833W050PKENGEN.ui",
+    "aikensa/qtui/MMC/M_5A45/P82832W040PKENGEN.ui",
+    "aikensa/qtui/MMC/M_5A45/P82833W090PKENGEN.ui",
+    "aikensa/qtui/MMC/M_5A45/P82832W080PKENGEN.ui",
+    "aikensa/qtui/MMC/M_5A45/P82833W050PCLIPSOUNYUUKI.ui",
+    "aikensa/qtui/MMC/M_5A45/P82832W040PCLIPSOUNYUUKI.ui",
+    "aikensa/qtui/MMC/M_5A45/P82833W090PCLIPSOUNYUUKI.ui",
+    "aikensa/qtui/MMC/M_5A45/P82832W080PCLIPSOUNYUUKI.ui",
+    "aikensa/qtui/NISSAN/M_JC2D/P808387UA1A.ui",
+    "aikensa/qtui/NISSAN/M_JC2D/P828447UA0A.ui",
+    "aikensa/qtui/NISSAN/M_JC2D/P658217UA0A.ui",
+    "aikensa/qtui/NISSAN/M_JC2D/P658207UA0A.ui",
+    "aikensa/qtui/NISSAN/M_JC2D/P658217UJ0A.ui",
+    "aikensa/qtui/NISSAN/M_JC2D/P658207UJ0A.ui",
+    "aikensa/qtui/empty.ui",
+    "aikensa/qtui/empty.ui",
+    "aikensa/qtui/dailyTenken_new_01.ui",
+    "aikensa/qtui/dailyTenken_new_02.ui",
+    "aikensa/qtui/dailyTenken_new_03.ui"
+  ],
+  "widget_dir_map": {
+    "5": "82833W050P",
+    "6": "82832W040P",
+    "7": "82833W090P",
+    "8": "82832W080P",
+    "9": "82833W050PKENGEN",
+    "10": "82832W040PKENGEN",
+    "11": "82833W090PKENGEN",
+    "12": "82832W080PKENGEN",
+    "13": "82833W050PCLIPSOUNYUUKI",
+    "14": "82832W040PCLIPSOUNYUUKI",
+    "15": "82833W090PCLIPSOUNYUUKI",
+    "16": "82832W080PCLIPSOUNYUUKI",
+    "17": "808387UA1A",
+    "18": "828447UA0A",
+    "19": "658217UA0A",
+    "20": "658207UA0A",
+    "21": "658217UJ0A",
+    "22": "658207UJ0A",
+    "23": "empty",
+    "100": "dailyTenken_01",
+    "101": "dailyTenken_02",
+    "102": "dailyTenken_03"
+  },
+  "parts": {
+    "三菱自動車": {
+      "5A45": [
+            {"name": "82833W050P W/STRIP-RR DOOR, LH ピッキング", "id": 5},
+            {"name": "82832W040P W/STRIP-RR DOOR, RH ピッキング", "id": 6},
+            {"name": "82833W090P W/STRIP-RR DOOR, LH ピッキング", "id": 7},
+            {"name": "82832W080P W/STRIP-RR DOOR, RH ピッキング", "id": 8},
+            {"name": "82833W050P W/STRIP-RR DOOR, LH", "id": 9},
+            {"name": "82832W040P W/STRIP-RR DOOR, RH", "id": 10},
+            {"name": "82833W090P W/STRIP-RR DOOR, LH", "id": 11},
+            {"name": "82832W080P W/STRIP-RR DOOR, RH", "id": 12},      
+            {"name": "82833W050P W/STRIP-RR DOOR, LH クリップ挿入機用", "id": 13},
+            {"name": "82832W040P W/STRIP-RR DOOR, RH クリップ挿入機用", "id": 14},
+            {"name": "82833W090P W/STRIP-RR DOOR, LH クリップ挿入機用", "id": 15},
+            {"name": "82832W080P W/STRIP-RR DOOR, RH クリップ挿入機用", "id": 16}
+      ],
+      "5P45": [
+        {"name": "LE", "id": 105},
+        {"name": "XLE", "id": 106},
+        {"name": "Limited", "id": 107}
+      ]
+    },
+    "日産自動車": {
+      "JC2D": [
+        {"name": "80838 7UA1A SEAL-FR DOOR PARTING", "id": 17},
+        {"name": "82844 7UA0A SEAL-RR DOOR PARTING LWR", "id": 18},
+        {"name": "65821 7UA0A SEAL ASSY-HOOD, FR LH CCM1", "id": 19},
+        {"name": "65820 7UA0A SEAL ASSY-HOOD, FR RH CCM1", "id": 20},
+        {"name": "65821 7UJ0A SEAL ASSY-HOOD FR LH CCM2", "id": 21},
+        {"name": "65820 7UJ0A SEAL ASSY-HOOD FR RH CCM2", "id": 22}
+      ],
+      "J42U": [
+        {"name": "LX", "id": 201},
+        {"name": "Touring", "id": 202}
+      ]
+    }
+  }
+}
