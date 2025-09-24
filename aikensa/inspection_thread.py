@@ -2181,7 +2181,7 @@ class InspectionThread(QThread):
 
                         
 
-                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=428)
+                            self.emitImages[0] = self.downSampling(self.InspectionImages[0], width=1791, height=137)
                             self.emitImages[0] = cv2.cvtColor(self.emitImages[0], cv2.COLOR_RGB2BGR)
                             self.part1Cam.emit(self.converQImageRGB(self.emitImages[0]))
 
