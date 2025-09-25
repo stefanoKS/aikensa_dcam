@@ -6,6 +6,7 @@ import os
 from enum import Enum
 import time
 import datetime
+from typing import List
 
 from PyQt5 import QtCore
 
@@ -21,6 +22,8 @@ from aikensa.inspection_thread import InspectionThread, InspectionConfig
 
 from aikensa.sio_thread import ServerMonitorThread
 from aikensa.time_thread import TimeMonitorThread
+
+from aikensa.scripts.scripts_classes import DebouncedButton
 
 
 # List of UI files to be loaded
@@ -76,6 +79,8 @@ class AIKensa(QMainWindow):
         self.server_monitor_thread.input_states_signal.connect(self.handle_input_states)
         self.server_monitor_thread.start()
 
+        self.button0 = DebouncedButton(debounce_ms=40)
+
         self.timeMonitorThread = TimeMonitorThread(check_interval=1)
         self.timeMonitorThread.time_signal.connect(self.timeUpdate)
         self.timeMonitorThread.start()
@@ -119,19 +124,11 @@ class AIKensa(QMainWindow):
                 label.setStyleSheet(f"color: {status_color};")
 
 
-    def handle_input_states(self, input_states):
-        # print(f"Input states: {input_states}")
-        if input_states:
-            if input_states[0] == 1 and self.prevTriggerStates == 0:
-                self.trigger_kensa()
-                self.prevTriggerStates = input_states[0]
-                # print("Triggered Kensa")
-            if time.time() - self.currentTime > self.TriggerWaitTime:
-                # print("timePassed")
-                self.prevTriggerStates = 0
-                self.currentTime = time.time()
-            else:
-                pass
+    def handle_input_states(self, input_states: List[int]):
+        if not input_states:
+            return
+        if self.button0.update(int(input_states[0])):
+            self.trigger_kensa()
 
     def trigger_kensa(self):
         self.Inspect_button.click()
