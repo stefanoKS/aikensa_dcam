@@ -1322,7 +1322,6 @@ class InspectionThread(QThread):
                                 play_konpou_sound()
                                 self.InspectionImages[0] = imgResult
 
-
                             self.today_numofPart_signal.emit(self.inspection_config.today_numofPart)
                             self.current_numofPart_signal.emit(self.inspection_config.current_numofPart)
                             self.InspectionImages[0] = self.downSampling(self.InspectionImages[0], width=1742, height=337)
