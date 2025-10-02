@@ -280,6 +280,23 @@ class InspectionThread(QThread):
         self.cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_30320216-video-index0")
         # self.cap_cam1 = initialize_camera(0)
         # self.cap_cam2 = initialize_camera(2)
+        #Check whether the camera is opened correctly
+        if not self.cap_cam1.isOpened():
+            print(f"Failed to open camera with ID 1, problem with camera 1.")
+            self.cap_cam1 = None
+        if not self.cap_cam2.isOpened():
+            print(f"Failed to open camera with ID 2, problem with camera 2.")
+            self.cap_cam2 = None
+
+        #print if camera is initialized
+        if self.cap_cam1.isOpened():
+            print(f"Initialized Camera on ID 1")
+
+        if self.cap_cam2.isOpened():
+            print(f"Initialized Camera on ID 2")
+
+        #wait till camera ready for 3 seconds
+        time.sleep(3)
 
 
         if not self.cap_cam1.isOpened():
@@ -478,6 +495,31 @@ class InspectionThread(QThread):
 
                 _, self.mergeframe1 = self.cap_cam1.read()
                 _, self.mergeframe2 = self.cap_cam2.read()
+
+                # if none, reinitialize
+                # if self.mergeframe1 is None:
+                #     print("Camera 1 frame is None, reinitializing camera 1")
+                #     self.cap_cam1.release()
+                #     time.sleep(1)
+                #     self.cap_cam1 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_35420835-video-index0")
+                #     time.sleep(3)
+                #     _, self.mergeframe1 = self.cap_cam1.read()
+
+                # if self.mergeframe2 is None:
+                #     print("Camera 2 frame is None, reinitializing camera 2")
+                #     self.cap_cam2.release()
+                #     time.sleep(1)
+                #     self.cap_cam2 = initialize_camera("/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DFK_33UX178_30320216-video-index0")
+                #     time.sleep(3)
+                #     _, self.mergeframe2 = self.cap_cam2.read()
+
+                # if image is empty, create a black image
+                # if self.mergeframe1 is None:
+                #     print("Camera 1 frame is None, creating black image")
+                #     self.mergeframe1 = np.zeros((self.frame_height, self.frame_width, 3), dtype=np.uint8)
+                # if self.mergeframe2 is None:
+                #     print("Camera 2 frame is None, creating black image")
+                #     self.mergeframe2 = np.zeros((self.frame_height, self.frame_width, 3), dtype=np.uint8)
 
                 #Downsampled the image
                 self.mergeframe1_scaled = self.downSampling(self.mergeframe1, self.scaled_width, self.scaled_height)
@@ -1684,6 +1726,7 @@ class InspectionThread(QThread):
         P658217UA0A_HANIRE_Model = None
         P658217UJ0A_CLIP_Model = None
         P658217UJ0A_SEGMENT_Model = None
+        P658217UJ0A_KEYPOINT_Model = None
 
         #Detection Model
         path_P658207LE0A_CLIP_Model = "./aikensa/models/P658207LE0A_CLIP.pt"
@@ -1704,7 +1747,7 @@ class InspectionThread(QThread):
         #Use the same model with 7UA0A
         path_P658217UJ0A_CLIP_Model = "./aikensa/models/P658217UA0A_CLIP.pt"
         path_P658217UJ0A_SEGMENT_Model = "./aikensa/models/P658217UA0A_SEGMENT.pt"
-        path_P658217UJ0A_KEYPOINT_Model = "./aikensa/models/P658217UA0A_KEYPOINT.pt"
+        path_P658217UJ0A_KEYPOINT_Model = "./aikensa/models/P658217UJ0A_KEYPOINT.pt"
 
 
         if os.path.exists(path_P658207LE0A_CLIP_Model):

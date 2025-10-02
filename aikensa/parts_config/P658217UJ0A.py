@@ -215,9 +215,11 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
         # left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -0, Xoffsetval = 0)
         # right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -0, Xoffsetval = 0)
 
-        left_edge =  leftmostPointX, leftmostPointY
-        right_edge = rightmostPointX, rightmostPointY
+        # left_edge =  leftmostPointX, leftmostPointY
+        # right_edge = rightmostPointX, rightmostPointY
         
+        left_edge =  leftmostPointX, detectedposY[0]
+        right_edge = rightmostPointX, detectedposY[-1]
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
