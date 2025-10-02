@@ -11,6 +11,7 @@ import os
 import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
+from aikensa.scripts.scripts_img_processing import map_keypoint_xcrop_to_original
 
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
@@ -39,12 +40,11 @@ segmentation_pixel_start = 256
 segmentation_pixel_finish = 768
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
 detected_cropped_size = 84
-
 border_width = 512
 
 
 
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, widgetNumber, YoloHanireModel):
+def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, keypointLeft, keypointRight, widgetNumber, YoloHanireModel):
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
 
@@ -70,6 +70,11 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
     flag_hole_notfound = 0
     leftmostPitch = 0
     rightmostPitch = 0
+
+    leftmostPointX = 0
+    leftmostPointY = 0
+    rightmostPointX = 0
+    rightmostPointY = 0
 
     flag_muki = 0 #whether the hole is facing the right direction
     flag_hanire = 0 #whether the clip is half inserted
@@ -104,7 +109,6 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
             combined_lmask = combined_lmask[border_width:-border_width, border_width:-border_width]
             combined_lmask = cv2.resize(combined_lmask, (segmentation_width, image.shape[0]))
             # cv2.imwrite("leftmask.jpg", combined_lmask)
-
 
         if lm.masks is None:
             status = "NG"
@@ -142,13 +146,27 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
             return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
 
-
     combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
     if combined_lmask is not None and combined_rmask is not None:
         combined_mask[:, segmentation_pixel_start:segmentation_pixel_finish] = combined_lmask
         combined_mask[:, -segmentation_pixel_finish:-segmentation_pixel_start] = combined_rmask
 
     # cv2.imwrite("combined_mask.jpg", combined_mask)
+
+        # Access the results
+    for keypoint in keypointLeft:
+        xy = keypoint.keypoints.xy
+        x_pos, y_pos = xy[0, 0].tolist()
+        # print ("Keypoint left xy: ", xy)
+        leftmostPointX, leftmostPointY = map_keypoint_xcrop_to_original(x_start=segmentation_pixel_start, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
+        print ("Mapped Keypoint left xy to original: ", (leftmostPointX, leftmostPointY))
+
+    for keypoint in keypointRight:
+        xy = keypoint.keypoints.xy
+        # print ("Keypoint right xy: ", xy)
+        x_pos, y_pos = xy[0, 0].tolist()
+        rightmostPointX, rightmostPointY = map_keypoint_xcrop_to_original(x_start=-segmentation_pixel_finish, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
+        print ("Mapped Keypoint right xy to original: ", (rightmostPointX, rightmostPointY))
 
     for i, detection in enumerate(sorted_detections):
 
@@ -189,13 +207,17 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, w
 
     if len(detectedposX) > 0:
         leftmostCenter = (detectedposX[0], detectedposY[0])
-        leftmostWidth = detectedWidth[0]
+        # leftmostWidth = detectedWidth[0]
         rightmostCenter = (detectedposX[-1], detectedposY[-1])
-        rightmostWidth = detectedWidth[-1]
+        # rightmostWidth = detectedWidth[-1]
       
-        # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -0, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -0, Xoffsetval = 0)
+        # # Positive Yoffsetval means going down, negative means going up
+        # left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -0, Xoffsetval = 0)
+        # right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -0, Xoffsetval = 0)
+
+        left_edge =  leftmostPointX, leftmostPointY
+        right_edge = rightmostPointX, rightmostPointY
+        
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier

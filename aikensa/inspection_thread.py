@@ -190,8 +190,14 @@ class InspectionThread(QThread):
         self.InspectionImages_endSegmentation_Left = [None]*1
         self.InspectionImages_endSegmentation_Right = [None]*1
 
+        self.InspectionImages_keypoint_Left = [None]*1
+        self.InspectionImages_keypoint_Right = [None]*1
+
         self.InspectionResult_EndSegmentation_Left = [None]*1
         self.InspectionResult_EndSegmentation_Right = [None]*1
+
+        self.InspectionResult_keypoint_Left = [None]*1
+        self.InspectionResult_keypoint_Right = [None]*1
 
         self.InspectionResult_ClipDetection = [None]*30
         self.InspectionResult_Segmentation = [None]*30
@@ -1256,14 +1262,21 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:-256, :]
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, 256:768, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -768:-256, :]
 
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P658217UJ0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
+
+                                self.InspectionResult_keypoint_Left[i] = self.P658217UJ0A_KEYPOINT_Model(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P658217UJ0A_KEYPOINT_Model(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
 
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DeltaPitch[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i] = P658217UJ0A_check(self.InspectionImages[i], 
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                 self.inspection_config.widget,
                                                                                                                                                                                                                                                 self.P658217UA0A_HANIRE_Model)
 
@@ -1691,6 +1704,7 @@ class InspectionThread(QThread):
         #Use the same model with 7UA0A
         path_P658217UJ0A_CLIP_Model = "./aikensa/models/P658217UA0A_CLIP.pt"
         path_P658217UJ0A_SEGMENT_Model = "./aikensa/models/P658217UA0A_SEGMENT.pt"
+        path_P658217UJ0A_KEYPOINT_Model = "./aikensa/models/P658217UA0A_KEYPOINT.pt"
 
 
         if os.path.exists(path_P658207LE0A_CLIP_Model):
@@ -1736,6 +1750,9 @@ class InspectionThread(QThread):
         if os.path.exists(path_P658217UJ0A_SEGMENT_Model):
             P658217UJ0A_SEGMENT_Model = YOLO(path_P658217UJ0A_SEGMENT_Model)
 
+        if os.path.exists(path_P658217UJ0A_KEYPOINT_Model):
+            P658217UJ0A_KEYPOINT_Model = YOLO(path_P658217UJ0A_KEYPOINT_Model)
+
 
         self.P658207LE0A_CLIP_Model = P658207LE0A_CLIP_Model
         self.P658207LE0A_SEGMENT_Model = P658207LE0A_SEGMENT_Model
@@ -1753,6 +1770,7 @@ class InspectionThread(QThread):
 
         self.P658217UJ0A_CLIP_Model = P658217UJ0A_CLIP_Model
         self.P658217UJ0A_SEGMENT_Model = P658217UJ0A_SEGMENT_Model
+        self.P658217UJ0A_KEYPOINT_Model = P658217UJ0A_KEYPOINT_Model
 
         if self.P658207LE0A_CLIP_Model is not None:
             print("P658207LE0A_CLIP_Model loaded")
@@ -1781,6 +1799,8 @@ class InspectionThread(QThread):
             print("P658217UJ0A_CLIP_Model loaded")
         if self.P658217UJ0A_SEGMENT_Model is not None:
             print("P658217UJ0A_SEGMENT_Model loaded")
+        if self.P658217UJ0A_KEYPOINT_Model is not None:
+            print("P658217UJ0A_KEYPOINT_Model loaded")
         
         NICHIJOU_TENKEN_Model = None
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA1GO_NICHIJOU_TENKEN.pt"
