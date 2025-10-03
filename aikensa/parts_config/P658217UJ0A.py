@@ -155,6 +155,17 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
 
         # Access the results
     for keypoint in keypointLeft:
+        if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
+
         xy = keypoint.keypoints.xy
         x_pos, y_pos = xy[0, 0].tolist()
         # print ("Keypoint left xy: ", xy)
@@ -162,6 +173,18 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
         print ("Mapped Keypoint left xy to original: ", (leftmostPointX, leftmostPointY))
 
     for keypoint in keypointRight:
+        if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
+
+
         xy = keypoint.keypoints.xy
         # print ("Keypoint right xy: ", xy)
         x_pos, y_pos = xy[0, 0].tolist()
@@ -314,7 +337,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
     #     status = "NG"
 
     xy_pairs = list(zip(detectedposX, detectedposY))
-    draw_pitch_line(image, xy_pairs, resultPitch, thickness=8)
+    draw_pitch_line(image, xy_pairs, resultPitch, thickness=4)
 
     image = draw_status_text_PIL(image, status, print_status, size="normal")
     
