@@ -1125,8 +1125,17 @@ class InspectionThread(QThread):
 
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, 256:768, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -768:-256, :]
+
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, 256:768, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -768:-256, :]
+
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
+
+
+                                self.InspectionResult_keypoint_Left[i] = self.P658217UA0A_KEYPOINT_Model(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P658217UA0A_KEYPOINT_Model(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
+
 
                                 #save image left and right
                                 # cv2.imwrite(f"left_{i}.jpg", self.InspectionImages_endSegmentation_Left[i])
@@ -1139,6 +1148,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                 self.inspection_config.widget,
                                                                                                                                                                                                                                                 self.P658217UA0A_HANIRE_Model)
 
@@ -1724,6 +1735,8 @@ class InspectionThread(QThread):
         P658217UA0A_CLIP_Model = None
         P658217UA0A_SEGMENT_Model = None
         P658217UA0A_HANIRE_Model = None
+        P658217UA0A_KEYPOINT_Model = None
+
         P658217UJ0A_CLIP_Model = None
         P658217UJ0A_SEGMENT_Model = None
         P658217UJ0A_KEYPOINT_Model = None
@@ -1743,6 +1756,7 @@ class InspectionThread(QThread):
         path_P658217UA0A_CLIP_Model = "./aikensa/models/P658217UA0A_CLIP.pt"
         path_P658217UA0A_SEGMENT_Model = "./aikensa/models/P658217UA0A_SEGMENT.pt"
         path_P658217UA0A_HANIRE_Model = "./aikensa/models/P658217UA0A_HANIRE.pt"
+        path_P658217UA0A_KEYPOINT_Model = "./aikensa/models/P658217UA0A_KEYPOINT.pt"
 
         #Use the same model with 7UA0A
         path_P658217UJ0A_CLIP_Model = "./aikensa/models/P658217UA0A_CLIP.pt"
@@ -1796,6 +1810,9 @@ class InspectionThread(QThread):
         if os.path.exists(path_P658217UJ0A_KEYPOINT_Model):
             P658217UJ0A_KEYPOINT_Model = YOLO(path_P658217UJ0A_KEYPOINT_Model)
 
+        if os.path.exists(path_P658217UA0A_KEYPOINT_Model):
+            P658217UA0A_KEYPOINT_Model = YOLO(path_P658217UA0A_KEYPOINT_Model)
+
 
         self.P658207LE0A_CLIP_Model = P658207LE0A_CLIP_Model
         self.P658207LE0A_SEGMENT_Model = P658207LE0A_SEGMENT_Model
@@ -1810,6 +1827,7 @@ class InspectionThread(QThread):
         self.P658217UA0A_CLIP_Model = P658217UA0A_CLIP_Model
         self.P658217UA0A_SEGMENT_Model = P658217UA0A_SEGMENT_Model
         self.P658217UA0A_HANIRE_Model = P658217UA0A_HANIRE_Model
+        self.P658217UA0A_KEYPOINT_Model = P658217UA0A_KEYPOINT_Model
 
         self.P658217UJ0A_CLIP_Model = P658217UJ0A_CLIP_Model
         self.P658217UJ0A_SEGMENT_Model = P658217UJ0A_SEGMENT_Model
@@ -1838,6 +1856,10 @@ class InspectionThread(QThread):
             print("P658217UA0A_SEGMENT_Model loaded")
         if self.P658217UA0A_HANIRE_Model is not None:
             print("P658217UA0A_HANIRE_Model loaded")
+        if self.P658217UA0A_KEYPOINT_Model is not None:
+            print("P658217UA0A_KEYPOINT_Model loaded")
+
+
         if self.P658217UJ0A_CLIP_Model is not None:
             print("P658217UJ0A_CLIP_Model loaded")
         if self.P658217UJ0A_SEGMENT_Model is not None:
