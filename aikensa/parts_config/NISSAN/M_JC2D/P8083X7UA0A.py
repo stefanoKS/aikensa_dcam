@@ -164,8 +164,6 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
         w = bbox.maxx - bbox.minx
         h = bbox.maxy - bbox.miny
 
-
-
         if detection.category.id == 0:
             #brown for brown clip
             color = (170, 0, 100)
@@ -256,16 +254,26 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, p
     
     if detectedid == idSpec_with_epto:
         if partSide == "LH":
+            # epto_left = abs(detectedposX[3] - epto_edge_point[0])
+            # epto_left = round(epto_left * pixelMultiplier_eptoLH, 1)
+            # measuredPitch.append(epto_left)
+            # measuredPitch.append(epto_width)
+
             epto_left = abs(detectedposX[3] - epto_edge_point[0])
-            epto_left = round(epto_left * pixelMultiplier_eptoLH, 1)
-            measuredPitch.append(epto_left)
-            measuredPitch.append(epto_width)
+            epto_left = float(epto_left * pixelMultiplier_eptoLH)
+            measuredPitch.append(round(epto_left, 1))
+            measuredPitch.append(float(epto_width))
 
         if partSide == "RH":
+            # epto_right = abs(epto_edge_point[0] - detectedposX[5])
+            # epto_right = round(epto_right * pixelMultiplier_eptoRH, 1)
+            # measuredPitch.append(epto_right)
+            # measuredPitch.append(epto_width)
+
             epto_right = abs(epto_edge_point[0] - detectedposX[5])
-            epto_right = round(epto_right * pixelMultiplier_eptoRH, 1)
-            measuredPitch.append(epto_right)
-            measuredPitch.append(epto_width)
+            epto_right = float(epto_right * pixelMultiplier_eptoRH)
+            measuredPitch.append(round(epto_right, 1))
+            measuredPitch.append(float(epto_width))
 
         print ("Measured Pitches with EPTO:", measuredPitch)
 
