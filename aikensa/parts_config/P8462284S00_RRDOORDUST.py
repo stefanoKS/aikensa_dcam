@@ -7,6 +7,7 @@ import os
 import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
+from aikensa.scripts.script_img_processing import map_keypoint_xcrop_to_original
 
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
@@ -29,6 +30,10 @@ bbox_offset = 10
 
 segmentation_width = 1640
 border_width = 200
+
+segmentation_pixel_start = 412
+segmentation_pixel_finish = 1692
+segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
 
 # pixelMultiplier = 0.16097859
 pixelMultiplier = 0.15969076128

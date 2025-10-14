@@ -2704,6 +2704,7 @@ class InspectionThread(QThread):
                                                                             confidence_threshold=0.80,
                                                                             device="cuda:0")
         P8462284S00_SEGMENT_Model = YOLO(path_P8462284S00_SEGMENT_Model)
+        P8462284S00_KEYPOINT_Model = YOLO(path_P8462284S00_KEYPOINT_Model)
         self.P8462284S00_CLIP_Model = P8462284S00_CLIP_Model
         self.P8462284S00_KEYPOINT_Model = P8462284S00_KEYPOINT_Model
         self.P8462284S00_SEGMENT_Model = P8462284S00_SEGMENT_Model
