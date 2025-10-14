@@ -228,8 +228,14 @@ class InspectionThread(QThread):
         self.InspectionImages_endSegmentation_Left = [None]*1
         self.InspectionImages_endSegmentation_Right = [None]*1
 
+        self.InspectionImages_keypoint_Left = [None]*1
+        self.InspectionImages_keypoint_Right = [None]*1
+
         self.InspectionResult_EndSegmentation_Left = [None]*5
         self.InspectionResult_EndSegmentation_Right = [None]*5
+
+        self.InspectionResult_keypoint_Left = [None]*5
+        self.InspectionResult_keypoint_Right = [None]*5
 
         self.InspectionResult_ClipDetection = [None]*30
         self.InspectioNResult_KatabuDetection = [None]*30
@@ -2154,8 +2160,14 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1640, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1640:, :]
 
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, 412:1692, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -1692:-412, :]
+
                                 self.InspectionImages_endSegmentation_Left[i] = add_imageborder(img = self.InspectionImages_endSegmentation_Left[i], width = 200)
                                 self.InspectionImages_endSegmentation_Right[i] = add_imageborder(img = self.InspectionImages_endSegmentation_Right[i], width = 200)
+
+                                self.InspectionResult_keypoint_Left[i] = self.P8462284S00_KEYPOINT_Model(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=1280, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P8462284S00_KEYPOINT_Model(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=1280, verbose=False)
    
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P8462284S00_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False)
@@ -2163,7 +2175,10 @@ class InspectionThread(QThread):
                                 self.InspectionImages[i], self.InspectionResult_PitchMeasured[i], self.InspectionResult_PitchResult[i], self.InspectionResult_DetectionID[i], self.InspectionResult_Status[i], self.InspectionResult_NGReason[i]   = P8462284S00_check(self.InspectionImages[i], 
                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
-                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i])
+                                                                                                                                                                                                                self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i]
+                                                                                                                                                                                                                )
 
 
                                 for i in range(len(self.InspectionResult_Status)):
@@ -2627,6 +2642,7 @@ class InspectionThread(QThread):
         #13
         P8462284S00_CLIP_Model = None
         P8462284S00_SEGMENT_Model = None
+        P8462284S00_KEYPOINT_Model = None
 
         #05
         path_P658107YA0A_CLIP_Model = "./aikensa/models/P658107YA0A_detect.pt"
@@ -2683,11 +2699,13 @@ class InspectionThread(QThread):
         #13
         path_P8462284S00_CLIP_Model = "./aikensa/models/P8462284S00_detect.pt"
         path_P8462284S00_SEGMENT_Model = "./aikensa/models/P8462284S00_segment.pt"
+        path_P8462284S00_KEYPOINT_Model = "./aikensa/models/P8462284S00_KEYPOINT.pt"
         P8462284S00_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",model_path=path_P8462284S00_CLIP_Model,
                                                                             confidence_threshold=0.80,
                                                                             device="cuda:0")
         P8462284S00_SEGMENT_Model = YOLO(path_P8462284S00_SEGMENT_Model)
         self.P8462284S00_CLIP_Model = P8462284S00_CLIP_Model
+        self.P8462284S00_KEYPOINT_Model = P8462284S00_KEYPOINT_Model
         self.P8462284S00_SEGMENT_Model = P8462284S00_SEGMENT_Model
 
         NICHIJOU_TENKEN_Model = None
@@ -2700,7 +2718,6 @@ class InspectionThread(QThread):
                                                                             device="cuda:0")
             
         self.NICHIJOU_TENKEN_Model = NICHIJOU_TENKEN_Model
-
 
         print("Model Loaded")
         
