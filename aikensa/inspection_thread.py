@@ -12,6 +12,7 @@ import time
 import logging
 import sqlite3
 import mysql.connector
+from ast import literal_eval
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -113,6 +114,8 @@ class InspectionThread(QThread):
             self.inspection_config = inspection_config
 
         self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
+        self._today_str = datetime.now().strftime("%Y%m%d")
+
 
         self.multiCam_stream = False
 
@@ -536,6 +539,7 @@ class InspectionThread(QThread):
 
         while self.running:
 
+            self._check_date_rollover()
 
             if self.inspection_config.widget == 0:
                 self.inspection_config.cameraID = -1
@@ -2452,69 +2456,82 @@ class InspectionThread(QThread):
             print(f"Error saving to MySQL: {e}")
 
 
+    # def get_last_entry_currentnumofPart(self, part_name):
+    #     self.cursor.execute('''
+    #     SELECT currentnumofPart 
+    #     FROM inspection_results 
+    #     WHERE partName = ? 
+    #     ORDER BY id DESC 
+    #     LIMIT 1
+    #     ''', (part_name,))
+        
+    #     row = self.cursor.fetchone()
+    #     if row:
+    #         currentnumofPart = eval(row[0])
+    #         return currentnumofPart
+    #     else:
+    #         return [0, 0]
+            
+    # def get_last_entry_total_numofPart(self, part_name):
+    #     # Get today's date in yyyymmdd format
+    #     today_date = datetime.now().strftime("%Y%m%d")
+
+    #     self.cursor.execute('''
+    #         SELECT numofPart, timestampDate 
+    #         FROM inspection_results 
+    #         WHERE partName = ? 
+    #         ORDER BY id DESC 
+    #         LIMIT 1
+    #     ''', (part_name,))
+
+    #     row = self.cursor.fetchone()
+    #     #print last entry and today date
+    #     print(f"Part name: {part_name}, Last entry: {row}")
+    #     print(f"Today date: {today_date}")
+    #     if row:
+    #         last_entry_date = row[1]
+    #         if last_entry_date == today_date:
+    #             # Convert the string (e.g., "[10, 5]") into an actual list
+    #             numofPart = eval(row[0])
+    #             return numofPart
+    #         else:
+    #             # If the last entry is not from today, return [0, 0]
+    #             return [0, 0]
+    #     else:
+    #         return [0, 0]  # Default values if no entry is found
+
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
-        SELECT currentnumofPart 
-        FROM inspection_results 
-        WHERE partName = ? 
-        ORDER BY id DESC 
-        LIMIT 1
-        ''', (part_name,))
-        
-        row = self.cursor.fetchone()
-        if row:
-            currentnumofPart = eval(row[0])
-            return currentnumofPart
-        else:
-            return [0, 0]
-            
-    def get_last_entry_total_numofPart(self, part_name):
-        # Get today's date in yyyymmdd format
-        today_date = datetime.now().strftime("%Y%m%d")
-
-        # self.cursor.execute('''
-        # SELECT numofPart 
-        # FROM inspection_results 
-        # WHERE partName = ? AND timestampDate = ? 
-        # ORDER BY id DESC 
-        # LIMIT 1
-        # ''', (part_name, today_date))
-
-        
-        # row = self.cursor.fetchone()
-        # if row:
-        #     numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-        #     print(f"Part: {part_name} - NumofPart: {numofPart}")
-        #     return numofPart
-        # else:
-        #     print(f"Last entry for today not found for {part_name}")
-        #     return [0, 0]  # Default values if no entry is found
-
-        # Select the last entry for the given part_name, regardless of date.
-        self.cursor.execute('''
-            SELECT numofPart, timestampDate 
-            FROM inspection_results 
-            WHERE partName = ? 
-            ORDER BY id DESC 
+            SELECT currentnumofPart
+            FROM inspection_results
+            WHERE partName = ?
+            ORDER BY id DESC
             LIMIT 1
         ''', (part_name,))
-
         row = self.cursor.fetchone()
-        #print last entry and today date
-        print(f"Part name: {part_name}, Last entry: {row}")
-        print(f"Today date: {today_date}")
         if row:
-            last_entry_date = row[1]
-            if last_entry_date == today_date:
-                # Convert the string (e.g., "[10, 5]") into an actual list
-                numofPart = eval(row[0])
-                return numofPart
-            else:
-                # If the last entry is not from today, return [0, 0]
+            try:
+                return list(literal_eval(row[0]))
+            except Exception:
                 return [0, 0]
-        else:
-            return [0, 0]  # Default values if no entry is found
+        return [0, 0]
 
+    def get_last_entry_total_numofPart(self, part_name):
+        today_date = datetime.now().strftime("%Y%m%d")
+        self.cursor.execute('''
+            SELECT numofPart
+            FROM inspection_results
+            WHERE partName = ? AND timestampDate = ?
+            ORDER BY id DESC
+            LIMIT 1
+        ''', (part_name, today_date))
+        row = self.cursor.fetchone()
+        if row:
+            try:
+                return list(literal_eval(row[0]))
+            except Exception:
+                return [0, 0]
+        return [0, 0]
 
     def draw_status_text_PIL(self, image, text, color, size = "normal", x_offset = 0, y_offset = 0):
 
@@ -2741,3 +2758,10 @@ class InspectionThread(QThread):
                 print(f"Could not add column {column_name}: {e}")
 
 
+    def _check_date_rollover(self):
+        today = datetime.now().strftime("%Y%m%d")
+        if today != self._today_str:
+            self._today_str = today
+            # reset only the daily totals, keep current (session) counts as-is
+            for k in self.widget_dir_map.keys():
+                self.inspection_config.today_numofPart[k] = [0, 0]
