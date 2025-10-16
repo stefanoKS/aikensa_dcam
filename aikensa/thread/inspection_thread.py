@@ -232,8 +232,14 @@ class InspectionThread(QThread):
 
         self.InspectionImagesKatabu = [None]*1
 
+        self.InspectionImages_keypoint_Left = [None]*1
+        self.InspectionImages_keypoint_Right = [None]*1
+
         self.InspectionImages_endSegmentation_Left = [None]*1
         self.InspectionImages_endSegmentation_Right = [None]*1
+
+        self.InspectionResult_keypoint_Left = [None]*5
+        self.InspectionResult_keypoint_Right = [None]*5
 
         self.InspectionResult_EndSegmentation_Left = [None]*5
         self.InspectionResult_EndSegmentation_Right = [None]*5
@@ -1371,6 +1377,12 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :512, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -512:, :]
 
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, :-512, :]
+
+                                self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
+
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
@@ -1381,6 +1393,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                 self.P828447UA0A_ANOMALY_CLASSIFICATION_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
@@ -1519,6 +1533,11 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, :-512, :]
+
+                                self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
 
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
@@ -1527,6 +1546,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                 self.P828447UA0A_ANOMALY_CLASSIFICATION_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
@@ -1969,6 +1990,7 @@ class InspectionThread(QThread):
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
         path_P808387UA1A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P808387UA1A_SEGMENT_Model = "./aikensa/models/P808387UA1A_segment.pt"
+        path_P808387UA1A_keypoint = "./aikensa/models/P808387UA1A_keypoint.pt"
         path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
 
@@ -2031,6 +2053,12 @@ class InspectionThread(QThread):
         else:
             print(f"Model file {path_P808387UA1A_SEGMENT_Model} does not exist. Initializing as None.")
             self.P808387UA1A_SEGMENT_Model = None
+
+        if os.path.exists(path_P808387UA1A_keypoint):
+            self.P808387UA1A_keypoint = YOLO(path_P808387UA1A_keypoint)
+        else:
+            print(f"Model file {path_P808387UA1A_keypoint} does not exist. Initializing as None.")
+            self.P808387UA1A_keypoint = None
 
         if os.path.exists(path_P828447UA0A_CLIP_Model):
             self.P828447UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(

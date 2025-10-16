@@ -14,7 +14,8 @@ from PIL import ImageFont, ImageDraw, Image
 
 from aikensa.scripts.scripts_img_processing import create_masks, draw_bounding_box, get_center, find_edge_point_mask, calclength, check_tolerance, check_id, draw_pitch_line
 from aikensa.scripts.scripts_img_processing import draw_status_text_PIL
-from aikensa.scripts.scripts_img_processing import check_hanire, draw_redCircle
+from aikensa.scripts.scripts_img_processing import check_hanire, draw_redCircle, map_keypoint_xcrop_to_original
+
 
 
 pitchSpec = [15, 123, 122, 81, 81, 122, 123, 15, 682]
@@ -49,7 +50,7 @@ segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
 # border_width = 512
 
 
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, YoloHanireModel):
+def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, keypointLeft, keypointRight, YoloHanireModel):
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
 
@@ -74,6 +75,11 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, Y
     flag_hole_notfound = 0
     leftmostPitch = 0
     rightmostPitch = 0
+
+    leftmostPointX = 0
+    leftmostPointY = 0
+    rightmostPointX = 0
+    rightmostPointY = 0
 
     flag_hanire = 0 #whether the clip is half inserted
 
@@ -140,6 +146,42 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, Y
         combined_mask[:, -segmentation_pixel_finish:] = combined_rmask
 
     # cv2.imwrite("combined_mask.jpg", combined_mask)
+    for keypoint in keypointLeft:
+        if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
+
+        xy = keypoint.keypoints.xy
+        x_pos, y_pos = xy[0, 0].tolist()
+        # print ("Keypoint left xy: ", xy)
+        leftmostPointX, leftmostPointY = map_keypoint_xcrop_to_original(x_start=segmentation_pixel_start, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
+        print ("Mapped Keypoint left xy to original: ", (leftmostPointX, leftmostPointY))
+
+    for keypoint in keypointRight:
+        if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
+            status = "NG"
+            print_status = "製品は見つかりません"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
+        
+        xy = keypoint.keypoints.xy
+        # print ("Keypoint right xy: ", xy)
+        x_pos, y_pos = xy[0, 0].tolist()
+        rightmostPointX, rightmostPointY = map_keypoint_xcrop_to_original(x_start=-segmentation_pixel_finish, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
+        print ("Mapped Keypoint right xy to original: ", (rightmostPointX, rightmostPointY))
+
 
     for i, detection in enumerate(sorted_detections):
 
@@ -179,13 +221,19 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, Y
 
     if len(detectedposX) > 0:
         leftmostCenter = (detectedposX[0], detectedposY[0])
-        leftmostWidth = detectedWidth[0]
         rightmostCenter = (detectedposX[-1], detectedposY[-1])
-        rightmostWidth = detectedWidth[-1]
       
-        # Positive Yoffsetval means going down, negative means going up
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -50, Xoffsetval = 0)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -50, Xoffsetval = 0)
+        # leftmostWidth = detectedWidth[0]
+        # rightmostWidth = detectedWidth[-1]
+      
+        # left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -50, Xoffsetval = 0)
+        # right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -50, Xoffsetval = 0)
+
+        # leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
+        # rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
+
+        left_edge =  leftmostPointX, detectedposY[0]
+        right_edge = rightmostPointX, detectedposY[-1]
 
         leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
         rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
