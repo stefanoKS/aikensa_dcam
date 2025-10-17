@@ -1825,40 +1825,73 @@ class InspectionThread(QThread):
             print(f"Error saving to MySQL database: {str(e)}")
 
 
+    # def get_last_entry_currentnumofPart(self, part_name):
+    #     self.cursor.execute('''
+    #     SELECT currentnumofPart 
+    #     FROM inspection_results 
+    #     WHERE partName = ? 
+    #     ORDER BY id DESC 
+    #     LIMIT 1
+    #     ''', (part_name,))
+        
+    #     row = self.cursor.fetchone()
+    #     if row:
+    #         currentnumofPart = eval(row[0])
+    #         return currentnumofPart
+    #     else:
+    #         return [0, 0]
+            
+    # def get_last_entry_total_numofPart(self, part_name):
+    #     # Get today's date in yyyymmdd format
+    #     today_date = datetime.now().strftime("%Y%m%d")
+
+    #     self.cursor.execute('''
+    #     SELECT numofPart 
+    #     FROM inspection_results 
+    #     WHERE partName = ? AND timestampDate = ? 
+    #     ORDER BY id DESC 
+    #     LIMIT 1
+    #     ''', (part_name, today_date))
+        
+    #     row = self.cursor.fetchone()
+    #     if row:
+    #         numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+    #         return numofPart
+    #     else:
+    #         return [0, 0]  # Default values if no entry is found
+
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
-        SELECT currentnumofPart 
-        FROM inspection_results 
-        WHERE partName = ? 
-        ORDER BY id DESC 
-        LIMIT 1
+            SELECT currentnumofPart
+            FROM inspection_results
+            WHERE partName = ?
+            ORDER BY id DESC
+            LIMIT 1
         ''', (part_name,))
-        
         row = self.cursor.fetchone()
         if row:
-            currentnumofPart = eval(row[0])
-            return currentnumofPart
-        else:
-            return [0, 0]
-            
-    def get_last_entry_total_numofPart(self, part_name):
-        # Get today's date in yyyymmdd format
-        today_date = datetime.now().strftime("%Y%m%d")
+            try:
+                return list(literal_eval(row[0]))
+            except Exception:
+                return [0, 0]
+        return [0, 0]
 
+    def get_last_entry_total_numofPart(self, part_name):
+        today_date = datetime.now().strftime("%Y%m%d")
         self.cursor.execute('''
-        SELECT numofPart 
-        FROM inspection_results 
-        WHERE partName = ? AND timestampDate = ? 
-        ORDER BY id DESC 
-        LIMIT 1
+            SELECT numofPart
+            FROM inspection_results
+            WHERE partName = ? AND timestampDate = ?
+            ORDER BY id DESC
+            LIMIT 1
         ''', (part_name, today_date))
-        
         row = self.cursor.fetchone()
         if row:
-            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-            return numofPart
-        else:
-            return [0, 0]  # Default values if no entry is found
+            try:
+                return list(literal_eval(row[0]))
+            except Exception:
+                return [0, 0]
+        return [0, 0]
 
     def draw_status_text_PIL(self, image, text, color, size = "normal", x_offset = 0, y_offset = 0):
 
