@@ -10,6 +10,7 @@ import time
 import logging
 import sqlite3
 import mysql.connector
+from ast import literal_eval
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -111,6 +112,8 @@ class InspectionThread(QThread):
             self.inspection_config = inspection_config
 
         self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
+        self._today_str = datetime.now().strftime("%Y%m%d")
+
 
         self.multiCam_stream = False
 
@@ -531,6 +534,8 @@ class InspectionThread(QThread):
                 self.planarizeTransform_wide_scaled = np.array(transform_list)
 
         while self.running:
+
+            self._check_date_rollover()
 
             if self.inspection_config.widget == 0:
                 self.inspection_config.cameraID = -1
@@ -2111,3 +2116,12 @@ class InspectionThread(QThread):
                 print(f"Added column: {column_name}")
             except sqlite3.OperationalError as e:
                 print(f"Could not add column {column_name}: {e}")
+
+
+    def _check_date_rollover(self):
+        today = datetime.now().strftime("%Y%m%d")
+        if today != self._today_str:
+            self._today_str = today
+            # reset only the daily totals, keep current (session) counts as-is
+            for k in self.widget_dir_map.keys():
+                self.inspection_config.today_numofPart[k] = [0, 0]
