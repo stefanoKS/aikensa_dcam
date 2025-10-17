@@ -1383,7 +1383,9 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -512:, :]
 
                                 self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
-                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, :-512, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -512:, :]
+                                
+ 
 
                                 self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
                                 self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
@@ -1539,8 +1541,9 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
                                 self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
-                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, :-512, :]
-
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -512:, :]
+                                cv2.imwrite("./keypoint_Left.png", self.InspectionImages_keypoint_Left[i])
+                                cv2.imwrite("./keypoint_Right.png", self.InspectionImages_keypoint_Right[i])
                                 self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
                                 self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
 

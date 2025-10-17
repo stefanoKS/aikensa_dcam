@@ -162,7 +162,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
         x_pos, y_pos = xy[0, 0].tolist()
         # print ("Keypoint left xy: ", xy)
         leftmostPointX, leftmostPointY = map_keypoint_xcrop_to_original(x_start=segmentation_pixel_start, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
-        print ("Mapped Keypoint left xy to original: ", (leftmostPointX, leftmostPointY))
+        # print ("Mapped Keypoint left xy to original: ", (leftmostPointX, leftmostPointY))
 
     for keypoint in keypointRight:
         if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
@@ -180,7 +180,7 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
         # print ("Keypoint right xy: ", xy)
         x_pos, y_pos = xy[0, 0].tolist()
         rightmostPointX, rightmostPointY = map_keypoint_xcrop_to_original(x_start=-segmentation_pixel_finish, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
-        print ("Mapped Keypoint right xy to original: ", (rightmostPointX, rightmostPointY))
+        # print ("Mapped Keypoint right xy to original: ", (rightmostPointX, rightmostPointY))
         
     for i, detection in enumerate(sorted_detections):
 
