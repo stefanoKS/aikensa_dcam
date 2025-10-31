@@ -325,13 +325,13 @@ class InspectionThread(QThread):
         if self.cap_cam2 is not None:
             self.cap_cam2.release()
             print(f"Camera 2 released.")
-        if self.cap_cam3 is not None:
-            self.cap_cam3.release()
-            print(f"Camera 3 released.")
+        # if self.cap_cam3 is not None:
+        #     self.cap_cam3.release()
+        #     print(f"Camera 3 released.")
 
         self.cap_cam1 = initialize_camera(0)
-        self.cap_cam2 = initialize_camera(2)
-        self.cap_cam3 = initialize_camera(1) #This is the gaikanCamera
+        self.cap_cam2 = initialize_camera(1)
+        # self.cap_cam3 = initialize_camera(1) #This is the gaikanCamera
 
         if not self.cap_cam1.isOpened():
             print(f"Failed to open camera with ID 1, problem with camera 1.")
@@ -345,9 +345,9 @@ class InspectionThread(QThread):
         else:
             print(f"Initialized Camera on ID 2")
 
-        if not self.cap_cam3.isOpened():
-            print(f"Failed to open camera with ID 3, problem with camera 3.")
-            self.cap_cam3 = None
+        # if not self.cap_cam3.isOpened():
+        #     print(f"Failed to open camera with ID 3, problem with camera 3.")
+        #     self.cap_cam3 = None
 
 
     def run(self):
@@ -626,8 +626,9 @@ class InspectionThread(QThread):
                         self.combinedImage_scaled = cv2.warpPerspective(self.combinedImage_scaled, self.planarizeTransform_wide_scaled, (int(self.wide_planarize[1]/(self.scale_factor)), int(self.wide_planarize[0]/(self.scale_factor))))
                         self.combinedImage_scaled = self.downScaledImage(self.combinedImage_scaled, scaleFactor=0.724734785036293)
 
-                        _, self.gaikanframe = self.cap_cam3.read()
-                        self.gaikanframe = cv2.rotate(self.gaikanframe, cv2.ROTATE_180)
+                        # _, self.gaikanframe = self.cap_cam3.read()
+                        # self.gaikanframe = cv2.rotate(self.gaikanframe, cv2.ROTATE_180)
+                        self.gaikanframe = np.zeros((147, 110, 3), dtype=np.uint8)
 
                         if self.gaikanframe is not None:
                             self.gaikanframe_scaled = self.downSampling(self.gaikanframe, 147, 110) #w147, h110 is the qt window size
