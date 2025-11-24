@@ -225,17 +225,17 @@ class InspectionThread(QThread):
         self.P5_RH_image_scaled = None
 
         #value for opencv cropping
-        self.P1_LH_image_scaled_crop = [0, 8, 700, 33]
-        self.P2_LH_image_scaled_crop = [0, 63, 700, 88]
-        self.P3_LH_image_scaled_crop = [0, 116, 700, 141]
-        self.P4_LH_image_scaled_crop = [0, 173, 700, 198]
-        self.P5_LH_image_scaled_crop = [0, 228, 700, 250]
+        self.P1_LH_image_scaled_crop = [0, 15, 700, 40]
+        self.P2_LH_image_scaled_crop = [0, 70, 700, 95]
+        self.P3_LH_image_scaled_crop = [0, 123, 700, 148]
+        self.P4_LH_image_scaled_crop = [0, 180, 700, 205]
+        self.P5_LH_image_scaled_crop = [0, 235, 700, 257]
 
-        self.P1_RH_image_scaled_crop = [0, 8, 700, 33]
-        self.P2_RH_image_scaled_crop = [0, 63, 700, 88]
-        self.P3_RH_image_scaled_crop = [0, 116, 700, 141]
-        self.P4_RH_image_scaled_crop = [0, 172, 700, 197]
-        self.P5_RH_image_scaled_crop = [0, 228, 700, 250]
+        self.P1_RH_image_scaled_crop = [0, 11, 700, 36]
+        self.P2_RH_image_scaled_crop = [0, 66, 700, 91]
+        self.P3_RH_image_scaled_crop = [0, 119, 700, 144]
+        self.P4_RH_image_scaled_crop = [0, 175, 700, 200]
+        self.P5_RH_image_scaled_crop = [0, 231, 700, 253]
 
         self.LH_CROP_START = 1261
         self.RH_CROP_START = 2090
