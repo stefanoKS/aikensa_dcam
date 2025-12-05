@@ -10,6 +10,7 @@ import time
 import logging
 import sqlite3
 import mysql.connector
+from ast import literal_eval
 
 from sahi import AutoDetectionModel
 from sahi.predict import get_prediction, get_sliced_prediction, predict
@@ -111,6 +112,8 @@ class InspectionThread(QThread):
             self.inspection_config = inspection_config
 
         self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
+        self._today_str = datetime.now().strftime("%Y%m%d")
+
 
         self.multiCam_stream = False
 
@@ -232,8 +235,14 @@ class InspectionThread(QThread):
 
         self.InspectionImagesKatabu = [None]*1
 
+        self.InspectionImages_keypoint_Left = [None]*1
+        self.InspectionImages_keypoint_Right = [None]*1
+
         self.InspectionImages_endSegmentation_Left = [None]*1
         self.InspectionImages_endSegmentation_Right = [None]*1
+
+        self.InspectionResult_keypoint_Left = [None]*5
+        self.InspectionResult_keypoint_Right = [None]*5
 
         self.InspectionResult_EndSegmentation_Left = [None]*5
         self.InspectionResult_EndSegmentation_Right = [None]*5
@@ -525,6 +534,8 @@ class InspectionThread(QThread):
                 self.planarizeTransform_wide_scaled = np.array(transform_list)
 
         while self.running:
+
+            self._check_date_rollover()
 
             if self.inspection_config.widget == 0:
                 self.inspection_config.cameraID = -1
@@ -1371,6 +1382,14 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :512, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -512:, :]
 
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -512:, :]
+                                
+ 
+
+                                self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
+
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
@@ -1381,6 +1400,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                 self.P828447UA0A_ANOMALY_CLASSIFICATION_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
@@ -1519,6 +1540,12 @@ class InspectionThread(QThread):
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 512, 512, 512, 512, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -512:, :]
+                                cv2.imwrite("./keypoint_Left.png", self.InspectionImages_keypoint_Left[i])
+                                cv2.imwrite("./keypoint_Right.png", self.InspectionImages_keypoint_Right[i])
+                                self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
 
                                 self.InspectionResult_EndSegmentation_Left[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Left[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
                                 self.InspectionResult_EndSegmentation_Right[i] = self.P828447UA0A_SEGMENT_Model(source=self.InspectionImages_endSegmentation_Right[i], conf=0.5, imgsz=1680, verbose=False, retina_masks=True)
@@ -1527,6 +1554,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                 self.InspectionResult_ClipDetection[i].object_prediction_list,
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                 self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                 self.P828447UA0A_ANOMALY_CLASSIFICATION_Model)
 
                                 for i in range(len(self.InspectionResult_Status)):
@@ -1799,40 +1828,73 @@ class InspectionThread(QThread):
             print(f"Error saving to MySQL database: {str(e)}")
 
 
+    # def get_last_entry_currentnumofPart(self, part_name):
+    #     self.cursor.execute('''
+    #     SELECT currentnumofPart 
+    #     FROM inspection_results 
+    #     WHERE partName = ? 
+    #     ORDER BY id DESC 
+    #     LIMIT 1
+    #     ''', (part_name,))
+        
+    #     row = self.cursor.fetchone()
+    #     if row:
+    #         currentnumofPart = eval(row[0])
+    #         return currentnumofPart
+    #     else:
+    #         return [0, 0]
+            
+    # def get_last_entry_total_numofPart(self, part_name):
+    #     # Get today's date in yyyymmdd format
+    #     today_date = datetime.now().strftime("%Y%m%d")
+
+    #     self.cursor.execute('''
+    #     SELECT numofPart 
+    #     FROM inspection_results 
+    #     WHERE partName = ? AND timestampDate = ? 
+    #     ORDER BY id DESC 
+    #     LIMIT 1
+    #     ''', (part_name, today_date))
+        
+    #     row = self.cursor.fetchone()
+    #     if row:
+    #         numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
+    #         return numofPart
+    #     else:
+    #         return [0, 0]  # Default values if no entry is found
+
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
-        SELECT currentnumofPart 
-        FROM inspection_results 
-        WHERE partName = ? 
-        ORDER BY id DESC 
-        LIMIT 1
+            SELECT currentnumofPart
+            FROM inspection_results
+            WHERE partName = ?
+            ORDER BY id DESC
+            LIMIT 1
         ''', (part_name,))
-        
         row = self.cursor.fetchone()
         if row:
-            currentnumofPart = eval(row[0])
-            return currentnumofPart
-        else:
-            return [0, 0]
-            
-    def get_last_entry_total_numofPart(self, part_name):
-        # Get today's date in yyyymmdd format
-        today_date = datetime.now().strftime("%Y%m%d")
+            try:
+                return list(literal_eval(row[0]))
+            except Exception:
+                return [0, 0]
+        return [0, 0]
 
+    def get_last_entry_total_numofPart(self, part_name):
+        today_date = datetime.now().strftime("%Y%m%d")
         self.cursor.execute('''
-        SELECT numofPart 
-        FROM inspection_results 
-        WHERE partName = ? AND timestampDate = ? 
-        ORDER BY id DESC 
-        LIMIT 1
+            SELECT numofPart
+            FROM inspection_results
+            WHERE partName = ? AND timestampDate = ?
+            ORDER BY id DESC
+            LIMIT 1
         ''', (part_name, today_date))
-        
         row = self.cursor.fetchone()
         if row:
-            numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-            return numofPart
-        else:
-            return [0, 0]  # Default values if no entry is found
+            try:
+                return list(literal_eval(row[0]))
+            except Exception:
+                return [0, 0]
+        return [0, 0]
 
     def draw_status_text_PIL(self, image, text, color, size = "normal", x_offset = 0, y_offset = 0):
 
@@ -1969,6 +2031,7 @@ class InspectionThread(QThread):
         path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
         path_P808387UA1A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P808387UA1A_SEGMENT_Model = "./aikensa/models/P808387UA1A_segment.pt"
+        path_P808387UA1A_keypoint = "./aikensa/models/P808387UA1A_keypoint.pt"
         path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
         path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
 
@@ -2032,6 +2095,12 @@ class InspectionThread(QThread):
             print(f"Model file {path_P808387UA1A_SEGMENT_Model} does not exist. Initializing as None.")
             self.P808387UA1A_SEGMENT_Model = None
 
+        if os.path.exists(path_P808387UA1A_keypoint):
+            self.P808387UA1A_keypoint = YOLO(path_P808387UA1A_keypoint)
+        else:
+            print(f"Model file {path_P808387UA1A_keypoint} does not exist. Initializing as None.")
+            self.P808387UA1A_keypoint = None
+
         if os.path.exists(path_P828447UA0A_CLIP_Model):
             self.P828447UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
                 model_type="ultralytics",
@@ -2083,3 +2152,12 @@ class InspectionThread(QThread):
                 print(f"Added column: {column_name}")
             except sqlite3.OperationalError as e:
                 print(f"Could not add column {column_name}: {e}")
+
+
+    def _check_date_rollover(self):
+        today = datetime.now().strftime("%Y%m%d")
+        if today != self._today_str:
+            self._today_str = today
+            # reset only the daily totals, keep current (session) counts as-is
+            for k in self.widget_dir_map.keys():
+                self.inspection_config.today_numofPart[k] = [0, 0]

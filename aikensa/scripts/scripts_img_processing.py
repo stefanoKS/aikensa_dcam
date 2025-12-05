@@ -4,6 +4,8 @@ import cv2
 import math
 import numpy as np
 import pygame
+from typing import Tuple, Optional
+
 
 kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
 text_offset = 40
@@ -345,3 +347,20 @@ def draw_redCircle(image, x, y, w, h, img_size, thickness=3, bbox_offset=8):
     h = int(h)  
     radius = int((w + h) / 4) + bbox_offset  # Calculate radius based on width and height
     cv2.circle(image, (x, y), radius, color, thickness)
+
+def map_keypoint_xcrop_to_original(
+    x_start: int,
+    kpt_xy_crop: Tuple[float, float],
+    img_width: int = None
+) -> Tuple[float, float]:
+    """
+    Map a keypoint from x-crop back to original image coords.
+    Accepts negative x_start (interpreted relative to right edge).
+    """
+    if img_width is not None and x_start < 0:
+        x_start = img_width + x_start
+
+    x_crop, y_crop = kpt_xy_crop
+    x_orig = x_start + x_crop
+    y_orig = y_crop
+    return x_orig, y_orig
