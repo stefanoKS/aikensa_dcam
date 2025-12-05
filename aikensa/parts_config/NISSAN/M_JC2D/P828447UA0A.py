@@ -19,7 +19,7 @@ from aikensa.scripts.scripts_img_processing import check_hanire, draw_redCircle
 
 pitchSpec = [10, 121.5, 121.5, 121.5, 121.5, 121.5, 10, 627.5]
 idSpec = [0, 0, 0, 0, 0, 0]
-tolerance_pitch = [3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.0, 10.0]
+tolerance_pitch = [3.0, 1.7, 1.7, 1.7, 1.7, 1.7, 3.0, 10.0]
 
 
 color = (0, 255, 0)
