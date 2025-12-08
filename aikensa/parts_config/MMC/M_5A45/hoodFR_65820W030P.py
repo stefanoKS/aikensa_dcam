@@ -327,25 +327,3 @@ def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=
     cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     center_x, center_y = x, y
     return (center_x, center_y)
-
-# class BoundingBox:
-#     def __init__(self, minx, miny, maxx, maxy):
-#         self.minx = minx
-#         self.miny = miny
-#         self.maxx = maxx
-#         self.maxy = maxy
-
-# class PredictionScore:
-#     def __init__(self, value):
-#         self.value = value
-
-# class Category:
-#     def __init__(self, id, name):
-#         self.id = id
-#         self.name = name
-
-# class ObjectPrediction:
-#     def __init__(self, bbox, score, category):
-#         self.bbox = bbox
-#         self.score = score
-#         self.category = category

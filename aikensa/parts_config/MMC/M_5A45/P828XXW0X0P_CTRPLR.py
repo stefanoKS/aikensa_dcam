@@ -67,10 +67,14 @@ pixelMultiplier = 0.1598
 pixelMultiplier_katabumarking = 0.1598
 
 this_dir = os.path.dirname(__file__)
-detectFlip_model = os.path.abspath(os.path.join(this_dir, "..", "..", "..", "models", "P828XXW0X0P_detect_flip.pt"))
 
-#Print the path of the model
-P828XXW0X0P_CLIPFLIP_DETECT = YOLO(detectFlip_model)
+#if model path is exists, load the model
+detectFlip_model_path = os.path.abspath(os.path.join(this_dir, "..", "..", "..", "models", "P828XXW0X0P_detect_flip.pt"))
+if os.path.exists(detectFlip_model_path):
+    P828XXW0X0P_CLIPFLIP_DETECT = YOLO(detectFlip_model_path)
+else:
+    print(f"Model path {detectFlip_model_path} does not exist. Please check the model path.")
+    P828XXW0X0P_CLIPFLIP_DETECT = None
 
 
 def partcheck(image, img_katabumarking, sahi_predictionList, katabumarking_detection, partname):
@@ -643,25 +647,3 @@ def draw_bounding_box(image, x, y, w, h, img_size, color=(0, 255, 0), thickness=
     cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
     center_x, center_y = x, y
     return (center_x, center_y)
-
-# class BoundingBox:
-#     def __init__(self, minx, miny, maxx, maxy):
-#         self.minx = minx
-#         self.miny = miny
-#         self.maxx = maxx
-#         self.maxy = maxy
-
-# class PredictionScore:
-#     def __init__(self, value):
-#         self.value = value
-
-# class Category:
-#     def __init__(self, id, name):
-#         self.id = id
-#         self.name = name
-
-# class ObjectPrediction:
-#     def __init__(self, bbox, score, category):
-#         self.bbox = bbox
-#         self.score = score
-#         self.category = category

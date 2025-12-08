@@ -1,10 +1,8 @@
 import inspect
-from tabnanny import verbose
 import cv2
 import os
 from datetime import datetime
 import numpy as np
-from scipy.fftpack import ifft
 import yaml
 import time
 import logging
@@ -106,228 +104,64 @@ class InspectionThread(QThread):
         super(InspectionThread, self).__init__()
         self.running = True
 
-        if inspection_config is None:
-            self.inspection_config = InspectionConfig()    
-        else:
-            self.inspection_config = inspection_config
+        # ---- Config ----
+        self.inspection_config = inspection_config or InspectionConfig()
 
+        # ---- Simple constants / defaults ----
         self.kanjiFontPath = "aikensa/font/NotoSansJP-ExtraBold.ttf"
         self._today_str = datetime.now().strftime("%Y%m%d")
-
-
         self.multiCam_stream = False
 
-        self.cap_cam = None
-        self.cap_cam1 = None
-        self.cap_cam2 = None
-
-        self.emit = None
-
-        self.mergeframe1 = None
-        self.mergeframe2 = None
-
-        self.mergeframe1_scaled = None
-        self.mergeframe2_scaled = None
-
-        self.mergeframe1_downsampled = None
-        self.mergeframe2_downsampled = None
-
-        self.homography_template = None
-        self.homography_matrix1 = None
-        self.homography_matrix2 = None
-        # self.homography_matrix1_high = None
-        # self.homography_matrix2_high = None
-
-        self.homography_template_scaled = None
-        self.homography_matrix1_scaled = None
-        self.homography_matrix2_scaled = None
-        # self.homography_matrix1_high_scaled= None
-        # self.homography_matrix2_high_scaled = None
-
-        self.H1 = None
-        self.H2 = None
-        self.H1_high = None
-        self.H2_high = None
-
-        self.H1_scaled = None
-        self.H2_scaled = None
-        self.H1_high_scaled = None
-        self.H2_high_scaled = None
-
-        self.homography_size = None
-        self.homography_size_scaled = None
-        self.homography_blank_canvas = None
-        self.homography_blank_canvas_scaled = None
-
-        self.combinedImage = None
-        self.combinedImage_scaled = None
-
-        self.katabuImageL = None
-        self.katabuImageR = None
-        self.katabuImageL_scaled = None
-        self.katabuImageR_scaled = None
-        
-        self.katabuImage = None
-        self.katabuImage_init = None
-
-        #Crop format: X Y W H OUTW OUTH
-        self.katabuImageL_Crop = np.array([620, 360, 320, 160, 320, 160])
-        self.katabuImageR_Crop = np.array([4800, 360, 320, 160, 320, 160])
-
-        self.clipImage1 = None
-        self.clipImage2 = None
-        self.clipImage3 = None
-
-        self.clipImage1_Crop = np.array([1750, 1600, 600, 600, 128, 128])
-        self.clipImage2_Crop = np.array([600, 1600, 600, 600, 128, 128])
-        self.clipImage3_Crop = np.array([1880, 1600, 600, 600, 128, 128])
-
-        self.HandinFrame1 = None
-        self.HandinFrame2 = None
-        self.HandinFrame3 = None
-
-        # self.combinedImage_narrow = None
-        # self.combinedImage_narrow_scaled = None
-        # self.combinedImage_wide = None
-        # self.combinedImage_wide_scaled = None
-
-        # self.combinedImage_high_narrow = None
-        # self.combinedImage_high_narrow_scaled = None
-        # self.combinedImage_high_wide = None
-        # self.combinedImage_high_wide_scaled = None
-
-        self.scale_factor = 5.0 #Scale Factor, might increase this later
-        self.frame_width = 3072
-        self.frame_height = 2048
-        self.scaled_width = None
-        self.scaled_height = None
-
-        self.narrow_planarize = (531, 2646)
-        self.wide_planarize = (1342, 5672)
-
-        self.planarizeTransform_narrow = None
-        self.planarizeTransform_narrow_scaled = None
-        self.planarizeTransform_high_narrow = None
-        self.planarizeTransform_high_narrow_scaled = None
-
-        self.planarizeTransform_wide = None
-        self.planarizeTransform_wide_scaled = None
-        self.planarizeTransform_high_wide = None
-        self.planarizeTransform_high_wide_scaled = None
-
-        self.scaled_height  = int(self.frame_height / self.scale_factor)
-        self.scaled_width = int(self.frame_width / self.scale_factor)
-
-        self.timerStart = None
-        self.timerFinish = None
-        self.fps = None
-
-        self.timerStart_mini = None
-        self.timerFinish_mini = None
-        self.fps_mini = None
-
+        # ---- Timing ----
         self.pickingTimerStart = time.time()
         self.pickingWaitTime = 3.0
-
-        self.InspectionImages = [None]*1
-        self.InspectionImages_bgr = [None]*1
-        self.emitImages = [None]*1
-
-        self.InspectionImagesKatabu = [None]*1
-
-        self.InspectionImages_keypoint_Left = [None]*1
-        self.InspectionImages_keypoint_Right = [None]*1
-
-        self.InspectionImages_endSegmentation_Left = [None]*1
-        self.InspectionImages_endSegmentation_Right = [None]*1
-
-        self.InspectionResult_keypoint_Left = [None]*5
-        self.InspectionResult_keypoint_Right = [None]*5
-
-        self.InspectionResult_EndSegmentation_Left = [None]*5
-        self.InspectionResult_EndSegmentation_Right = [None]*5
-
-        self.InspectionResult_ClipDetection = [None]*30
-        self.InspectionResult_KatabuDetection = [None]*30
-        self.InspectionResult_Segmentation = [None]*30
-        self.InspectionResult_Hanire = [None]*30
-
-        self.InspectionResult_PitchMeasured = [None]*30
-        self.InspectionResult_PitchResult = [None]*30
-        self.InspectionResult_DetectionID = [None]*30
-        self.InspectionResult_Status = [None]*30
-        self.InspectionResult_DeltaPitch = [None]*30
-        self.InspectionResult_NGReason = [None]*30
-
-        self.widget_indices_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        self.inspection_widget_indices = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23]
-        self.inspection_widget_indices_without_dailytenken = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-
-        self.ROI_top = 219
-        self.ROI_bottom = 700
-        self.ROI_left = 600
-        self.ROI_right = 600
-
-        self.ROI_top_scaled = int(self.ROI_top / self.scale_factor)
-        self.ROI_bottom_scaled = int(self.ROI_bottom / self.scale_factor)
-        self.ROI_left_scaled = int(self.ROI_left / self.scale_factor)
-        self.ROI_right_scaled = int(self.ROI_right / self.scale_factor)
-
-        self.InspectionImages_prev = [None]*30
-        self._test = [0]*30
-
-        self.widget_dir_map = {
-            5: "82833W050P",
-            6: "82832W040P",
-            7: "82833W090P",
-            8: "82832W080P",
-            9: "82833W050PKENGEN",
-            10: "82832W040PKENGEN",
-            11: "82833W090PKENGEN",
-            12: "82832W080PKENGEN",
-            13: "82833W050PCLIPSOUNYUUKI",
-            14: "82832W040PCLIPSOUNYUUKI",
-            15: "82833W090PCLIPSOUNYUUKI",
-            16: "82832W080PCLIPSOUNYUUKI",
-            17: "808387UA1A",
-            18: "828447UA0A",
-            21: "dailyTenken_01",
-            22: "dailyTenken_02",
-            23: "dailyTenken_03",
-        }
-
-        #for widget name map, append the string "P" to the initial widget dir map
-        self.widget_name_map = {key: f"P{value}" for key, value in self.widget_dir_map.items()}
 
         self.InspectionWaitTime = 1.0
         self.InspectionTimeStart = None
 
-        self.ethernetTrigger = [0]*5
-
-        self.clipPickingOrder = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0] for _ in range(30)]
-
-        self.OrderTargetMore = [1, 1, 1, 1, 1, 1]
-        self.OrderTargetLess = [1, 1, 1, 1, 1]
-
-        self.InspectionResult_PitchResult_sounyuuki = [None]*30
-        self.InspectionResult_PitchMeasured_sounyuuki = [None]*30
-        self.InspectionImages_sounyuuki = [None]*1
-
         self.bool_keep_measurement = False
-        
+
+        self._init_geometry_defaults()
+        self._init_placeholders()
+
+        # ---- Core state groups ----
+        self._init_cameras()
+        self._init_frames()
+        self._init_homography()
+        self._init_planarize()
+        self._init_images_and_crops()
+        self._init_hand_state()
+ 
+        # ---- Derived geometry ----
+        self._init_scaled_geometry()
+
+        # ---- Inspection buffers/results ----
+        self._init_inspection_images()
+        self._init_results()
+
+        # ---- Widget maps / indices ----
+        self._init_widget_maps()
+
+        # ---- ROI ----
+        self._init_roi()
+
+        # ---- Trigger/order ----
+        self._init_clip_order()
+
+        # ---- Sounyuuki specific ----
+        self._init_sounyuuki()
+
+        # ---- Optional defaults YAML (safe: only if file exists) ----
+        # You can create this file later to further reduce hardcoded values.
+        self._load_optional_defaults("aikensa/config/inspection_defaults.yaml")
+
+        # ---- Camera map YAML ----
         self.cam_config_file = "aikensa/camscripts/cam_config.yaml"
-        
-        with open(self.cam_config_file, 'r') as file:
-            self.cam_map = yaml.safe_load(file)
+        self._load_cam_map()
 
+        # ---- MySQL credentials YAML ----
+        self._load_mysql_credentials()
 
-        # "Read mysql id and password from yaml file"
-        with open("aikensa/mysql/id.yaml") as file:
-            credentials = yaml.load(file, Loader=yaml.FullLoader)
-            self.mysqlID = credentials["id"]
-            self.mysqlPassword = credentials["pass"]
-            self.mysqlHost = credentials["host"]
-            self.mysqlHostPort = credentials["port"]
 
 
     def release_all_camera(self):
@@ -339,47 +173,46 @@ class InspectionThread(QThread):
             print(f"Camera 2 released.")
 
     def initialize_single_camera(self, camID):
-        if self.cap_cam is not None:
-            self.cap_cam.release()  # Release the previous camera if it's already open
-            print(f"Camera {self.inspection_config.cameraID} released.")
+        # release old
+        try:
+            if self.cap_cam is not None:
+                self.cap_cam.release()
+        except Exception:
+            pass
 
-        if camID == -1:
-            print("No valid camera selected, displaying placeholder.")
-            self.cap_cam = None  # No camera initialized
-            # self.frame = self.create_placeholder_image()
-            self.cap_cam = initialize_camera(camID)
-            if not self.cap_cam.isOpened():
-                print(f"Failed to open camera with ID {camID}")
-                self.cap_cam = None
-            else:
-                print(f"Initialized Camera on ID {camID}")
+        self.cap_cam = self._open_or_placeholder(camID, self._placeholder_cam0)
+
+        if isinstance(self.cap_cam, DummyCapture):
+            print(f"Failed to open camera with ID {camID}. Using placeholder.")
+            return False
+
+        print(f"Initialized Camera on ID {camID}")
+        return True
 
     def initialize_all_camera(self):
-        if self.cap_cam1 is not None:
-            self.cap_cam1.release()
-            print(f"Camera 1 released.")
-        if self.cap_cam2 is not None:
-            self.cap_cam2.release()
-            print(f"Camera 2 released.")
+        # release old
+        for cap in (self.cap_cam1, self.cap_cam2):
+            try:
+                if cap is not None:
+                    cap.release()
+            except Exception:
+                pass
 
-        actual_camID = self.cam_map.get(0, -1)
-        self.cap_cam1 = initialize_camera(actual_camID)
+        cam1_id = self.cam_map.get(0, -1)
+        cam2_id = self.cam_map.get(1, -1)
 
-        actual_camID = self.cam_map.get(1, -1)
-        self.cap_cam2 = initialize_camera(actual_camID)
+        self.cap_cam1 = self._open_or_placeholder(cam1_id, self._placeholder_cam1)
+        self.cap_cam2 = self._open_or_placeholder(cam2_id, self._placeholder_cam2)
 
-        if not self.cap_cam1.isOpened():
-            print(f"Failed to open camera with ID 1")
-            self.cap_cam1 = None
+        if isinstance(self.cap_cam1, DummyCapture):
+            print(f"Failed to open camera with ID {cam1_id} (Logical Cam 1). Using placeholder.")
         else:
-            print(f"Initialized Camera on ID 1")
+            print(f"Initialized Camera 1 on ID {cam1_id}")
 
-        if not self.cap_cam2.isOpened():
-            print(f"Failed to open camera with ID 2")
-            self.cap_cam2 = None
+        if isinstance(self.cap_cam2, DummyCapture):
+            print(f"Failed to open camera with ID {cam2_id} (Logical Cam 2). Using placeholder.")
         else:
-            print(f"Initialized Camera on ID 2")
-
+            print(f"Initialized Camera 2 on ID {cam2_id}")
 
     def run(self):
         #initialize the database
@@ -784,42 +617,7 @@ class InspectionThread(QThread):
 
             #for normal inspection
             if self.inspection_config.widget in [5, 6, 7, 8]:
-                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
-                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
-                        self.inspection_config.furyou_plus, 
-                        self.inspection_config.furyou_minus, 
-                        self.inspection_config.furyou_plus_10, 
-                        self.inspection_config.furyou_minus_10, 
-                        self.inspection_config.kansei_plus, 
-                        self.inspection_config.kansei_minus,
-                        self.inspection_config.kansei_plus_10,
-                        self.inspection_config.kansei_minus_10)
-                    print("Manual Adjustment Done")
-                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
-                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
-                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
-                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
-                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
-                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
-                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
-                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
-                    
-                if self.inspection_config.counterReset is True:
-                    self.inspection_config.counterReset = False
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
-                            deltaTime = 0.0,
-                            kensainName = self.inspection_config.kensainNumber, 
-                            detected_pitch_str = "COUNTERRESET", 
-                            delta_pitch_str = "COUNTERRESET", 
-                            total_length=0,
-                            resultPitch = "COUNTERRESET",
-                            status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET",
-                            )
+                self._handle_manual_adjustment_and_reset(widget=self.inspection_config.widget, use_ppms=True)
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -963,46 +761,12 @@ class InspectionThread(QThread):
                                 self.partKatabuR.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
                             if self.inspection_config.widget in [6, 8, 10, 12]: 
                                 self.partKatabuL.emit(self.convertQImage(self.InspectionImagesKatabu[0]))
-                            
                             time.sleep(1.5)
+     
             #for the kengen
             if self.inspection_config.widget in [9, 10, 11, 12]:    
+                self._handle_manual_adjustment_and_reset(widget=self.inspection_config.widget, use_ppms=True)
 
-                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
-                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
-                        self.inspection_config.furyou_plus, 
-                        self.inspection_config.furyou_minus, 
-                        self.inspection_config.furyou_plus_10, 
-                        self.inspection_config.furyou_minus_10, 
-                        self.inspection_config.kansei_plus, 
-                        self.inspection_config.kansei_minus,
-                        self.inspection_config.kansei_plus_10,
-                        self.inspection_config.kansei_minus_10)
-                    print("Manual Adjustment Done")
-                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
-                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
-                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
-                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
-                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
-                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
-                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
-                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
-                    
-                if self.inspection_config.counterReset is True:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-                    self.inspection_config.counterReset = False
-                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
-                            deltaTime = 0.0,
-                            kensainName = self.inspection_config.kensainNumber, 
-                            detected_pitch_str = "COUNTERRESET", 
-                            delta_pitch_str = "COUNTERRESET", 
-                            total_length=0,
-                            resultPitch = "COUNTERRESET",
-                            status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET")
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1139,44 +903,10 @@ class InspectionThread(QThread):
                                     NGreason = self.InspectionResult_NGReason[0])
 
                             time.sleep(1.5)
+          
             #for clip insertion  machine
             if self.inspection_config.widget in [13, 14, 15, 16]:    
-                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
-                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
-                        self.inspection_config.furyou_plus, 
-                        self.inspection_config.furyou_minus, 
-                        self.inspection_config.furyou_plus_10, 
-                        self.inspection_config.furyou_minus_10, 
-                        self.inspection_config.kansei_plus, 
-                        self.inspection_config.kansei_minus,
-                        self.inspection_config.kansei_plus_10,
-                        self.inspection_config.kansei_minus_10)
-                    print("Manual Adjustment Done")
-                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
-                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
-                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
-                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
-                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
-                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
-                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
-                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
-                    
-                if self.inspection_config.counterReset is True:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-                    self.inspection_config.counterReset = False
-                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
-                            deltaTime = 0.0,
-                            kensainName = self.inspection_config.kensainNumber, 
-                            detected_pitch_str = "COUNTERRESET", 
-                            delta_pitch_str = "COUNTERRESET", 
-                            total_length=0,
-                            resultPitch = "COUNTERRESET",
-                            status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET",
-                            PPMS = "COUNTERRESET")
+                self._handle_manual_adjustment_and_reset(widget=self.inspection_config.widget, use_ppms=True)
 
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
@@ -1289,44 +1019,10 @@ class InspectionThread(QThread):
                     self.P82832W080PCLIPSOUNYUUKI_InspectionResult_PitchMeasured.emit(self.InspectionResult_PitchMeasured, self.InspectionResult_PitchResult)
                     self.partCam.emit(self.converQImageRGB(self.InspectionImages[0]))
           
-#for the P808387UA1A
+            #for the P808387UA1A
             if self.inspection_config.widget in [17]:
+                self._handle_manual_adjustment_and_reset(widget=self.inspection_config.widget, use_ppms=True)
 
-                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
-                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
-                        self.inspection_config.furyou_plus, 
-                        self.inspection_config.furyou_minus, 
-                        self.inspection_config.furyou_plus_10, 
-                        self.inspection_config.furyou_minus_10, 
-                        self.inspection_config.kansei_plus, 
-                        self.inspection_config.kansei_minus,
-                        self.inspection_config.kansei_plus_10,
-                        self.inspection_config.kansei_minus_10)
-                    print("Manual Adjustment Done")
-                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
-                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
-                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
-                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
-                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
-                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
-                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
-                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
-                if self.inspection_config.counterReset is True:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-                    self.inspection_config.counterReset = False
-                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
-                            deltaTime = 0.0,
-                            kensainName = self.inspection_config.kensainNumber, 
-                            detected_pitch_str = "COUNTERRESET", 
-                            delta_pitch_str = "COUNTERRESET", 
-                            total_length=0,
-                            resultPitch = "COUNTERRESET",
-                            status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET",
-                            PPMS = "COUNTERRESET")
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
 
@@ -1444,45 +1140,10 @@ class InspectionThread(QThread):
 
                             time.sleep(1.5)
 
-
-#for the P828447UA0A
+            #for the P828447UA0A
             if self.inspection_config.widget in [18]:
+                self._handle_manual_adjustment_and_reset(widget=self.inspection_config.widget, use_ppms=True)
 
-                if self.inspection_config.furyou_plus or self.inspection_config.furyou_minus or self.inspection_config.kansei_plus or self.inspection_config.kansei_minus or self.inspection_config.furyou_plus_10 or self.inspection_config.furyou_minus_10 or self.inspection_config.kansei_plus_10 or self.inspection_config.kansei_minus_10:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget] = self.manual_adjustment(
-                        self.inspection_config.current_numofPart[self.inspection_config.widget], self.inspection_config.today_numofPart[self.inspection_config.widget],
-                        self.inspection_config.furyou_plus, 
-                        self.inspection_config.furyou_minus, 
-                        self.inspection_config.furyou_plus_10, 
-                        self.inspection_config.furyou_minus_10, 
-                        self.inspection_config.kansei_plus, 
-                        self.inspection_config.kansei_minus,
-                        self.inspection_config.kansei_plus_10,
-                        self.inspection_config.kansei_minus_10)
-                    print("Manual Adjustment Done")
-                    print(f"Furyou Plus: {self.inspection_config.furyou_plus}")
-                    print(f"Furyou Minus: {self.inspection_config.furyou_minus}")
-                    print(f"Kansei Plus: {self.inspection_config.kansei_plus}")
-                    print(f"Kansei Minus: {self.inspection_config.kansei_minus}")
-                    print(f"Furyou Plus 10: {self.inspection_config.furyou_plus_10}")
-                    print(f"Furyou Minus 10: {self.inspection_config.furyou_minus_10}")
-                    print(f"Kansei Plus 10: {self.inspection_config.kansei_plus_10}")
-                    print(f"Kansei Minus 10: {self.inspection_config.kansei_minus_10}")
-                if self.inspection_config.counterReset is True:
-                    self.inspection_config.current_numofPart[self.inspection_config.widget] = [0, 0]
-                    self.inspection_config.counterReset = False
-                    self.save_result_database(partname = self.widget_dir_map[self.inspection_config.widget],
-                            numofPart = self.inspection_config.today_numofPart[self.inspection_config.widget],
-                            currentnumofPart = [0, 0], 
-                            deltaTime = 0.0,
-                            kensainName = self.inspection_config.kensainNumber, 
-                            detected_pitch_str = "COUNTERRESET", 
-                            delta_pitch_str = "COUNTERRESET", 
-                            total_length=0,
-                            resultPitch = "COUNTERRESET",
-                            status = "COUNTERRESET",
-                            NGreason = "COUNTERRESET",
-                            PPMS = "COUNTERRESET")
                 if self.InspectionTimeStart is None:
                     self.InspectionTimeStart = time.time()
 
@@ -1542,8 +1203,6 @@ class InspectionThread(QThread):
 
                                 self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :512, :]
                                 self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -512:, :]
-                                cv2.imwrite("./keypoint_Left.png", self.InspectionImages_keypoint_Left[i])
-                                cv2.imwrite("./keypoint_Right.png", self.InspectionImages_keypoint_Right[i])
                                 self.InspectionResult_keypoint_Left[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=512, verbose=False)
                                 self.InspectionResult_keypoint_Right[i] = self.P808387UA1A_keypoint(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=512, verbose=False)
 
@@ -1595,7 +1254,6 @@ class InspectionThread(QThread):
                                     PPMS = self.inspection_config.ppmsnumber)
 
                             self.bool_keep_measurement = False
-
                             time.sleep(1.5)
 
             #for daily inspection
@@ -1827,42 +1485,6 @@ class InspectionThread(QThread):
         except Exception as e:
             print(f"Error saving to MySQL database: {str(e)}")
 
-
-    # def get_last_entry_currentnumofPart(self, part_name):
-    #     self.cursor.execute('''
-    #     SELECT currentnumofPart 
-    #     FROM inspection_results 
-    #     WHERE partName = ? 
-    #     ORDER BY id DESC 
-    #     LIMIT 1
-    #     ''', (part_name,))
-        
-    #     row = self.cursor.fetchone()
-    #     if row:
-    #         currentnumofPart = eval(row[0])
-    #         return currentnumofPart
-    #     else:
-    #         return [0, 0]
-            
-    # def get_last_entry_total_numofPart(self, part_name):
-    #     # Get today's date in yyyymmdd format
-    #     today_date = datetime.now().strftime("%Y%m%d")
-
-    #     self.cursor.execute('''
-    #     SELECT numofPart 
-    #     FROM inspection_results 
-    #     WHERE partName = ? AND timestampDate = ? 
-    #     ORDER BY id DESC 
-    #     LIMIT 1
-    #     ''', (part_name, today_date))
-        
-    #     row = self.cursor.fetchone()
-    #     if row:
-    #         numofPart = eval(row[0])  # Convert the string tuple to an actual tuple
-    #         return numofPart
-    #     else:
-    #         return [0, 0]  # Default values if no entry is found
-
     def get_last_entry_currentnumofPart(self, part_name):
         self.cursor.execute('''
             SELECT currentnumofPart
@@ -1956,28 +1578,12 @@ class InspectionThread(QThread):
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".png", image_result)
         cv2.imwrite(result_dir + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_katabu.png", katabu_result)
 
-    def minitimerStart(self):
-        self.timerStart_mini = time.time()
-    
-    def minitimerFinish(self, message = "OperationName"):
-        self.timerFinish_mini = time.time()
-        # self.fps_mini = 1/(self.timerFinish_mini - self.timerStart_mini)
-        print(f"Time to {message} : {(self.timerFinish_mini - self.timerStart_mini) * 1000} ms")
-        # print(f"FPS of {message} : {self.fps_mini}")
-
     def convertQImage(self, image):
         h, w, ch = image.shape
         bytesPerLine = ch * w
         processed_image = QImage(image.data, w, h, bytesPerLine, QImage.Format_BGR888)
         return processed_image
     
-    def convertQImageKatabu(self, image):
-        h, w, ch = image.shape
-        bytesPerLine = ch * w
-        # Ensure image data is converted to bytes
-        processed_image = QImage(image.data.tobytes(), w, h, bytesPerLine, QImage.Format_BGR888)
-        return processed_image
-
     def converQImageRGB(self, image):
         h, w, ch = image.shape
         bytesPerLine = ch * w
@@ -1985,12 +1591,10 @@ class InspectionThread(QThread):
         return processed_image
     
     def downScaledImage(self, image, scaleFactor=1.0):
-        #create a copy of the image
         resized_image = cv2.resize(image, (0, 0), fx=1/scaleFactor, fy=1/scaleFactor, interpolation=cv2.INTER_LINEAR)
         return resized_image
     
     def downSampling(self, image, width=384, height=256):
-        #create a copy of the image
         resized_image = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
         return resized_image
 
@@ -2002,13 +1606,10 @@ class InspectionThread(QThread):
         return camera_matrix, distortion_coeff
 
     def frameCrop(self,img, x=0, y=0, w=640, h=480, wout=640, hout=480):
-        #crop and resize image to wout and hout
-        #convert x y w h into int
         x, y, w, h, wout, hout = int(x), int(y), int(w), int(h), int(wout), int(hout)
         if img is None:
             img = np.zeros((480, 640, 3), dtype=np.uint8)
 
-        # print(f"X: {x}, Y: {y}, W: {w}, H: {h}")
         img = img[y:y+h, x:x+w]
         try:
             img = cv2.resize(img, (wout, hout), interpolation=cv2.INTER_LINEAR)
@@ -2019,128 +1620,108 @@ class InspectionThread(QThread):
     def createBlackImage(self, width, height): #create a black image with width and height
         return np.zeros((height, width, 3), dtype=np.uint8)
 
+
     def initialize_model(self):
         print("Model Dummy Loaded")
 
-        # Define model paths
-        path_P828XXW0X0P_CLIP_Model = "./aikensa/models/P828XXW0X0P_detect.pt"
-        path_P828XXW0X0P_KATABU_Model = "./aikensa/models/P828XXW0X0P_katabu.pt"
-        path_P828XXW0X0P_CLIPFLIP_Model = "./aikensa/models/P828XXW0X0P_detect_flip.pt"
-        path_P828XXW0X0P_SEGMENT_Model = "./aikensa/models/P828XXW0X0P_segment.pt"
-        path_P828XXW0X0P_HAND_DETECT = "./aikensa/models/P828XXW0X0P_hand.pt"
-        path_NICHIJOU_TENKEN_Model = "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
-        path_P808387UA1A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
-        path_P808387UA1A_SEGMENT_Model = "./aikensa/models/P808387UA1A_segment.pt"
-        path_P808387UA1A_keypoint = "./aikensa/models/P808387UA1A_keypoint.pt"
-        path_P828447UA0A_CLIP_Model = "./aikensa/models/P828447UA0A_detect.pt"
-        path_P828447UA0A_SEGMENT_Model = "./aikensa/models/P828447UA0A_segment.pt"
+        config_path = "./aikensa/config/models.yaml"
 
-        path_P828447UA0A_ANOMALY_CLASSIFICATION_Model = "./aikensa/models/P828447UA0A_anomaly_classification.pt"
+        # Default: in case YAML is missing
+        self.model_device = "cuda:0"
 
-        # Initialize each model with existence check
-        if os.path.exists(path_P828XXW0X0P_CLIP_Model):
-            self.P828XXW0X0P_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="yolov8",
-                model_path=path_P828XXW0X0P_CLIP_Model,
-                confidence_threshold=0.5,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P828XXW0X0P_CLIP_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_CLIP_Model = None
+        # -------------------------
+        # Safe YAML load
+        # -------------------------
+        if not os.path.exists(config_path):
+            print(f"[Model Config Missing] {config_path}")
+            return
 
-        if os.path.exists(path_P828XXW0X0P_KATABU_Model):
-            self.P828XXW0X0P_KATABU_Model = YOLO(path_P828XXW0X0P_KATABU_Model)
-        else:
-            print(f"Model file {path_P828XXW0X0P_KATABU_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_KATABU_Model = None
+        try:
+            with open(config_path, "r") as f:
+                cfg = yaml.safe_load(f) or {}
+        except Exception as e:
+            print(f"[Model Config Load Failed] {config_path} -> {e}")
+            return
 
-        if os.path.exists(path_P828XXW0X0P_SEGMENT_Model):
-            self.P828XXW0X0P_SEGMENT_Model = YOLO(path_P828XXW0X0P_SEGMENT_Model)
-        else:
-            print(f"Model file {path_P828XXW0X0P_SEGMENT_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_SEGMENT_Model = None
+        self.model_device = cfg.get("device", "cuda:0")
+        models_cfg = cfg.get("models", {}) or {}
 
-        if os.path.exists(path_P828XXW0X0P_HAND_DETECT):
-            self.P828XXW0X0P_HAND_DETECT = YOLO(path_P828XXW0X0P_HAND_DETECT)
-        else:
-            print(f"Model file {path_P828XXW0X0P_HAND_DETECT} does not exist. Initializing as None.")
-            self.P828XXW0X0P_HAND_DETECT = None
+        # -------------------------
+        # Local safe loaders
+        # -------------------------
+        def _exists(path):
+            try:
+                return bool(path) and os.path.exists(path)
+            except Exception:
+                return False
 
-        if os.path.exists(path_NICHIJOU_TENKEN_Model):
-            self.NICHIJOU_TENKEN_Model = AutoDetectionModel.from_pretrained(
-                model_type="yolov8",
-                model_path=path_NICHIJOU_TENKEN_Model,
-                confidence_threshold=0.5,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_NICHIJOU_TENKEN_Model} does not exist. Initializing as None.")
-            self.NICHIJOU_TENKEN_Model = None
+        def _load_yolo(path, attr_name):
+            if not _exists(path):
+                print(f"[Model Missing] {attr_name}: {path}")
+                return None
+            try:
+                return YOLO(path)
+            except Exception as e:
+                print(f"[Model Load Failed] {attr_name}: {path} -> {e}")
+                return None
 
-        if os.path.exists(path_P808387UA1A_CLIP_Model):
-            self.P808387UA1A_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="ultralytics",
-                model_path=path_P808387UA1A_CLIP_Model,
-                confidence_threshold=0.5,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P808387UA1A_CLIP_Model} does not exist. Initializing as None.")
-            self.P808387UA1A_CLIP_Model = None
+        def _load_sahi(path, attr_name, model_type, conf, device):
+            if not _exists(path):
+                print(f"[Model Missing] {attr_name}: {path}")
+                return None
+            try:
+                return AutoDetectionModel.from_pretrained(
+                    model_type=model_type,
+                    model_path=path,
+                    confidence_threshold=float(conf),
+                    device=device,
+                )
+            except Exception as e:
+                print(f"[Model Load Failed] {attr_name}: {path} -> {e}")
+                return None
 
-        if os.path.exists(path_P808387UA1A_SEGMENT_Model):
-            self.P808387UA1A_SEGMENT_Model = YOLO(path_P808387UA1A_SEGMENT_Model)
-        else:
-            print(f"Model file {path_P808387UA1A_SEGMENT_Model} does not exist. Initializing as None.")
-            self.P808387UA1A_SEGMENT_Model = None
+        # -------------------------
+        # Load all models defined in YAML
+        # -------------------------
+        loaded = []
+        missing = []
 
-        if os.path.exists(path_P808387UA1A_keypoint):
-            self.P808387UA1A_keypoint = YOLO(path_P808387UA1A_keypoint)
-        else:
-            print(f"Model file {path_P808387UA1A_keypoint} does not exist. Initializing as None.")
-            self.P808387UA1A_keypoint = None
+        for attr_name, spec in models_cfg.items():
+            loader = (spec.get("loader") or "").lower()
+            path = spec.get("path")
 
-        if os.path.exists(path_P828447UA0A_CLIP_Model):
-            self.P828447UA0A_CLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="ultralytics",
-                model_path=path_P828447UA0A_CLIP_Model,
-                confidence_threshold=0.5,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P828447UA0A_CLIP_Model} does not exist. Initializing as None.")
-            self.P828447UA0A_CLIP_Model = None
+            model = None
 
-        if os.path.exists(path_P828447UA0A_SEGMENT_Model):
-            self.P828447UA0A_SEGMENT_Model = YOLO(path_P828447UA0A_SEGMENT_Model)
-        else:
-            print(f"Model file {path_P828447UA0A_SEGMENT_Model} does not exist. Initializing as None.")
-            self.P828447UA0A_SEGMENT_Model = None
+            if loader == "yolo":
+                model = _load_yolo(path, attr_name)
 
-        if os.path.exists(path_P828XXW0X0P_CLIPFLIP_Model):
-            self.P828XXW0X0P_CLIPFLIP_Model = AutoDetectionModel.from_pretrained(
-                model_type="yolov8",
-                model_path=path_P828XXW0X0P_CLIPFLIP_Model,
-                confidence_threshold=0.35,
-                device="cuda:0"
-            )
-        else:
-            print(f"Model file {path_P828XXW0X0P_CLIPFLIP_Model} does not exist. Initializing as None.")
-            self.P828XXW0X0P_CLIPFLIP_Model = None
+            elif loader == "sahi":
+                model_type = spec.get("model_type", "yolov8")
+                conf = spec.get("conf", 0.5)
+                model = _load_sahi(path, attr_name, model_type, conf, self.model_device)
 
-        if os.path.exists(path_P828447UA0A_ANOMALY_CLASSIFICATION_Model):
-            self.P828447UA0A_ANOMALY_CLASSIFICATION_Model = YOLO(path_P828447UA0A_ANOMALY_CLASSIFICATION_Model)
-        else:
-            print(f"Model file {path_P828447UA0A_ANOMALY_CLASSIFICATION_Model} does not exist. Initializing as None.")
-            self.P828447UA0A_ANOMALY_CLASSIFICATION_Model = None
-        
+            else:
+                print(f"[Unknown Loader] {attr_name}: loader='{spec.get('loader')}'")
+                model = None
+
+            setattr(self, attr_name, model)
+
+            if model is None:
+                missing.append(attr_name)
+            else:
+                loaded.append(attr_name)
+
+        print(f"[Models Loaded] {len(loaded)} -> {loaded}")
+        print(f"[Models Missing/Failed] {len(missing)} -> {missing}")
+
+
     def stop(self):
+        print("Releasing all cameras.")
+        print("Inspection thread stopped.")
         self.inspection_config.widget = -1
         self.running = False
-        print("Releasing all cameras.")
         self.release_all_camera()
-        print("Inspection thread stopped.")
+
 
     def add_columns(self, cursor, table_name, columns):
         for column_name, column_type in columns:
@@ -2153,7 +1734,6 @@ class InspectionThread(QThread):
             except sqlite3.OperationalError as e:
                 print(f"Could not add column {column_name}: {e}")
 
-
     def _check_date_rollover(self):
         today = datetime.now().strftime("%Y%m%d")
         if today != self._today_str:
@@ -2161,3 +1741,442 @@ class InspectionThread(QThread):
             # reset only the daily totals, keep current (session) counts as-is
             for k in self.widget_dir_map.keys():
                 self.inspection_config.today_numofPart[k] = [0, 0]
+
+    def _handle_manual_adjustment_and_reset(self, widget, use_ppms=False):
+        cfg = self.inspection_config
+
+        if (
+            cfg.furyou_plus or cfg.furyou_minus or
+            cfg.kansei_plus or cfg.kansei_minus or
+            cfg.furyou_plus_10 or cfg.furyou_minus_10 or
+            cfg.kansei_plus_10 or cfg.kansei_minus_10
+        ):
+            cfg.current_numofPart[widget], cfg.today_numofPart[widget] = self.manual_adjustment(
+                cfg.current_numofPart[widget],
+                cfg.today_numofPart[widget],
+                cfg.furyou_plus, cfg.furyou_minus,
+                cfg.furyou_plus_10, cfg.furyou_minus_10,
+                cfg.kansei_plus, cfg.kansei_minus,
+                cfg.kansei_plus_10, cfg.kansei_minus_10,
+            )
+            print("Manual Adjustment Done")
+
+        # Counter reset
+        if cfg.counterReset:
+            cfg.counterReset = False
+            cfg.current_numofPart[widget] = [0, 0]
+
+            partname = self.widget_dir_map[widget]
+            ppms = cfg.ppmsnumber if use_ppms else "COUNTERRESET"
+
+            self.save_result_database(
+                partname=partname,
+                numofPart=cfg.today_numofPart[widget],
+                currentnumofPart=[0, 0],
+                deltaTime=0.0,
+                kensainName=cfg.kensainNumber,
+                detected_pitch_str="COUNTERRESET",
+                delta_pitch_str="COUNTERRESET",
+                total_length=0,
+                resultPitch="COUNTERRESET",
+                status="COUNTERRESET",
+                NGreason="COUNTERRESET",
+                ClipInsertionMachine="COUNTERRESET",
+                PPMS=ppms,
+            )
+
+    # =========================
+    # Init helper methods
+    # =========================
+
+    def _init_cameras(self):
+        # Use your known camera resolution
+        w = getattr(self, "frame_width", 3072)
+        h = getattr(self, "frame_height", 2048)
+
+        self._placeholder_cam1 = make_camera_placeholder(w, h, 1)
+        self._placeholder_cam2 = make_camera_placeholder(w, h, 2)
+
+        # Start as DummyCapture so read() is always valid
+        self.cap_cam = DummyCapture(make_camera_placeholder(w, h, 0))
+        self.cap_cam1 = DummyCapture(self._placeholder_cam1)
+        self.cap_cam2 = DummyCapture(self._placeholder_cam2)
+
+    def _init_frames(self):
+        self.mergeframe1 = None
+        self.mergeframe2 = None
+
+        self.mergeframe1_scaled = None
+        self.mergeframe2_scaled = None
+
+        self.mergeframe1_downsampled = None
+        self.mergeframe2_downsampled = None
+
+    def _init_homography(self):
+        self.homography_template = None
+        self.homography_matrix1 = None
+        self.homography_matrix2 = None
+
+        self.homography_template_scaled = None
+        self.homography_matrix1_scaled = None
+        self.homography_matrix2_scaled = None
+
+        self.H1 = None
+        self.H2 = None
+        self.H1_high = None
+        self.H2_high = None
+
+        self.H1_scaled = None
+        self.H2_scaled = None
+        self.H1_high_scaled = None
+        self.H2_high_scaled = None
+
+        self.homography_size = None
+        self.homography_size_scaled = None
+        self.homography_blank_canvas = None
+        self.homography_blank_canvas_scaled = None
+
+    def _init_planarize(self):
+        self.planarizeTransform_narrow = None
+        self.planarizeTransform_narrow_scaled = None
+        self.planarizeTransform_high_narrow = None
+        self.planarizeTransform_high_narrow_scaled = None
+
+        self.planarizeTransform_wide = None
+        self.planarizeTransform_wide_scaled = None
+        self.planarizeTransform_high_wide = None
+        self.planarizeTransform_high_wide_scaled = None
+
+    def _init_images_and_crops(self):
+        self.combinedImage = None
+        self.combinedImage_scaled = None
+
+        self.katabuImageL = None
+        self.katabuImageR = None
+        self.katabuImageL_scaled = None
+        self.katabuImageR_scaled = None
+
+        self.katabuImage = None
+        self.katabuImage_init = None
+
+        # Default crops (safe fallback if no optional YAML)
+        self.katabuImageL_Crop = np.array([620, 360, 320, 160, 320, 160])
+        self.katabuImageR_Crop = np.array([4800, 360, 320, 160, 320, 160])
+
+        self.clipImage1 = None
+        self.clipImage2 = None
+        self.clipImage3 = None
+
+        self.clipImage1_Crop = np.array([1750, 1600, 600, 600, 128, 128])
+        self.clipImage2_Crop = np.array([600, 1600, 600, 600, 128, 128])
+        self.clipImage3_Crop = np.array([1880, 1600, 600, 600, 128, 128])
+
+    def _init_hand_state(self):
+        self.HandinFrame1 = None
+        self.HandinFrame2 = None
+        self.HandinFrame3 = None
+
+    def _init_scaled_geometry(self):
+        # Derived values from frame + scale_factor
+        self.scaled_height = int(self.frame_height / self.scale_factor)
+        self.scaled_width = int(self.frame_width / self.scale_factor)
+
+    def _init_inspection_images(self):
+        # Currently batch size is 1
+        self.InspectionImages = [None] * 1
+        self.InspectionImages_bgr = [None] * 1
+        self.emitImages = [None] * 1
+
+        self.InspectionImagesKatabu = [None] * 1
+
+        self.InspectionImages_keypoint_Left = [None] * 1
+        self.InspectionImages_keypoint_Right = [None] * 1
+
+        self.InspectionImages_endSegmentation_Left = [None] * 1
+        self.InspectionImages_endSegmentation_Right = [None] * 1
+
+    def _init_results(self):
+        MAX = 30
+
+        # Keypoint/seg results are length 5 in your current design
+        self.InspectionResult_keypoint_Left = [None] * 5
+        self.InspectionResult_keypoint_Right = [None] * 5
+
+        self.InspectionResult_EndSegmentation_Left = [None] * 5
+        self.InspectionResult_EndSegmentation_Right = [None] * 5
+
+        # 30-slot per-widget result groups
+        result_fields = [
+            "ClipDetection",
+            "KatabuDetection",
+            "Segmentation",
+            "Hanire",
+            "PitchMeasured",
+            "PitchResult",
+            "DetectionID",
+            "Status",
+            "DeltaPitch",
+            "NGReason",
+        ]
+        for field in result_fields:
+            setattr(self, "InspectionResult_" + field, [None] * MAX)
+
+        self.InspectionImages_prev = [None] * MAX
+        self._test = [0] * MAX
+
+    def _init_widget_maps(self):
+        # Basic lists
+        self.widget_indices_list = list(range(19))
+
+        self.inspection_widget_indices = [
+            5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 21, 22, 23
+        ]
+        self.inspection_widget_indices_without_dailytenken = [
+            5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+        ]
+
+        # Widget → directory name
+        self.widget_dir_map = {
+            5: "82833W050P",
+            6: "82832W040P",
+            7: "82833W090P",
+            8: "82832W080P",
+            9: "82833W050PKENGEN",
+            10: "82832W040PKENGEN",
+            11: "82833W090PKENGEN",
+            12: "82832W080PKENGEN",
+            13: "82833W050PCLIPSOUNYUUKI",
+            14: "82832W040PCLIPSOUNYUUKI",
+            15: "82833W090PCLIPSOUNYUUKI",
+            16: "82832W080PCLIPSOUNYUUKI",
+            17: "808387UA1A",
+            18: "828447UA0A",
+            21: "dailyTenken_01",
+            22: "dailyTenken_02",
+            23: "dailyTenken_03",
+        }
+
+        # Widget → UI name prefix
+        self.widget_name_map = {k: "P{}".format(v) for k, v in self.widget_dir_map.items()}
+
+    def _init_roi(self):
+        # Default ROI (safe fallback if no optional YAML)
+        self.ROI_top = 219
+        self.ROI_bottom = 700
+        self.ROI_left = 600
+        self.ROI_right = 600
+
+        self._update_roi_scaled()
+
+    def _update_roi_scaled(self):
+        self.ROI_top_scaled = int(self.ROI_top / self.scale_factor)
+        self.ROI_bottom_scaled = int(self.ROI_bottom / self.scale_factor)
+        self.ROI_left_scaled = int(self.ROI_left / self.scale_factor)
+        self.ROI_right_scaled = int(self.ROI_right / self.scale_factor)
+
+    def _init_clip_order(self):
+        MAX = 30
+        self.ethernetTrigger = [0] * 5
+
+        # Each widget has its own list; safe (no shared inner list bug)
+        self.clipPickingOrder = [[0] * 10 for _ in range(MAX)]
+
+        self.OrderTargetMore = [1, 1, 1, 1, 1, 1]
+        self.OrderTargetLess = [1, 1, 1, 1, 1]
+
+    def _init_sounyuuki(self):
+        MAX = 30
+        self.InspectionResult_PitchResult_sounyuuki = [None] * MAX
+        self.InspectionResult_PitchMeasured_sounyuuki = [None] * MAX
+        self.InspectionImages_sounyuuki = [None] * 1
+
+    def _init_geometry_defaults(self):
+        # Safe fallback values even if YAML doesn't exist
+        self.scale_factor = 5.0
+        self.frame_width = 3072
+        self.frame_height = 2048
+
+        self.narrow_planarize = (531, 2646)
+        self.wide_planarize = (1342, 5672)
+
+    # =========================
+    # YAML loading helpers
+    # =========================
+
+    def _load_optional_defaults(self, path):
+        """
+        Optional YAML-based defaults loader.
+        Safe behavior:
+        - If file not found, do nothing.
+        - If partial keys missing, only update what exists.
+        This lets you move hardcoded init data into YAML gradually.
+        """
+        if not os.path.exists(path):
+            return
+
+        try:
+            with open(path, "r") as f:
+                cfg = yaml.safe_load(f) or {}
+        except Exception as e:
+            print("Failed to load optional defaults YAML:", path, e)
+            return
+
+        # Geometry
+        geo = cfg.get("geometry", {})
+        if "frame_width" in geo:
+            self.frame_width = int(geo["frame_width"])
+        if "frame_height" in geo:
+            self.frame_height = int(geo["frame_height"])
+        if "scale_factor" in geo:
+            self.scale_factor = float(geo["scale_factor"])
+
+        # Recompute derived geometry
+        self._init_scaled_geometry()
+
+        # Planarize sizes (optional)
+        planar = cfg.get("planarize", {})
+        if "narrow_planarize" in planar:
+            self.narrow_planarize = tuple(planar["narrow_planarize"])
+        if "wide_planarize" in planar:
+            self.wide_planarize = tuple(planar["wide_planarize"])
+
+        # ROI
+        roi = cfg.get("roi", {})
+        if "top" in roi:
+            self.ROI_top = int(roi["top"])
+        if "bottom" in roi:
+            self.ROI_bottom = int(roi["bottom"])
+        if "left" in roi:
+            self.ROI_left = int(roi["left"])
+        if "right" in roi:
+            self.ROI_right = int(roi["right"])
+
+        self._update_roi_scaled()
+
+        # Crops
+        crops = cfg.get("crops", {})
+        kat = crops.get("katabu", {})
+        clip = crops.get("clip", {})
+
+        if "L" in kat:
+            self.katabuImageL_Crop = np.array(kat["L"])
+        if "R" in kat:
+            self.katabuImageR_Crop = np.array(kat["R"])
+
+        # clip keys may be strings in YAML; handle both
+        for key, attr in [("1", "clipImage1_Crop"), ("2", "clipImage2_Crop"), ("3", "clipImage3_Crop")]:
+            if key in clip:
+                setattr(self, attr, np.array(clip[key]))
+            elif int(key) in clip:
+                setattr(self, attr, np.array(clip[int(key)]))
+
+        # Widget maps / indices
+        widgets = cfg.get("widgets", {})
+        wmap = widgets.get("map")
+        if isinstance(wmap, dict):
+            self.widget_dir_map = {int(k): v for k, v in wmap.items()}
+            self.widget_name_map = {k: "P{}".format(v) for k, v in self.widget_dir_map.items()}
+
+        idx = widgets.get("inspection_indices")
+        if isinstance(idx, list):
+            self.inspection_widget_indices = list(idx)
+
+        idx2 = widgets.get("inspection_indices_without_dailytenken")
+        if isinstance(idx2, list):
+            self.inspection_widget_indices_without_dailytenken = list(idx2)
+
+    def _load_cam_map(self):
+        self.cam_map = {}
+        if not os.path.exists(self.cam_config_file):
+            print("Camera config YAML not found:", self.cam_config_file)
+            return
+
+        try:
+            with open(self.cam_config_file, "r") as file:
+                self.cam_map = yaml.safe_load(file) or {}
+        except Exception as e:
+            print("Failed to read camera config YAML:", self.cam_config_file, e)
+            self.cam_map = {}
+
+    def _load_mysql_credentials(self):
+        self.mysqlID = None
+        self.mysqlPassword = None
+        self.mysqlHost = None
+        self.mysqlHostPort = None
+
+        cred_path = "aikensa/mysql/id.yaml"
+        if not os.path.exists(cred_path):
+            print("MySQL credential YAML not found:", cred_path)
+            return
+
+        try:
+            with open(cred_path, "r") as file:
+                credentials = yaml.load(file, Loader=yaml.FullLoader) or {}
+        except Exception as e:
+            print("Failed to read MySQL credential YAML:", cred_path, e)
+            return
+
+        self.mysqlID = credentials.get("id")
+        self.mysqlPassword = credentials.get("pass")
+        self.mysqlHost = credentials.get("host")
+        self.mysqlHostPort = credentials.get("port")
+
+    def _init_placeholders(self):
+        # Use known defaults if geometry not set yet
+        w = getattr(self, "frame_width", 3072)
+        h = getattr(self, "frame_height", 2048)
+
+        self._placeholder_cam0 = make_camera_placeholder(w, h, 0)
+        self._placeholder_cam1 = make_camera_placeholder(w, h, 1)
+        self._placeholder_cam2 = make_camera_placeholder(w, h, 2)
+
+    def _init_cameras(self):
+        # Start with DummyCapture so .read() is always safe
+        self.cap_cam = DummyCapture(self._placeholder_cam0)
+        self.cap_cam1 = DummyCapture(self._placeholder_cam1)
+        self.cap_cam2 = DummyCapture(self._placeholder_cam2)
+
+    def _open_or_placeholder(self, cam_id, placeholder):
+        if cam_id == -1:
+            return DummyCapture(placeholder)
+
+        cap = initialize_camera(cam_id)
+        if cap is None or (hasattr(cap, "isOpened") and not cap.isOpened()):
+            return DummyCapture(placeholder)
+
+        return cap
+
+
+class DummyCapture:
+    """Fallback camera-like object that always returns a placeholder frame."""
+    def __init__(self, frame: np.ndarray):
+        self._frame = frame
+
+    def read(self):
+        # mimic cv2.VideoCapture.read() signature
+        return True, self._frame.copy()
+
+    def isOpened(self):
+        return True
+
+    def release(self):
+        pass
+
+
+def make_camera_placeholder(width: int, height: int, cam_id: int):
+    img = np.zeros((height, width, 3), dtype=np.uint8)
+
+    # Simple message. You can add your logo later.
+    text1 = "CAMERA OFFLINE"
+    text2 = f"ID: {cam_id}"
+    text3 = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Big readable text
+    cv2.putText(img, text1, (60, int(height * 0.45)),
+                cv2.FONT_HERSHEY_SIMPLEX, 2.0, (0, 0, 255), 4, cv2.LINE_AA)
+    cv2.putText(img, text2, (60, int(height * 0.55)),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(img, text3, (60, int(height * 0.65)),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (200, 200, 200), 2, cv2.LINE_AA)
+
+    return img

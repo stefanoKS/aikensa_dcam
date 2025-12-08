@@ -1,0 +1,63 @@
+device: "cuda:0"
+
+models:
+  # ===== MMC family =====
+  P828XXW0X0P_CLIP_Model:
+    path: "./aikensa/models/P828XXW0X0P_detect.pt"
+    loader: "sahi"
+    model_type: "yolov8"
+    conf: 0.5
+
+  P828XXW0X0P_CLIPFLIP_Model:
+    path: "./aikensa/models/P828XXW0X0P_detect_flip.pt"
+    loader: "sahi"
+    model_type: "yolov8"
+    conf: 0.35
+
+  P828XXW0X0P_KATABU_Model:
+    path: "./aikensa/models/P828XXW0X0P_katabu.pt"
+    loader: "yolo"
+
+  P828XXW0X0P_SEGMENT_Model:
+    path: "./aikensa/models/P828XXW0X0P_segment.pt"
+    loader: "yolo"
+
+  P828XXW0X0P_HAND_DETECT:
+    path: "./aikensa/models/P828XXW0X0P_hand.pt"
+    loader: "yolo"
+
+  # ===== Daily / Nichijou tenken =====
+  NICHIJOU_TENKEN_Model:
+    path: "./aikensa/models/AIKENSA23GO_NICHIJOU_TENKEN.pt"
+    loader: "sahi"
+    model_type: "yolov8"
+    conf: 0.5
+
+  # ===== Nissan family =====
+  P808387UA1A_CLIP_Model:
+    path: "./aikensa/models/P808387UA1A_detect.pt"
+    loader: "sahi"
+    model_type: "ultralytics"
+    conf: 0.5
+
+  P808387UA1A_SEGMENT_Model:
+    path: "./aikensa/models/P808387UA1A_segment.pt"
+    loader: "yolo"
+
+  P808387UA1A_keypoint:
+    path: "./aikensa/models/P808387UA1A_keypoint.pt"
+    loader: "yolo"
+
+  P828447UA0A_CLIP_Model:
+    path: "./aikensa/models/P828447UA0A_detect.pt"
+    loader: "sahi"
+    model_type: "ultralytics"
+    conf: 0.5
+
+  P828447UA0A_SEGMENT_Model:
+    path: "./aikensa/models/P828447UA0A_segment.pt"
+    loader: "yolo"
+
+  P828447UA0A_ANOMALY_CLASSIFICATION_Model:
+    path: "./aikensa/models/P828447UA0A_anomaly_classification.pt"
+    loader: "yolo"

@@ -21,6 +21,10 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon/aikensa_ico.png</normaloff>icon/aikensa_ico.png</iconset>
+  </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(85, 87, 83);</string>
   </property>
@@ -32,8 +36,8 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>469</y>
-      <width>611</width>
+      <y>540</y>
+      <width>641</width>
       <height>21</height>
      </rect>
     </property>
@@ -44,8 +48,8 @@
    <widget class="QLabel" name="label_1">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>500</y>
+      <x>700</x>
+      <y>240</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -59,7 +63,8 @@
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
+     <string notr="true">color: rgb(238, 238, 236);
+background-color: rgba(255, 255, 255, 0);</string>
     </property>
     <property name="text">
      <string>部品リスト</string>
@@ -71,8 +76,8 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>190</y>
+      <x>60</x>
+      <y>231</y>
       <width>361</width>
       <height>31</height>
      </rect>
@@ -98,8 +103,8 @@
    <widget class="QPushButton" name="quitbutton">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>960</y>
+      <x>1640</x>
+      <y>930</y>
       <width>191</width>
       <height>51</height>
      </rect>
@@ -188,7 +193,8 @@
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
+     <string notr="true">color: rgb(238, 238, 236);
+background-color: rgba(255, 255, 255, 0);</string>
     </property>
     <property name="text">
      <string>AI 検査</string>
@@ -202,7 +208,7 @@
      <rect>
       <x>1050</x>
       <y>50</y>
-      <width>141</width>
+      <width>191</width>
       <height>41</height>
      </rect>
     </property>
@@ -216,10 +222,11 @@
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
+     <string notr="true">color: rgb(238, 238, 236);
+background-color: rgba(255, 255, 255, 0);</string>
     </property>
     <property name="text">
-     <string>by 設計課</string>
+     <string>by G開発.設計課</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -299,7 +306,8 @@
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(238, 238, 236);</string>
+     <string notr="true">color: rgb(238, 238, 236);
+background-color: rgba(255, 255, 255, 0);</string>
     </property>
     <property name="text">
      <string>Time</string>
@@ -311,8 +319,8 @@
    <widget class="QPushButton" name="dailytenkenbutton">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>340</y>
+      <x>50</x>
+      <y>361</y>
       <width>231</width>
       <height>91</height>
      </rect>
@@ -334,8 +342,8 @@ Daily Check</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>800</x>
-      <y>780</y>
+      <x>810</x>
+      <y>500</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -361,8 +369,8 @@ Daily Check</string>
    <widget class="QPushButton" name="camcalibrationbutton1">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>250</y>
+      <x>50</x>
+      <y>271</y>
       <width>161</width>
       <height>61</height>
      </rect>
@@ -384,8 +392,8 @@ Camera①Calib.</string>
    <widget class="QPushButton" name="camcalibrationbutton2">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>250</y>
+      <x>220</x>
+      <y>271</y>
       <width>161</width>
       <height>61</height>
      </rect>
@@ -407,8 +415,8 @@ Camera②Calib.</string>
    <widget class="QPushButton" name="cameraMerge">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>250</y>
+      <x>390</x>
+      <y>271</y>
       <width>161</width>
       <height>61</height>
      </rect>
@@ -526,16 +534,16 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82833W090PKENGENbutton">
     <property name="geometry">
      <rect>
-      <x>680</x>
-      <y>660</y>
-      <width>220</width>
+      <x>720</x>
+      <y>410</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -546,20 +554,30 @@ W/STRIP-RR DOOR, LH</string>
 82833W090P
 W/STRIP-RR DOOR, LH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82832W040PKENGENbutton">
     <property name="geometry">
      <rect>
       <x>920</x>
-      <y>570</y>
-      <width>220</width>
+      <y>320</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -570,20 +588,30 @@ W/STRIP-RR DOOR, LH</string>
 82832W040P
  W/STRIP-RR DOOR, RH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82833W050PKENGENbutton">
     <property name="geometry">
      <rect>
-      <x>680</x>
-      <y>570</y>
-      <width>220</width>
+      <x>720</x>
+      <y>320</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -594,20 +622,30 @@ W/STRIP-RR DOOR, LH</string>
 82833W050P
 W/STRIP-RR DOOR, LH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82832W080PKENGENbutton">
     <property name="geometry">
      <rect>
       <x>920</x>
-      <y>660</y>
-      <width>220</width>
+      <y>410</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -618,20 +656,30 @@ W/STRIP-RR DOOR, LH</string>
 82832W080P
  W/STRIP-RR DOOR, RH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82833W050PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1240</x>
-      <y>570</y>
-      <width>220</width>
+      <x>1200</x>
+      <y>320</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -642,20 +690,30 @@ W/STRIP-RR DOOR, LH</string>
 82833W050P
 W/STRIP-RR DOOR, LH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82833W090PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1240</x>
-      <y>660</y>
-      <width>220</width>
+      <x>1200</x>
+      <y>410</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -666,20 +724,30 @@ W/STRIP-RR DOOR, LH</string>
 82833W090P
 W/STRIP-RR DOOR, LH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82832W080PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1480</x>
-      <y>660</y>
-      <width>220</width>
+      <x>1400</x>
+      <y>410</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -690,20 +758,30 @@ W/STRIP-RR DOOR, LH</string>
 82832W080P
  W/STRIP-RR DOOR, RH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P82832W040PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1480</x>
-      <y>570</y>
-      <width>220</width>
+      <x>1400</x>
+      <y>320</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -714,12 +792,22 @@ W/STRIP-RR DOOR, LH</string>
 82832W040P
  W/STRIP-RR DOOR, RH</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/82833W.png</normaloff>icon/82833W.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>1270</x>
-      <y>780</y>
+      <x>1240</x>
+      <y>500</y>
       <width>391</width>
       <height>31</height>
      </rect>
@@ -761,9 +849,9 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>670</x>
-      <y>560</y>
-      <width>481</width>
+      <x>710</x>
+      <y>310</y>
+      <width>411</width>
       <height>181</height>
      </rect>
     </property>
@@ -777,9 +865,9 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>1230</x>
-      <y>560</y>
-      <width>481</width>
+      <x>1190</x>
+      <y>310</y>
+      <width>411</width>
       <height>181</height>
      </rect>
     </property>
@@ -793,8 +881,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>780</y>
+      <x>810</x>
+      <y>840</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -820,16 +908,16 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P828447UA0Abutton">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>570</y>
-      <width>220</width>
+      <x>920</x>
+      <y>750</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -841,20 +929,30 @@ W/STRIP-RR DOOR, LH</string>
 SEAL-RR DOOR PARTING 
 LWR</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/828447UA0A.png</normaloff>icon/828447UA0A.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="P808387UA1Abutton">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>570</y>
-      <width>220</width>
+      <x>720</x>
+      <y>750</y>
+      <width>191</width>
       <height>70</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Ubuntu Mono</family>
-      <pointsize>12</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -865,14 +963,24 @@ LWR</string>
 80838 7UA1A
 SEAL-FR DOOR PARTING</string>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/808387UA1A.png</normaloff>icon/808387UA1A.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
    </widget>
    <widget class="QLabel" name="label_11">
     <property name="geometry">
      <rect>
-      <x>110</x>
-      <y>560</y>
-      <width>481</width>
-      <height>181</height>
+      <x>710</x>
+      <y>580</y>
+      <width>411</width>
+      <height>251</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -885,7 +993,7 @@ SEAL-FR DOOR PARTING</string>
    <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>640</x>
       <y>150</y>
       <width>20</width>
       <height>711</height>
@@ -895,8 +1003,148 @@ SEAL-FR DOOR PARTING</string>
      <enum>Qt::Vertical</enum>
     </property>
    </widget>
-   <zorder>label_10</zorder>
+   <widget class="QPushButton" name="P658217UA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>590</y>
+      <width>191</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(245, 121, 0);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65821 7UA0A
+ SEAL ASSY-HOOD, FR LH
+CCM1</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/658207UA0A.png</normaloff>icon/658207UA0A.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658217UJ0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>670</y>
+      <width>191</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(245, 121, 0);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65821 7UJ0A
+ SEAL ASSY-HOOD FR LH
+CCM2</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/658207UJ0A.png</normaloff>icon/658207UJ0A.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658207UJ0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>670</y>
+      <width>191</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65820 7UJ0A
+ SEAL ASSY-HOOD FR RH
+CCM2</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/658207UJ0A.png</normaloff>icon/658207UJ0A.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="P658207UA0Abutton">
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>590</y>
+      <width>191</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu Mono</family>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(211, 215, 207);</string>
+    </property>
+    <property name="text">
+     <string>JC2D
+65820 7UA0A
+ SEAL ASSY-HOOD, FR RH
+CCM1</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icon/658207UA0A.png</normaloff>icon/658207UA0A.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>50</width>
+      <height>50</height>
+     </size>
+    </property>
+   </widget>
    <zorder>label_11</zorder>
+   <zorder>label_10</zorder>
    <zorder>label_6</zorder>
    <zorder>label</zorder>
    <zorder>label_1</zorder>
@@ -934,6 +1182,10 @@ SEAL-FR DOOR PARTING</string>
    <zorder>P808387UA1Abutton</zorder>
    <zorder>line</zorder>
    <zorder>line_2</zorder>
+   <zorder>P658217UA0Abutton</zorder>
+   <zorder>P658217UJ0Abutton</zorder>
+   <zorder>P658207UJ0Abutton</zorder>
+   <zorder>P658207UA0Abutton</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -941,7 +1193,7 @@ SEAL-FR DOOR PARTING</string>
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>

@@ -1,30 +1,24 @@
 import cv2
+import sys
 
-# Open the camera with index 1
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(2, cv2.CAP_V4L2)  # try 0 first
 
-# Check if the camera opened successfully
 if not cap.isOpened():
     print("Error: Could not open camera.")
-else:
-    print("Camera opened successfully. Press 'q' to exit.")
+    sys.exit(1)
 
-# Stream the camera feed
-while cap.isOpened():
+print("Camera opened successfully. Press 'q' to exit.")
+
+while True:
     ret, frame = cap.read()
-    
-    # If a frame is successfully captured
-    if ret:
-        # Display the frame
-        cv2.imshow("Camera Stream", frame)
-        
-        # Press 'q' to exit the streaming
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    else:
+    if not ret or frame is None:
         print("Error: Could not read frame.")
         break
 
-# Release the camera and close the window
+    cv2.imshow("Camera Stream", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
 cap.release()
 cv2.destroyAllWindows()
