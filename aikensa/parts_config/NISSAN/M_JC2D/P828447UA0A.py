@@ -1,21 +1,16 @@
-from calendar import c
-import re
-import stat
-from unittest import result
-from networkx import draw
 import numpy as np
 import cv2
 import math
 import yaml
 import os
-import pygame
-import os
 from PIL import ImageFont, ImageDraw, Image
 
-from aikensa.scripts.scripts_img_processing import create_masks, draw_bounding_box, get_center, find_edge_point_mask, calclength, check_tolerance, check_id, draw_pitch_line
-from aikensa.scripts.scripts_img_processing import draw_status_text_PIL
-from aikensa.scripts.scripts_img_processing import check_hanire, draw_redCircle, map_keypoint_xcrop_to_original
-
+from aikensa.scripts.scripts_img_processing import (
+    draw_bounding_box, get_center, calclength,
+    check_tolerance, check_id, draw_pitch_line,
+    draw_status_text_PIL, check_hanire, draw_redCircle,
+    map_keypoint_xcrop_to_original
+)
 
 pitchSpec = [10, 121.5, 121.5, 121.5, 121.5, 121.5, 10, 627.5]
 idSpec = [0, 0, 0, 0, 0, 0]
@@ -45,25 +40,19 @@ border_width          = this_part["border_width"]
 segmentation_pixel_start = 0
 segmentation_pixel_finish = 512
 segmentation_width = segmentation_pixel_finish - segmentation_pixel_start
-# detected_cropped_size = 84
-# border_width = 512
 
 
-def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, keypointLeft, keypointRight, YoloHanireModel):
+def partcheck(image, sahi_predictionList, keypointLeft, keypointRight, YoloHanireModel):
 
     sorted_detections = sorted(sahi_predictionList, key=lambda d: d.bbox.minx)
 
     detectedid = []
-
     measuredPitch = []
     resultPitch = []
     deltaPitch = []
-
     resultid = []
-
     detectedposX = []
     detectedposY = []
-
     detectedWidth = []
 
     prev_center = None
@@ -74,13 +63,10 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
     flag_hole_notfound = 0
     leftmostPitch = 0
     rightmostPitch = 0
-
     leftmostPointX = 0
     leftmostPointY = 0
     rightmostPointX = 0
     rightmostPointY = 0
-
-
     flag_hanire = 0 #whether the clip is half inserted
 
     status = "OK"
@@ -91,61 +77,6 @@ def partcheck(image, sahi_predictionList, leftSegmentation, rightSegmentation, k
 
     raw_image = image.copy()
 
-    combined_lmask = None
-    for lm in leftSegmentation:
-        if lm.masks is not None:
-            orig_shape = (image.shape[0] + border_width * 2 , segmentation_width + border_width * 2 )
-            segmentation_xyn = lm.masks.xyn
-            lmask = create_masks(segmentation_xyn, orig_shape)
-            if combined_lmask is None:
-                combined_lmask = np.zeros_like(lmask)
-            combined_lmask = cv2.bitwise_or(combined_lmask, lmask)
-            #resize back to original size
-            combined_lmask = combined_lmask[border_width:-border_width, border_width:-border_width]
-            combined_lmask = cv2.resize(combined_lmask, (segmentation_width, image.shape[0]))
-            # cv2.imwrite("leftmask.jpg", combined_lmask)
-        if lm.masks is None:
-            status = "NG"
-            print_status = "製品は見つかりません"
-            image = draw_status_text_PIL(image, status, print_status, size="normal")
-
-            resultPitch = [0] * (len(pitchSpec))
-            measuredPitch = [0] * (len(pitchSpec))
-            ngreason = "PART IS NOT FOUND"
-
-            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
-        
-    combined_rmask = None
-    for rm in rightSegmentation:
-        if rm.masks is not None:
-            orig_shape = (image.shape[0] + border_width * 2 , segmentation_width + border_width * 2 )
-            segmentation_xyn = rm.masks.xyn
-            rmask = create_masks(segmentation_xyn, orig_shape)
-            if combined_rmask is None:
-                combined_rmask = np.zeros_like(rmask)
-            combined_rmask = cv2.bitwise_or(combined_rmask, rmask)
-            #remove the pad from the image (pad size is 200 around the image)
-            combined_rmask = combined_rmask[border_width:-border_width, border_width:-border_width]
-            combined_rmask = cv2.resize(combined_rmask, (segmentation_width, image.shape[0]))
-            # cv2.imwrite("rightmask.jpg", combined_rmask)
-        if rm.masks is None:
-            status = "NG"
-            print_status = "製品は見つかりません"
-            image = draw_status_text_PIL(image, status, print_status, size="small")
-
-            resultPitch = [0] * (len(pitchSpec))
-            measuredPitch = [0] * (len(pitchSpec))
-            ngreason = "PART IS NOT FOUND"
-
-            return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
-
-    combined_mask = np.zeros_like(image[:, :, 0])  # Single-channel black mask
-
-    if combined_lmask is not None and combined_rmask is not None:
-        combined_mask[:, segmentation_pixel_start:segmentation_pixel_finish] = combined_lmask
-        combined_mask[:, -segmentation_pixel_finish:] = combined_rmask
-
-    # cv2.imwrite("combined_mask.jpg", combined_mask)
     for keypoint in keypointLeft:
         if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
             status = "NG"
