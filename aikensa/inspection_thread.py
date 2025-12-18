@@ -658,8 +658,23 @@ class InspectionThread(QThread):
                             for i in range(len(self.InspectionImages)):
 
 
+
                                 self.InspectionImages_endSegmentation_Left[i] = self.InspectionImages[i][:, :1024, :]
                                 self.InspectionImages_endSegmentation_Right[i] = self.InspectionImages[i][:, -1024:, :]
+
+                                self.InspectionImages_keypoint_Left[i] = self.InspectionImages[i][:, :1024, :]
+                                self.InspectionImages_keypoint_Right[i] = self.InspectionImages[i][:, -1024:, :]
+
+
+                                    
+
+
+                                self.InspectionResult_keypoint_Left[i] = self.P5902A509_KEYPOINT_Model(source=self.InspectionImages_keypoint_Left[i], conf=0.6, imgsz=1024, verbose=False)
+                                self.InspectionResult_keypoint_Right[i] = self.P5902A509_KEYPOINT_Model(source=self.InspectionImages_keypoint_Right[i], conf=0.6, imgsz=1024, verbose=False)
+
+
+
+
                                 self.InspectionImages_endSegmentation_Left[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Left[i], 360, 360, 360, 360, cv2.BORDER_CONSTANT, value=[255, 255, 255])
                                 self.InspectionImages_endSegmentation_Right[i] = cv2.copyMakeBorder(self.InspectionImages_endSegmentation_Right[i], 360, 360, 360, 360, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
@@ -673,6 +688,8 @@ class InspectionThread(QThread):
                                                                                                                                                                                                                                                     self.InspectionResult_ClipDetection[i], 
                                                                                                                                                                                                                                                     self.InspectionResult_EndSegmentation_Left[i],
                                                                                                                                                                                                                                                     self.InspectionResult_EndSegmentation_Right[i],
+                                                                                                                                                                                                                                                    self.InspectionResult_keypoint_Left[i],
+                                                                                                                                                                                                                                                    self.InspectionResult_keypoint_Right[i],
                                                                                                                                                                                                                                                     self.InspectionResult_Hanire[i], 
                                                                                                                                                                                                                                                     self.inspection_config.widget)
 
@@ -1748,6 +1765,7 @@ class InspectionThread(QThread):
         path_P5902A509_CLIP_Model = "./aikensa/models/P5902A509_CLIP.pt"
         path_P5902A509_SEGMENT_Model = "./aikensa/models/P5902A509_SEGMENT.pt"
         path_P5902A509_HANIRE_Model = "./aikensa/models/P5902A509_HANIRE.pt"
+        path_P5902A509_KEYPOINT_Model = "./aikensa/models/P5902A509_KEYPOINT.pt"
 
         #Larger image inference, need SAHI
         path_P5819A107_CLIP_Model = "./aikensa/models/P5819A107_CLIP.pt"
@@ -1778,6 +1796,10 @@ class InspectionThread(QThread):
 
         if os.path.exists(path_P5902A509_HANIRE_Model):
             P5902A509_HANIRE_Model = YOLO(path_P5902A509_HANIRE_Model)
+
+
+        if os.path.exists(path_P5902A509_KEYPOINT_Model):
+            P5902A509_KEYPOINT_Model = YOLO(path_P5902A509_KEYPOINT_Model)
         
         if os.path.exists(path_P5819A107_CLIP_Model):
             P5819A107_CLIP_Model = AutoDetectionModel.from_pretrained(model_type="yolov8",
@@ -1820,6 +1842,7 @@ class InspectionThread(QThread):
         self.P5902A509_CLIP_Model = P5902A509_CLIP_Model
         self.P5902A509_SEGMENT_Model = P5902A509_SEGMENT_Model
         self.P5902A509_HANIRE_Model = P5902A509_HANIRE_Model
+        self.P5902A509_KEYPOINT_Model = P5902A509_KEYPOINT_Model
 
         self.P5819A107_CLIP_Model = P5819A107_CLIP_Model
         self.P5819A107_SEGMENT_Model = P5819A107_SEGMENT_Model
@@ -1844,6 +1867,10 @@ class InspectionThread(QThread):
             print("P5902A509_SEGMENT_Model loaded")
         if self.P5902A509_HANIRE_Model is not None:
             print("P5902A509_HANIRE_Model loaded")
+        if self.P5902A509_KEYPOINT_Model is not None:
+            print("P5902A509_KEYPOINT_Model loaded")
+
+
 
         if self.P5819A107_CLIP_Model is not None:
             print("P5819A107_CLIP_Model loaded")

@@ -11,6 +11,7 @@ import os
 import pygame
 import os
 from PIL import ImageFont, ImageDraw, Image
+from aikensa.scripts.scripts_img_processing import map_keypoint_xcrop_to_original
 
 pygame.mixer.init()
 ok_sound = pygame.mixer.Sound("aikensa/sound/positive_interface.wav") 
@@ -42,13 +43,14 @@ endoffset_y = 0
 bbox_offset = 1
 
 pixelMultiplier = 0.1592
-
+segmentation_pixel_start = 0
+segmentation_pixel_finish = 1024
 
 segmentation_width = 1024
 border_width = 360
 
 
-def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation, hanire_detection_result, widgetNumber):
+def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation, keypointLeft, keypointRight, hanire_detection_result, widgetNumber):
 
     # print(clip_detection_result)
     detectedid = []
@@ -78,6 +80,11 @@ def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation,
 
     leftmostPitch = 0
     rightmostPitch = 0
+
+    leftmostPointX = 0
+    leftmostPointY = 0
+    rightmostPointX = 0
+    rightmostPointY = 0
 
     status = "OK"
     print_status = ""
@@ -172,37 +179,6 @@ def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation,
 
             return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
 
-    # combined_mask = None
-
-    # for m in segmentation_result:
-    #     #use image size
-    #     if m.masks is not None:
-    #         orig_shape = (image.shape[0], image.shape[1])
-    #         segmentation_xyn = m.masks.xyn
-    #         mask = create_masks(segmentation_xyn, orig_shape)
-    #         if combined_mask is None:
-    #             combined_mask = np.zeros_like(mask)
-    #         combined_mask = cv2.bitwise_or(combined_mask, mask)
-
-    #         #draw the mask as overlay
-    #         image_overlay = image.copy()
-    #         image_overlay = cv2.addWeighted(image, 1, cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), 0.5, 0)
-    #         # cv2.imwrite("mask_overlay2.jpg", image_overlay)
-        
-    #     if m.masks is None:
-    #         print_status = print_status + " 製品は見つかりません"
-    #         status = "NG"
-    #         resultPitch = [0] * (len(pitchSpec)+1)
-    #         measuredPitch = [0] * (len(pitchSpec)+1)
-    #         ngreason = "PART IS NOT FOUND"
-    #         image = draw_status_text_PIL(image, status, print_status, size="normal")
-
-    #         return image, measuredPitch, resultPitch, deltaPitch, status, ngreason
-
-            #Checkgate for mask segmentation handling
-
-
-
 
     combined_lmask = None
     for lm in leftSegmentation:
@@ -262,7 +238,42 @@ def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation,
         combined_mask[:, -segmentation_width:] = combined_rmask 
         # cv2.imwrite("combined_mask.jpg", combined_mask)
 
+    for keypoint in keypointLeft:
+        if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
+            status = "NG"
+            print_status = "製品は見つかりませんLH"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
 
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
+
+        xy = keypoint.keypoints.xy
+        x_pos, y_pos = xy[0, 0].tolist()
+        # print ("Keypoint left xy: ", xy)
+        leftmostPointX, leftmostPointY = map_keypoint_xcrop_to_original(x_start=segmentation_pixel_start, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
+        print ("Mapped Keypoint left xy to original: ", (leftmostPointX, leftmostPointY))
+        
+
+    for keypoint in keypointRight:
+        if keypoint.keypoints.xy is None or keypoint.keypoints.xy.shape[0] == 0 or keypoint.keypoints.xy.shape[1] == 0:
+            status = "NG"
+            print_status = "製品は見つかりませんRH"
+            image = draw_status_text_PIL(image, status, print_status, size="normal")
+
+            resultPitch = [0] * (len(pitchSpec))
+            measuredPitch = [0] * (len(pitchSpec))
+            ngreason = "PART IS NOT FOUND"
+
+            return image, measuredPitch, resultPitch, resultid, status, ngreason
+        
+        xy = keypoint.keypoints.xy
+        # print ("Keypoint right xy: ", xy)
+        x_pos, y_pos = xy[0, 0].tolist()
+        rightmostPointX, rightmostPointY = map_keypoint_xcrop_to_original(x_start=-segmentation_pixel_finish, kpt_xy_crop=(x_pos, y_pos), img_width=image.shape[1])
+        print ("Mapped Keypoint right xy to original: ", (rightmostPointX, rightmostPointY))
 
 
     if len(detectedid) < 5:
@@ -290,13 +301,25 @@ def partcheck(image, clip_detection_result, leftSegmentation, rightSegmentation,
     if len(detectedid) == 5 and status == "OK":
 
         leftmostCenter = (detectedposX[0], detectedposY[0])
-        leftmostWidth = detectedWidth[0] # not really useful here since we use mask from inference
+        # leftmostWidth = detectedWidth[0] # not really useful here since we use mask from inference
         rightmostCenter = (detectedposX[-1], detectedposY[-1])
-        rightmostWidth = detectedWidth[-1] # not really useful here since we use mask from inference
+        # rightmostWidth = detectedWidth[-1] # not really useful here since we use mask from inference
+       
+       
         adjustment_offset = 0 # not really useful here since we use mask from inference
-        left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -60, Xoffsetval = 80)
-        right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -60, Xoffsetval = 80)
+        # left_edge = find_edge_point_mask(image, combined_mask, leftmostCenter, direction="left", Yoffsetval = -60, Xoffsetval = 80)
+        # right_edge = find_edge_point_mask(image, combined_mask, rightmostCenter, direction="right", Yoffsetval = -60, Xoffsetval = 80)
 
+        left_edge =  leftmostPointX, detectedposY[0]
+        right_edge = rightmostPointX, detectedposY[-1]
+
+        leftmostPitch = calclength(leftmostCenter, left_edge)*pixelMultiplier
+        rightmostPitch = calclength(rightmostCenter, right_edge)*pixelMultiplier
+
+        #append the leftmost and rightmost pitch to the measuredPitch
+        # measuredPitch.insert(0, leftmostPitch)
+        # measuredPitch.append(rightmostPitch)
+        #Reappend the leftmostcetner and rightmostcenter to the detectedposX and detectedposY
         detectedposX.insert(0, left_edge[0])
         detectedposY.insert(0, left_edge[1])
         detectedposX.append(right_edge[0])
