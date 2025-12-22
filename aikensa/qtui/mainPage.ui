@@ -36,8 +36,8 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>540</y>
-      <width>641</width>
+      <y>460</y>
+      <width>571</width>
       <height>21</height>
      </rect>
     </property>
@@ -48,8 +48,8 @@
    <widget class="QLabel" name="label_1">
     <property name="geometry">
      <rect>
-      <x>700</x>
-      <y>240</y>
+      <x>590</x>
+      <y>230</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -342,8 +342,8 @@ Daily Check</string>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>810</x>
-      <y>500</y>
+      <x>690</x>
+      <y>470</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -534,8 +534,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82833W090PKENGENbutton">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>410</y>
+      <x>600</x>
+      <y>370</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -568,8 +568,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82832W040PKENGENbutton">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>320</y>
+      <x>800</x>
+      <y>280</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -602,8 +602,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82833W050PKENGENbutton">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>320</y>
+      <x>600</x>
+      <y>280</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -636,8 +636,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82832W080PKENGENbutton">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>410</y>
+      <x>800</x>
+      <y>370</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -670,8 +670,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82833W050PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1200</x>
-      <y>320</y>
+      <x>50</x>
+      <y>500</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -704,8 +704,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82833W090PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1200</x>
-      <y>410</y>
+      <x>50</x>
+      <y>590</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -738,8 +738,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82832W080PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1400</x>
-      <y>410</y>
+      <x>250</x>
+      <y>590</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -772,8 +772,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P82832W040PCLIPSOUNYUUKIbutton">
     <property name="geometry">
      <rect>
-      <x>1400</x>
-      <y>320</y>
+      <x>250</x>
+      <y>500</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -806,8 +806,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>1240</x>
-      <y>500</y>
+      <x>50</x>
+      <y>690</y>
       <width>391</width>
       <height>31</height>
      </rect>
@@ -849,8 +849,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>710</x>
-      <y>310</y>
+      <x>590</x>
+      <y>270</y>
       <width>411</width>
       <height>181</height>
      </rect>
@@ -865,8 +865,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>1190</x>
-      <y>310</y>
+      <x>40</x>
+      <y>490</y>
       <width>411</width>
       <height>181</height>
      </rect>
@@ -881,8 +881,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>810</x>
-      <y>840</y>
+      <x>1110</x>
+      <y>530</y>
       <width>211</width>
       <height>31</height>
      </rect>
@@ -908,8 +908,8 @@ W/STRIP-RR DOOR, LH</string>
    <widget class="QPushButton" name="P828447UA0Abutton">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>750</y>
+      <x>1220</x>
+      <y>440</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -943,8 +943,8 @@ LWR</string>
    <widget class="QPushButton" name="P808387UA1Abutton">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>750</y>
+      <x>1020</x>
+      <y>440</y>
       <width>191</width>
       <height>70</height>
      </rect>
@@ -977,8 +977,8 @@ SEAL-FR DOOR PARTING</string>
    <widget class="QLabel" name="label_11">
     <property name="geometry">
      <rect>
-      <x>710</x>
-      <y>580</y>
+      <x>1010</x>
+      <y>270</y>
       <width>411</width>
       <height>251</height>
      </rect>
@@ -993,10 +993,10 @@ SEAL-FR DOOR PARTING</string>
    <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>640</x>
+      <x>560</x>
       <y>150</y>
       <width>20</width>
-      <height>711</height>
+      <height>321</height>
      </rect>
     </property>
     <property name="orientation">
@@ -1006,8 +1006,8 @@ SEAL-FR DOOR PARTING</string>
    <widget class="QPushButton" name="P658217UA0Abutton">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>590</y>
+      <x>1020</x>
+      <y>280</y>
       <width>191</width>
       <height>71</height>
      </rect>
@@ -1041,8 +1041,8 @@ CCM1</string>
    <widget class="QPushButton" name="P658217UJ0Abutton">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>670</y>
+      <x>1020</x>
+      <y>360</y>
       <width>191</width>
       <height>71</height>
      </rect>
@@ -1076,8 +1076,8 @@ CCM2</string>
    <widget class="QPushButton" name="P658207UJ0Abutton">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>670</y>
+      <x>1220</x>
+      <y>360</y>
       <width>191</width>
       <height>71</height>
      </rect>
@@ -1111,8 +1111,8 @@ CCM2</string>
    <widget class="QPushButton" name="P658207UA0Abutton">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>590</y>
+      <x>1220</x>
+      <y>280</y>
       <width>191</width>
       <height>71</height>
      </rect>

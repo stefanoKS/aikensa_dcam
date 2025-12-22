@@ -172,11 +172,11 @@ class InspectionThread(QThread):
 
 
     def release_all_camera(self):
-        if self.cap_cam1 is not None:
-            self.cap_cam1.release()
+        if self.cap_cam_ic4_1 is not None:
+            self.cap_cam_ic4_1.release()
             print(f"Camera 1 released.")
-        if self.cap_cam2 is not None:
-            self.cap_cam2.release()
+        if self.cap_cam_ic4_2 is not None:
+            self.cap_cam_ic4_2.release()
             print(f"Camera 2 released.")
 
     def initialize_all_camera(self):
@@ -1723,8 +1723,8 @@ class InspectionThread(QThread):
 
         # Start as DummyCapture so read() is always valid
         self.cap_cam = DummyCapture(make_camera_placeholder(w, h, 0))
-        self.cap_cam1 = DummyCapture(self._placeholder_cam1)
-        self.cap_cam2 = DummyCapture(self._placeholder_cam2)
+        self.cap_cam_ic4_1 = DummyCapture(self._placeholder_cam1)
+        self.cap_cam_ic4_2 = DummyCapture(self._placeholder_cam2)
 
     def _init_frames(self):
         self.mergeframe1 = None
@@ -2058,9 +2058,9 @@ class InspectionThread(QThread):
         self._placeholder_cam1 = make_camera_placeholder(w, h, 1)
         self._placeholder_cam2 = make_camera_placeholder(w, h, 2)
 
-    def _init_cameras(self):
-        self.cap_cam1 = DummyCapture(self._placeholder_cam1)
-        self.cap_cam2 = DummyCapture(self._placeholder_cam2)
+    # def _init_cameras(self):
+    #     self.cap_cam_ic4_1 = DummyCapture(self._placeholder_cam1)
+    #     self.cap_cam_ic4_2 = DummyCapture(self._placeholder_cam2)
 
     def _open_or_placeholder(self, ic4id, width = 3072, height = 2048, fps = 5, placeholder=None):
 

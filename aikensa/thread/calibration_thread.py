@@ -159,6 +159,9 @@ class CalibrationThread(QThread):
         self.planarizeTransform_high_wide = None
         self.planarizeTransform_high_wide_scaled = None
 
+        self.cap_cam_ic4_1 = None
+        self.cap_cam_ic4_2 = None
+
 
         this_dir = os.path.dirname(__file__)
         cam_config_path = os.path.abspath(os.path.join(this_dir, '..', 'camscripts'))
@@ -168,64 +171,51 @@ class CalibrationThread(QThread):
         with open(self.cam_config_file, 'r') as file:
             self.cam_map = yaml.safe_load(file)
 
-    def initialize_single_camera(self, camID):
+    def initialize_single_camera(self, widgetID: int):
 
         if self.cap_cam is not None:
             self.cap_cam.release()  # Release the previous camera if it's already open
             print(f"Camera {self.calib_config.cameraID} released.")
 
-        if camID == -1:
-            print("No valid camera selected, displaying placeholder.")
-            self.cap_cam = None  # No camera initialized
-            # self.frame = self.create_placeholder_image()
-        else:
-            print(camID)
-            actual_camID = self.cam_map.get(camID, -1)
-            print(f"Initialized Camera on ID {actual_camID}")
-            self.cap_cam = initialize_camera(actual_camID)
+        if widgetID == 1:
+            self.cap_cam = self._open_or_placeholder("21520069", width = 3072, height = 2048, fps = 15, placeholder=self._placeholder_cam1)
+            print("Initialized Camera 1")
+        if widgetID == 2:
+            self.cap_cam = self._open_or_placeholder("20520997", width = 3072, height = 2048, fps = 15, placeholder=self._placeholder_cam2)
+            print("Initialized Camera 2")
 
     def release_all_camera(self):
-        if self.cap_cam1 is not None:
-            self.cap_cam1.release()
+        if self.cap_cam_ic4_1 is not None:
+            self.cap_cam_ic4_1.release()
             print(f"Camera 1 released.")
-        if self.cap_cam2 is not None:
-            self.cap_cam2.release()
+        if self.cap_cam_ic4_2 is not None:
+            self.cap_cam_ic4_2.release()
             print(f"Camera 2 released.")
+        if self.cap_cam is not None:
+            self.cap_cam.release()
+            print(f"Camera {self.calib_config.cameraID} released.")
+
 
     def initialize_all_camera(self):
-        if self.cap_cam1 is not None:
-            self.cap_cam1.release()
-            print(f"Camera 1 released.")
-        if self.cap_cam2 is not None:
-            self.cap_cam2.release()
-            print(f"Camera 2 released.")
+        # release old
 
-        actual_camID = self.cam_map.get(0, -1)
-        self.cap_cam1 = initialize_camera(actual_camID)
+        self.cap_cam_ic4_1 = self._open_or_placeholder("21520069", width = 3072, height = 2048, fps = 15, placeholder=self._placeholder_cam1)
+        self.cap_cam_ic4_2 = self._open_or_placeholder("20520997", width = 3072, height = 2048, fps = 15, placeholder=self._placeholder_cam2)
 
-        actual_camID = self.cam_map.get(1, -1)
-        self.cap_cam2 = initialize_camera(actual_camID)
-
-        if not self.cap_cam1.isOpened():
-            print(f"Failed to open camera with ID 1")
-            self.cap_cam1 = None
+        if not self.cap_cam_ic4_1.isOpened() or not self.cap_cam_ic4_2.isOpened():
+            print("Failed to open IC4 camera ")
+            self.cap_cam_ic4_1 = None
+            self.cap_cam_ic4_2 = None
         else:
-            print(f"Initialized Camera on ID 1")
-
-        if not self.cap_cam2.isOpened():
-            print(f"Failed to open camera with ID 2")
-            self.cap_cam2 = None
-        else:
-            print(f"Initialized Camera on ID 2")
+            print("Initialized IC4 camera ")
 
             
     def run(self):
 
+        self.current_cameraID = -1
         #print thread started
         print("Calibration Thread Started")
 
-        self.current_cameraID = self.calib_config.cameraID
-        self.initialize_single_camera(self.current_cameraID)
         self._save_dir = f"aikensa/cameracalibration/"
 
         self.homography_template = cv2.imread("aikensa/homography_template/homography_template_border.png")
@@ -343,11 +333,11 @@ class CalibrationThread(QThread):
                     self.current_cameraID = self.calib_config.cameraID
                     # self.initialize_single_camera(self.current_cameraID)
                     if self.calib_config.widget == 1:
-                        self.initialize_single_camera(0)
-                        print("Initializing Camera 2")
-                    if self.calib_config.widget == 2:
-                        self.initialize_single_camera(1)
+                        self.initialize_single_camera(self.calib_config.widget)
                         print("Initializing Camera 0")
+                    if self.calib_config.widget == 2:
+                        self.initialize_single_camera(self.calib_config.widget)
+                        print("Initializing Camera 1")
                   
                 if self.cap_cam is not None:
                     try:
@@ -363,21 +353,8 @@ class CalibrationThread(QThread):
                     except cv2.error as e:
                         print("An error occurred while reading frames from the cameras:", str(e))
 
-                # self.calib_config.cameraID = self.calib_config.widget
                 self.calib_config.cameraID = self.calib_config.widget - 1 #Don't forget to clean this up in deployment !!
             
-                # if self.calib_config.mapCalculated[self.calib_config.cameraID] is False and self.frame is not None:
-                #     if os.path.exists(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml"):
-                #         camera_matrix, dist_coeffs = self.load_matrix_from_yaml(self._save_dir + f"Calibration_camera_{self.calib_config.cameraID}.yaml")
-                #         # Precompute the undistort and rectify map for faster processing
-                #         h, w = self.frame.shape[:2]
-                #         self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID] = cv2.initUndistortRectifyMap(camera_matrix, dist_coeffs, None, camera_matrix, (w, h), cv2.CV_16SC2)
-                #         print(f"map1 and map2 value is calculated for camera {self.calib_config.cameraID}")
-                #         self.calib_config.mapCalculated[self.calib_config.cameraID] = True
-                
-                # if self.calib_config.mapCalculated[self.calib_config.cameraID] is True:
-                    # self.frame = cv2.remap(self.frame, self.calib_config.map1[self.calib_config.cameraID], self.calib_config.map2[self.calib_config.cameraID], interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-
                 if self.calib_config.calculateSingeFrameMatrix:
                     self.frame, _, _ = detectCharucoBoard(self.frame)
                     self.frame_scaled, _, _ = detectCharucoBoard_scaledImage(self.frame_scaled)
@@ -749,3 +726,18 @@ class CalibrationThread(QThread):
         map1, map2 = cv2.initUndistortRectifyMap(
             camera_matrix, dist_coeffs, None, camera_matrix, image_size, cv2.CV_16SC2)
         return map1, map2
+
+    def _open_or_placeholder(self, ic4id, width = 3072, height = 2048, fps = 5, placeholder=None):
+
+        cap_cam_ic4 = initialize_camera_ic4(ic4id,
+            width=width, height=height, fps=fps,
+            color=True,
+            exposure_us=15000, gain_db=10, wb_temperature=6500,
+            auto_exposure=False, auto_gain=False, auto_wb=False)
+
+        if not cap_cam_ic4.isOpened():
+            print("Failed to open IC4 camera ")
+            cap_cam_ic4 = None
+            return DummyCapture(placeholder)
+
+        return cap_cam_ic4
