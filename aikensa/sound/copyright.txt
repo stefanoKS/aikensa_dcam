@@ -1,5 +1,0 @@
-sound from 
-https://mixkit.co/free-sound-effects/
-
-positive_interface.wav
-classic-short-alarm.wav
